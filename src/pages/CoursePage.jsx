@@ -40,7 +40,8 @@ export default function CoursePage() {
 
 	return (
 		<section className="course-page">
-			<h2 className="course-page__title">Courses</h2>
+			<h1 className="h1 course-page__title">Available Courses</h1>
+			<h4 className="h4 text-center">Start learning now</h4>
 
 			{/* Controls */}
 			<div className="course-page__controls">

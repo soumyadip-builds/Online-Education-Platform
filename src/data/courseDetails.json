@@ -5,7 +5,6 @@
 		"level": "Beginner",
 		"duration": "3h 20m",
 		"tags": ["react", "javascript", "frontend"],
-		"thumbnail": "/images/react-basics.png",
 		"description": "Learn the fundamentals of React: components, JSX, props, and state.",
 		"videos": [
 			{
@@ -14,17 +13,8 @@
 			},
 			{ "title": "JSX & Components", "url": "https://youtu.be/MhkGQAoc7bc" }
 		],
-		"docs": [
-			{ "title": "Course Slides (PDF)", "url": "/docs/react-basics-slides.pdf" },
-			{ "title": "Cheatsheet", "url": "https://react.dev/learn" }
-		],
-		"links": [
-			{ "label": "Official React Docs", "url": "https://react.dev/" },
-			{
-				"label": "MDN: JSX",
-				"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/JSX"
-			}
-		]
+		"docs": [{ "title": "Slides", "url": "/docs/react-basics-slides.pdf" }],
+		"links": [{ "label": "React Docs", "url": "https://react.dev" }]
 	},
 	{
 		"id": "node-api",
@@ -32,10 +22,202 @@
 		"level": "Intermediate",
 		"duration": "4h",
 		"tags": ["node", "api", "backend"],
-		"thumbnail": "/images/node-api.png",
 		"description": "Build and test REST APIs with Node.js, Express, and Postman.",
 		"videos": [],
 		"docs": [{ "title": "API Design Guide", "url": "/docs/api-design.pdf" }],
 		"links": [{ "label": "Express Docs", "url": "https://expressjs.com/" }]
+	},
+	{
+		"id": "typescript-essentials",
+		"title": "TypeScript Essentials",
+		"level": "Beginner",
+		"duration": "3h",
+		"tags": ["typescript", "javascript", "frontend", "backend"],
+		"description": "Get started with TypeScript: types, interfaces, generics, and tooling for safer JavaScript.",
+		"videos": [
+			{
+				"title": "TypeScript Crash Course",
+				"url": "https://www.youtube.com/watch?v=BCg4U1FzODs"
+			}
+		],
+		"docs": [
+			{ "title": "TypeScript Cheatsheet", "url": "/docs/typescript-cheatsheet.pdf" }
+		],
+		"links": [
+			{
+				"label": "TypeScript Handbook",
+				"url": "https://www.typescriptlang.org/docs/"
+			}
+		]
+	},
+	{
+		"id": "redux-toolkit",
+		"title": "Redux Toolkit & Modern State Management",
+		"level": "Intermediate",
+		"duration": "2h 30m",
+		"tags": ["redux", "react", "state-management"],
+		"description": "Learn Redux Toolkit patterns: slices, RTK Query, and best practices for scalable state management.",
+		"videos": [
+			{
+				"title": "Redux Toolkit Overview",
+				"url": "https://www.youtube.com/watch?v=9zySeP5vH9c"
+			}
+		],
+		"docs": [{ "title": "Redux Style Guide", "url": "/docs/redux-style-guide.pdf" }],
+		"links": [
+			{ "label": "Redux Toolkit Docs", "url": "https://redux-toolkit.js.org/" }
+		]
+	},
+	{
+		"id": "nextjs-fundamentals",
+		"title": "Next.js Fundamentals",
+		"level": "Intermediate",
+		"duration": "3h 15m",
+		"tags": ["nextjs", "react", "ssr", "frontend"],
+		"description": "Learn routing, data fetching, and rendering strategies (SSR/SSG/ISR) with Next.js.",
+		"videos": [
+			{
+				"title": "Next.js Crash Course",
+				"url": "https://www.youtube.com/watch?v=vwqS0fZ2xG0"
+			}
+		],
+		"docs": [{ "title": "Next.js Notes", "url": "/docs/nextjs-notes.pdf" }],
+		"links": [{ "label": "Next.js Docs", "url": "https://nextjs.org/docs" }]
+	},
+	{
+		"id": "express-auth",
+		"title": "Express Authentication & Authorization",
+		"level": "Intermediate",
+		"duration": "2h 45m",
+		"tags": ["express", "auth", "jwt", "backend"],
+		"description": "Implement secure login flows with JWT, sessions, and role-based access control in Express.",
+		"videos": [
+			{
+				"title": "JWT Auth with Express",
+				"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4"
+			}
+		],
+		"docs": [{ "title": "Auth Checklist", "url": "/docs/auth-checklist.pdf" }],
+		"links": [
+			{ "label": "OWASP Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/" }
+		]
+	},
+	{
+		"id": "mongodb-basics",
+		"title": "MongoDB Basics",
+		"level": "Beginner",
+		"duration": "2h",
+		"tags": ["mongodb", "database", "backend"],
+		"description": "Learn document modeling, CRUD operations, indexing, and aggregation in MongoDB.",
+		"videos": [
+			{
+				"title": "MongoDB Crash Course",
+				"url": "https://www.youtube.com/watch?v=ofme2o29ngU"
+			}
+		],
+		"docs": [{ "title": "MongoDB Notes", "url": "/docs/mongodb-notes.pdf" }],
+		"links": [{ "label": "MongoDB Docs", "url": "https://www.mongodb.com/docs/" }]
+	},
+	{
+		"id": "postgres-sql",
+		"title": "PostgreSQL & SQL Fundamentals",
+		"level": "Beginner",
+		"duration": "3h",
+		"tags": ["postgresql", "sql", "database"],
+		"description": "Master SQL basics, joins, transactions, indexes, and PostgreSQL tooling.",
+		"videos": [
+			{
+				"title": "PostgreSQL Tutorial",
+				"url": "https://www.youtube.com/watch?v=2GVaH1bYHeY"
+			}
+		],
+		"docs": [{ "title": "SQL Cheatsheet", "url": "/docs/sql-cheatsheet.pdf" }],
+		"links": [
+			{ "label": "PostgreSQL Docs", "url": "https://www.postgresql.org/docs/" }
+		]
+	},
+	{
+		"id": "docker-basics",
+		"title": "Docker Basics",
+		"level": "Beginner",
+		"duration": "2h 30m",
+		"tags": ["docker", "devops", "containers"],
+		"description": "Build, tag, and run containers; write efficient Dockerfiles and manage images.",
+		"videos": [
+			{
+				"title": "Docker Crash Course",
+				"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8"
+			}
+		],
+		"docs": [{ "title": "Docker Commands", "url": "/docs/docker-commands.pdf" }],
+		"links": [{ "label": "Docker Docs", "url": "https://docs.docker.com/" }]
+	},
+	{
+		"id": "kubernetes-intro",
+		"title": "Kubernetes Intro",
+		"level": "Intermediate",
+		"duration": "3h",
+		"tags": ["kubernetes", "devops", "containers", "orchestration"],
+		"description": "Core K8s concepts: pods, deployments, services, and basic YAML configuration.",
+		"videos": [
+			{
+				"title": "Kubernetes Basics",
+				"url": "https://www.youtube.com/watch?v=X48VuDVv0do"
+			}
+		],
+		"docs": [{ "title": "K8s Quickstart", "url": "/docs/k8s-quickstart.pdf" }],
+		"links": [
+			{ "label": "Kubernetes Docs", "url": "https://kubernetes.io/docs/home/" }
+		]
+	},
+	{
+		"id": "git-github-workflow",
+		"title": "Git & GitHub Workflow",
+		"level": "Beginner",
+		"duration": "2h",
+		"tags": ["git", "github", "version-control", "workflow"],
+		"description": "Branching strategies, pull requests, code reviews, and release tagging.",
+		"videos": [
+			{
+				"title": "Git & GitHub Tutorial",
+				"url": "https://www.youtube.com/watch?v=RGOj5yH7evk"
+			}
+		],
+		"docs": [{ "title": "Git Commands", "url": "/docs/git-commands.pdf" }],
+		"links": [{ "label": "Pro Git Book", "url": "https://git-scm.com/book/en/v2" }]
+	},
+	{
+		"id": "jest-testing",
+		"title": "Testing React & Node with Jest",
+		"level": "Intermediate",
+		"duration": "2h 15m",
+		"tags": ["testing", "jest", "react", "node"],
+		"description": "Write unit and integration tests with Jest, React Testing Library, and supertest.",
+		"videos": [
+			{
+				"title": "Jest Crash Course",
+				"url": "https://www.youtube.com/watch?v=7r4xVDI2vho"
+			}
+		],
+		"docs": [{ "title": "Testing Checklist", "url": "/docs/testing-checklist.pdf" }],
+		"links": [
+			{ "label": "Jest Docs", "url": "https://jestjs.io/docs/getting-started" }
+		]
+	},
+	{
+		"id": "prisma-orm",
+		"title": "Prisma ORM with Node.js",
+		"level": "Intermediate",
+		"duration": "2h",
+		"tags": ["prisma", "node", "orm", "database"],
+		"description": "Model data with Prisma, run migrations, and build type-safe queries in Node.js.",
+		"videos": [
+			{
+				"title": "Prisma Crash Course",
+				"url": "https://www.youtube.com/watch?v=RebA5J-rlwg"
+			}
+		],
+		"docs": [{ "title": "Prisma Notes", "url": "/docs/prisma-notes.pdf" }],
+		"links": [{ "label": "Prisma Docs", "url": "https://www.prisma.io/docs" }]
 	}
 ]

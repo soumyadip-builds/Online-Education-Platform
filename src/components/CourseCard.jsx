@@ -1,51 +1,33 @@
 // src/components/CourseCard.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import { getYouTubeIdFromUrl } from '../Utils/youtube';
-import '../styles/course.css'; // local styles only, no global CSS
+import '../styles/course.css';
 
-const placeholderThumb =
-	'data:image/svg+xml;charset=UTF-8,' +
-	encodeURIComponent(
-		`<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'>
-      <rect width='100%' height='100%' fill='#c9ada7'/>
-      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-        font-family='Arial' font-size='16' fill='#22223b'>No Thumbnail</text>
-    </svg>`
-	);
-
-function YoutubeEmbed({ url, title }) {
-	const videoId = getYouTubeIdFromUrl(url);
-	if (!videoId) {
-		return (
-			<a
-				href={url}
-				target="_blank"
-				rel="noopener noreferrer"
-				className="video-fallback-link"
-				aria-label={`Open video: ${title}`}
-			>
-				▶ {title}
-			</a>
-		);
-	}
-
+/**
+ * Instead of embedding YouTube (which may be blocked),
+ * render a button that opens the original video URL in a new tab.
+ */
+function YoutubeLinkButton({ url, title }) {
+	// Normalize/validate: ensure it's an http(s) URL; otherwise just render as-is
+	const href =
+		typeof url === 'string' && url.startsWith('http')
+			? url
+			: `https://www.youtube.com/watch?v=${url}`;
 	return (
-		<div className="video-container" aria-label={`YouTube video: ${title}`}>
-			<iframe
-				src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
-				title={title}
-				frameBorder="0"
-				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-				allowFullScreen
-				// optional sandbox:
-				// sandbox="allow-scripts allow-same-origin allow-presentation"
-			/>
-		</div>
+		<a
+			href={href}
+			target="_blank"
+			rel="noopener noreferrer"
+			className="video-button"
+			aria-label={`Open video on YouTube: ${title}`}
+			title={`Open on YouTube: ${title}`}
+		>
+			▶ Watch on YouTube
+		</a>
 	);
 }
 
-YoutubeEmbed.propTypes = {
+YoutubeLinkButton.propTypes = {
 	url: PropTypes.string.isRequired,
 	title: PropTypes.string.isRequired,
 };
@@ -57,7 +39,6 @@ export default function CourseCard({ course }) {
 		level,
 		duration,
 		tags = [],
-		thumbnail,
 		videos = [],
 		docs = [],
 		links = [],
@@ -66,12 +47,6 @@ export default function CourseCard({ course }) {
 	return (
 		<article className="course-card">
 			<header className="course-card__header">
-				<img
-					src={thumbnail || placeholderThumb}
-					alt={`${title} thumbnail`}
-					className="course-card__thumb"
-					loading="lazy"
-				/>
 				<div className="course-card__meta">
 					<h3 className="course-card__title">{title}</h3>
 					<p className="course-card__info">
@@ -98,17 +73,19 @@ export default function CourseCard({ course }) {
 			{videos.length > 0 && (
 				<details className="course-card__section" open>
 					<summary>Videos ({videos.length})</summary>
-					<div className="course-card__videos">
+					<div className="course-card__videos course-card__videos--buttons">
 						{videos.map((v, idx) => (
 							<div
 								key={`${v.url}-${idx}`}
 								className="course-card__video-item"
 							>
-								<YoutubeEmbed
+								<div className="course-card__video-title">
+									{v.title || `Video ${idx + 1}`}
+								</div>
+								<YoutubeLinkButton
 									url={v.url}
 									title={v.title || `Video ${idx + 1}`}
 								/>
-								<div className="course-card__video-title">{v.title}</div>
 							</div>
 						))}
 					</div>
@@ -158,15 +135,23 @@ CourseCard.propTypes = {
 		level: PropTypes.string,
 		duration: PropTypes.string,
 		tags: PropTypes.arrayOf(PropTypes.string),
-		thumbnail: PropTypes.string,
 		videos: PropTypes.arrayOf(
-			PropTypes.shape({ title: PropTypes.string, url: PropTypes.string.isRequired })
+			PropTypes.shape({
+				title: PropTypes.string,
+				url: PropTypes.string.isRequired,
+			})
 		),
 		docs: PropTypes.arrayOf(
-			PropTypes.shape({ title: PropTypes.string, url: PropTypes.string.isRequired })
+			PropTypes.shape({
+				title: PropTypes.string,
+				url: PropTypes.string.isRequired,
+			})
 		),
 		links: PropTypes.arrayOf(
-			PropTypes.shape({ label: PropTypes.string, url: PropTypes.string.isRequired })
+			PropTypes.shape({
+				label: PropTypes.string,
+				url: PropTypes.string.isRequired,
+			})
 		),
 	}).isRequired,
 };

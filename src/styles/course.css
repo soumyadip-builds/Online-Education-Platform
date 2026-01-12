@@ -1,5 +1,7 @@
 /* src/styles/course.css */
-/* Palette (variables only, no global styles) */
+/* ===============================
+   PALETTE (variables only)
+   =============================== */
 :root {
 	--space-indigo: #22223bff;
 	--dusty-grape: #4a4e69ff;
@@ -10,7 +12,7 @@
 	/* Derived tokens */
 	--bg: var(--parchment);
 	--surface: var(--almond-silk);
-	--surface-muted: #d9c0bb; /* safe fallback */
+	--surface-muted: #d9c0bb; /* safe fallback blend */
 	--text: var(--space-indigo);
 	--text-muted: var(--dusty-grape);
 	--border: var(--lilac-ash);
@@ -23,18 +25,18 @@
 	--tag-bg: var(--parchment);
 }
 
-/* ------------------------------- */
-/* Course page container            */
-/* ------------------------------- */
+/* ===============================
+   COURSE PAGE CONTAINER
+   =============================== */
 .course-page {
 	max-width: 1100px;
-	margin: 32px auto;
+	margin: 32px auto; /* center page block */
 	padding: 24px;
 	background: var(--bg);
 	color: var(--text);
-	border-radius: 16px;
+	border-radius: 16px; /* rounded corners */
 	box-shadow: 0 10px 24px rgba(34, 34, 59, 0.1); /* soft indigo shadow */
-	display: block;
+	display: block; /* avoid flex squeezing children */
 }
 
 .course-page__title {
@@ -50,8 +52,8 @@
 	display: flex;
 	gap: 12px;
 	margin: 0 auto 20px auto;
-	justify-content: center;
-	flex-wrap: wrap; /* allow stacking on small screens */
+	justify-content: center; /* center controls */
+	flex-wrap: wrap; /* wrap on small screens */
 }
 
 .course-page__search,
@@ -64,6 +66,7 @@
 	background: var(--parchment);
 	outline: none;
 	min-height: 40px; /* touch-friendly */
+  width: 30%;
 }
 
 .course-page__search::placeholder {
@@ -92,19 +95,19 @@
 	border-color: var(--dusty-grape);
 }
 
-/* ------------------------------- */
-/* Grid                            */
-/* ------------------------------- */
+/* ===============================
+   GRID
+   =============================== */
 .course-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 	gap: 16px;
-	width: 100%;
+	width: 100%; /* take full width inside page */
 }
 
-/* ------------------------------- */
-/* Card                            */
-/* ------------------------------- */
+/* ===============================
+   CARD
+   =============================== */
 .course-card {
 	border: 1px solid var(--border);
 	border-radius: 14px;
@@ -115,22 +118,12 @@
 	flex-direction: column;
 	gap: 12px;
 	color: var(--text);
+	overflow: hidden; /* ensure children never spill */
 }
 
+/* Header (no thumbnail) */
 .course-card__header {
-	display: flex;
-	gap: 12px;
-	align-items: flex-start;
-}
-
-.course-card__thumb {
-	width: 120px;
-	height: 80px;
-	object-fit: cover;
-	border-radius: 10px;
-	background: var(--surface-muted);
-	border: 1px solid var(--border);
-	flex-shrink: 0;
+	display: block; /* simpler flow without image */
 }
 
 .course-card__title {
@@ -143,6 +136,7 @@
 	margin-top: 6px;
 }
 
+/* Badges & tags */
 .badge {
 	display: inline-block;
 	padding: 2px 8px;
@@ -177,6 +171,7 @@
 	border: 1px solid var(--border);
 }
 
+/* Sections */
 .course-card__section {
 	border-top: 1px solid var(--border);
 	padding-top: 8px;
@@ -185,13 +180,14 @@
 	cursor: pointer;
 	font-weight: 600;
 	color: var(--accent);
+	margin-bottom: 8px; /* breathing room below summary */
 }
 .course-card__desc {
 	color: var(--text);
 	line-height: 1.6;
 }
 
-/* Links/list */
+/* Lists/Links */
 .course-card__list {
 	list-style: disc;
 	padding-left: 20px;
@@ -206,55 +202,78 @@
 	border-bottom-color: var(--accent);
 }
 
-/* Video embed */
-.course-card__videos {
+/* ===============================
+   VIDEO BUTTONS (no iframe)
+   =============================== */
+
+/* Grid never exceeds its container width */
+.course-card__videos.course-card__videos--buttons {
 	display: grid;
-	grid-template-columns: 1fr;
+	grid-template-columns: 1fr; /* single column by default */
 	gap: 12px;
+	width: 100%;
 }
+
+/* On wider cards, show two columns but keep items contained */
 @media (min-width: 720px) {
-	.course-card__videos {
-		grid-template-columns: repeat(2, 1fr);
+	.course-card__videos.course-card__videos--buttons {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
-.video-container {
-	position: relative;
-	padding-bottom: 56.25%;
-	height: 0;
-	background: var(--surface-muted);
+
+/* Each video item fits the card width and never overflows */
+.course-card__video-item {
+	width: 100%;
+	box-sizing: border-box;
+	background: var(--surface);
 	border: 1px solid var(--border);
 	border-radius: 12px;
-	overflow: hidden;
-}
-.video-container iframe {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	border: none;
-	border-radius: 12px;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 8px;
+	overflow: hidden; /* avoid visual spill over rounding */
 }
 
-/* Fallback video link button */
-.video-fallback-link {
-	display: inline-block;
-	padding: 10px 12px;
-	background: var(--accent-strong);
-	color: var(--parchment);
-	border-radius: 10px;
-	text-decoration: none;
-	border: 1px solid var(--accent-strong);
+.course-card__video-title {
+	color: var(--accent-strong);
+	font-weight: 600;
 }
-.video-fallback-link:hover {
+
+/* Watch on YouTube button */
+.video-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: var(--accent-strong); /* space indigo */
+	color: var(--parchment);
+	border: 1px solid var(--accent-strong);
+	text-decoration: none;
+	font-weight: 600;
+	transition: box-shadow 150ms ease, transform 120ms ease, background 120ms ease;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.video-button:hover {
 	background: var(--dusty-grape);
 	border-color: var(--dusty-grape);
+	box-shadow: 0 6px 14px rgba(34, 34, 59, 0.12);
 }
 
-/* ------------------------------- */
-/* Responsive: Tablets & Mobile    */
-/* ------------------------------- */
+.video-button:active {
+	transform: translateY(1px);
+}
 
-/* Tablets (≥768px and <1024px) */
+/* ===============================
+   RESPONSIVE: TABLETS & MOBILE
+   =============================== */
+
+/* Tablets (≤1024px) */
 @media (max-width: 1024px) {
 	.course-page {
 		max-width: 900px;
@@ -275,11 +294,6 @@
 	.course-card {
 		border-radius: 14px;
 		padding: 14px;
-	}
-
-	.course-card__thumb {
-		width: 110px;
-		height: 74px;
 	}
 }
 
@@ -317,40 +331,24 @@
 		gap: 12px;
 	}
 
-	.course-card__header {
-		flex-direction: column; /* stack image above meta */
-		align-items: stretch;
-	}
-
-	.course-card__thumb {
-		width: 100%;
-		height: auto; /* keep aspect ratio */
-		aspect-ratio: 3 / 2; /* approx 480x320 feel */
-		border-radius: 12px;
-	}
-
-	.course-card__title {
-		font-size: 1.2rem;
-		margin-top: 8px;
-	}
-
-	.badge {
-		font-size: 0.78rem;
-		padding: 3px 8px;
-		margin-right: 6px;
-	}
-
 	.course-card {
 		padding: 12px;
 		border-radius: 12px;
 	}
 
 	/* Video grid remains single column on mobile */
-	.course-card__videos {
+	.course-card__videos.course-card__videos--buttons {
 		grid-template-columns: 1fr;
 	}
 
-	.video-container {
-		border-radius: 10px;
+	.video-button {
+		width: 100%; /* full-width button for touch */
+	}
+}
+
+/* Optional: reduced motion users */
+@media (prefers-reduced-motion: reduce) {
+	.video-button {
+		transition: none;
 	}
 }
