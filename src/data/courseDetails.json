@@ -1,0 +1,41 @@
+[
+	{
+		"id": "react-basics",
+		"title": "React Basics",
+		"level": "Beginner",
+		"duration": "3h 20m",
+		"tags": ["react", "javascript", "frontend"],
+		"thumbnail": "/images/react-basics.png",
+		"description": "Learn the fundamentals of React: components, JSX, props, and state.",
+		"videos": [
+			{
+				"title": "Intro to React",
+				"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA"
+			},
+			{ "title": "JSX & Components", "url": "https://youtu.be/MhkGQAoc7bc" }
+		],
+		"docs": [
+			{ "title": "Course Slides (PDF)", "url": "/docs/react-basics-slides.pdf" },
+			{ "title": "Cheatsheet", "url": "https://react.dev/learn" }
+		],
+		"links": [
+			{ "label": "Official React Docs", "url": "https://react.dev/" },
+			{
+				"label": "MDN: JSX",
+				"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/JSX"
+			}
+		]
+	},
+	{
+		"id": "node-api",
+		"title": "Node.js APIs",
+		"level": "Intermediate",
+		"duration": "4h",
+		"tags": ["node", "api", "backend"],
+		"thumbnail": "/images/node-api.png",
+		"description": "Build and test REST APIs with Node.js, Express, and Postman.",
+		"videos": [],
+		"docs": [{ "title": "API Design Guide", "url": "/docs/api-design.pdf" }],
+		"links": [{ "label": "Express Docs", "url": "https://expressjs.com/" }]
+	}
+]
