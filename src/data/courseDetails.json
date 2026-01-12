@@ -2,6 +2,10 @@
 	{
 		"id": "react-basics",
 		"title": "React Basics",
+		"author": "365 Careers",
+		"rating": 4.6,
+		"learners": 14486,
+		"thumbnail": "/images/react-basics.png",
 		"level": "Beginner",
 		"duration": "3h 20m",
 		"tags": ["react", "javascript", "frontend"],
@@ -13,23 +17,32 @@
 			},
 			{ "title": "JSX & Components", "url": "https://youtu.be/MhkGQAoc7bc" }
 		],
-		"docs": [{ "title": "Slides", "url": "/docs/react-basics-slides.pdf" }],
+		"docs": [{ "title": "Slides", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "React Docs", "url": "https://react.dev" }]
 	},
 	{
 		"id": "node-api",
 		"title": "Node.js APIs",
+		"author": "KRISHAI Technologies",
+		"rating": 4.5,
+		"learners": 9271,
+		"thumbnail": "/images/node-api.png",
 		"level": "Intermediate",
 		"duration": "4h",
 		"tags": ["node", "api", "backend"],
 		"description": "Build and test REST APIs with Node.js, Express, and Postman.",
 		"videos": [],
-		"docs": [{ "title": "API Design Guide", "url": "/docs/api-design.pdf" }],
+		"docs": [{ "title": "API Design Guide", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Express Docs", "url": "https://expressjs.com/" }]
 	},
+
 	{
 		"id": "typescript-essentials",
 		"title": "TypeScript Essentials",
+		"author": "Code Academy",
+		"rating": 4.7,
+		"learners": 18340,
+		"thumbnail": "/images/typescript-essentials.png",
 		"level": "Beginner",
 		"duration": "3h",
 		"tags": ["typescript", "javascript", "frontend", "backend"],
@@ -40,9 +53,7 @@
 				"url": "https://www.youtube.com/watch?v=BCg4U1FzODs"
 			}
 		],
-		"docs": [
-			{ "title": "TypeScript Cheatsheet", "url": "/docs/typescript-cheatsheet.pdf" }
-		],
+		"docs": [{ "title": "TypeScript Cheatsheet", "url": "/docs/dummy.pdf" }],
 		"links": [
 			{
 				"label": "TypeScript Handbook",
@@ -53,6 +64,10 @@
 	{
 		"id": "redux-toolkit",
 		"title": "Redux Toolkit & Modern State Management",
+		"author": "Code Academy",
+		"rating": 4.5,
+		"learners": 12650,
+		"thumbnail": "/images/redux-toolkit.png",
 		"level": "Intermediate",
 		"duration": "2h 30m",
 		"tags": ["redux", "react", "state-management"],
@@ -63,7 +78,7 @@
 				"url": "https://www.youtube.com/watch?v=9zySeP5vH9c"
 			}
 		],
-		"docs": [{ "title": "Redux Style Guide", "url": "/docs/redux-style-guide.pdf" }],
+		"docs": [{ "title": "Redux Style Guide", "url": "/docs/dummy.pdf" }],
 		"links": [
 			{ "label": "Redux Toolkit Docs", "url": "https://redux-toolkit.js.org/" }
 		]
@@ -71,6 +86,10 @@
 	{
 		"id": "nextjs-fundamentals",
 		"title": "Next.js Fundamentals",
+		"author": "365 Careers",
+		"rating": 4.6,
+		"learners": 15420,
+		"thumbnail": "/images/nextjs-fundamentals.png",
 		"level": "Intermediate",
 		"duration": "3h 15m",
 		"tags": ["nextjs", "react", "ssr", "frontend"],
@@ -81,12 +100,16 @@
 				"url": "https://www.youtube.com/watch?v=vwqS0fZ2xG0"
 			}
 		],
-		"docs": [{ "title": "Next.js Notes", "url": "/docs/nextjs-notes.pdf" }],
+		"docs": [{ "title": "Next.js Notes", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Next.js Docs", "url": "https://nextjs.org/docs" }]
 	},
 	{
 		"id": "express-auth",
 		"title": "Express Authentication & Authorization",
+		"author": "Code Academy",
+		"rating": 4.4,
+		"learners": 10987,
+		"thumbnail": "/images/express-auth.png",
 		"level": "Intermediate",
 		"duration": "2h 45m",
 		"tags": ["express", "auth", "jwt", "backend"],
@@ -97,7 +120,7 @@
 				"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4"
 			}
 		],
-		"docs": [{ "title": "Auth Checklist", "url": "/docs/auth-checklist.pdf" }],
+		"docs": [{ "title": "Auth Checklist", "url": "/docs/dummy.pdf" }],
 		"links": [
 			{ "label": "OWASP Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/" }
 		]
@@ -105,6 +128,10 @@
 	{
 		"id": "mongodb-basics",
 		"title": "MongoDB Basics",
+		"author": "KRISHAI Technologies",
+		"rating": 4.5,
+		"learners": 13452,
+		"thumbnail": "/images/mongodb-basics.png",
 		"level": "Beginner",
 		"duration": "2h",
 		"tags": ["mongodb", "database", "backend"],
@@ -115,12 +142,16 @@
 				"url": "https://www.youtube.com/watch?v=ofme2o29ngU"
 			}
 		],
-		"docs": [{ "title": "MongoDB Notes", "url": "/docs/mongodb-notes.pdf" }],
+		"docs": [{ "title": "MongoDB Notes", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "MongoDB Docs", "url": "https://www.mongodb.com/docs/" }]
 	},
 	{
 		"id": "postgres-sql",
 		"title": "PostgreSQL & SQL Fundamentals",
+		"author": "365 Careers",
+		"rating": 4.6,
+		"learners": 15873,
+		"thumbnail": "/images/postgres-sql.png",
 		"level": "Beginner",
 		"duration": "3h",
 		"tags": ["postgresql", "sql", "database"],
@@ -131,7 +162,7 @@
 				"url": "https://www.youtube.com/watch?v=2GVaH1bYHeY"
 			}
 		],
-		"docs": [{ "title": "SQL Cheatsheet", "url": "/docs/sql-cheatsheet.pdf" }],
+		"docs": [{ "title": "SQL Cheatsheet", "url": "/docs/dummy.pdf" }],
 		"links": [
 			{ "label": "PostgreSQL Docs", "url": "https://www.postgresql.org/docs/" }
 		]
@@ -139,6 +170,10 @@
 	{
 		"id": "docker-basics",
 		"title": "Docker Basics",
+		"author": "KRISHAI Technologies",
+		"rating": 4.5,
+		"learners": 12014,
+		"thumbnail": "/images/docker-basics.png",
 		"level": "Beginner",
 		"duration": "2h 30m",
 		"tags": ["docker", "devops", "containers"],
@@ -149,12 +184,16 @@
 				"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8"
 			}
 		],
-		"docs": [{ "title": "Docker Commands", "url": "/docs/docker-commands.pdf" }],
+		"docs": [{ "title": "Docker Commands", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Docker Docs", "url": "https://docs.docker.com/" }]
 	},
 	{
 		"id": "kubernetes-intro",
 		"title": "Kubernetes Intro",
+		"author": "Code Academy",
+		"rating": 4.4,
+		"learners": 9875,
+		"thumbnail": "/images/kubernetes-intro.png",
 		"level": "Intermediate",
 		"duration": "3h",
 		"tags": ["kubernetes", "devops", "containers", "orchestration"],
@@ -165,7 +204,7 @@
 				"url": "https://www.youtube.com/watch?v=X48VuDVv0do"
 			}
 		],
-		"docs": [{ "title": "K8s Quickstart", "url": "/docs/k8s-quickstart.pdf" }],
+		"docs": [{ "title": "K8s Quickstart", "url": "/docs/dummy.pdf" }],
 		"links": [
 			{ "label": "Kubernetes Docs", "url": "https://kubernetes.io/docs/home/" }
 		]
@@ -173,6 +212,10 @@
 	{
 		"id": "git-github-workflow",
 		"title": "Git & GitHub Workflow",
+		"author": "365 Careers",
+		"rating": 4.6,
+		"learners": 19270,
+		"thumbnail": "/images/git-github-workflow.png",
 		"level": "Beginner",
 		"duration": "2h",
 		"tags": ["git", "github", "version-control", "workflow"],
@@ -183,12 +226,16 @@
 				"url": "https://www.youtube.com/watch?v=RGOj5yH7evk"
 			}
 		],
-		"docs": [{ "title": "Git Commands", "url": "/docs/git-commands.pdf" }],
+		"docs": [{ "title": "Git Commands", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Pro Git Book", "url": "https://git-scm.com/book/en/v2" }]
 	},
 	{
 		"id": "jest-testing",
 		"title": "Testing React & Node with Jest",
+		"author": "Code Academy",
+		"rating": 4.5,
+		"learners": 11204,
+		"thumbnail": "/images/jest-testing.png",
 		"level": "Intermediate",
 		"duration": "2h 15m",
 		"tags": ["testing", "jest", "react", "node"],
@@ -199,7 +246,7 @@
 				"url": "https://www.youtube.com/watch?v=7r4xVDI2vho"
 			}
 		],
-		"docs": [{ "title": "Testing Checklist", "url": "/docs/testing-checklist.pdf" }],
+		"docs": [{ "title": "Testing Checklist", "url": "/docs/dummy.pdf" }],
 		"links": [
 			{ "label": "Jest Docs", "url": "https://jestjs.io/docs/getting-started" }
 		]
@@ -207,6 +254,10 @@
 	{
 		"id": "prisma-orm",
 		"title": "Prisma ORM with Node.js",
+		"author": "KRISHAI Technologies",
+		"rating": 4.4,
+		"learners": 8742,
+		"thumbnail": "/images/prisma-orm.png",
 		"level": "Intermediate",
 		"duration": "2h",
 		"tags": ["prisma", "node", "orm", "database"],
@@ -217,7 +268,94 @@
 				"url": "https://www.youtube.com/watch?v=RebA5J-rlwg"
 			}
 		],
-		"docs": [{ "title": "Prisma Notes", "url": "/docs/prisma-notes.pdf" }],
+		"docs": [{ "title": "Prisma Notes", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Prisma Docs", "url": "https://www.prisma.io/docs" }]
+	},
+	{
+		"id": "playwright-e2e",
+		"title": "End-to-End Testing with Playwright",
+		"author": "365 Careers",
+		"rating": 4.5,
+		"learners": 10231,
+		"thumbnail": "/images/playwright-e2e.png",
+		"level": "Intermediate",
+		"duration": "2h 20m",
+		"tags": ["testing", "playwright", "e2e", "automation"],
+		"description": "Automate browsers with Playwright: parallel runs, fixtures, traces, and CI.",
+		"videos": [
+			{
+				"title": "Playwright Tutorial",
+				"url": "https://www.youtube.com/watch?v=Kx_3bM5YkGQ"
+			}
+		],
+		"docs": [{ "title": "Playwright Tips", "url": "/docs/dummy.pdf" }],
+		"links": [
+			{ "label": "Playwright Docs", "url": "https://playwright.dev/docs/intro" }
+		]
+	},
+	{
+		"id": "graphql-basics",
+		"title": "GraphQL Basics",
+		"author": "Code Academy",
+		"rating": 4.3,
+		"learners": 7654,
+		"thumbnail": "/images/graphql-basics.png",
+		"level": "Beginner",
+		"duration": "2h",
+		"tags": ["graphql", "api", "frontend", "backend"],
+		"description": "Define schemas, write resolvers, and query GraphQL from clients with best practices.",
+		"videos": [
+			{
+				"title": "GraphQL Crash Course",
+				"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q"
+			}
+		],
+		"docs": [{ "title": "GraphQL Notes", "url": "/docs/dummy.pdf" }],
+		"links": [{ "label": "GraphQL Docs", "url": "https://graphql.org/learn/" }]
+	},
+	{
+		"id": "react-native-intro",
+		"title": "React Native Intro",
+		"author": "KRISHAI Technologies",
+		"rating": 4.4,
+		"learners": 8421,
+		"thumbnail": "/images/react-native-intro.png",
+		"level": "Beginner",
+		"duration": "2h 10m",
+		"tags": ["react-native", "mobile", "frontend"],
+		"description": "Build native mobile apps with React Native: components, navigation, and APIs.",
+		"videos": [
+			{
+				"title": "React Native Tutorial",
+				"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc"
+			}
+		],
+		"docs": [{ "title": "RN Quickstart", "url": "/docs/dummy.pdf" }],
+		"links": [
+			{
+				"label": "React Native Docs",
+				"url": "https://reactnative.dev/docs/getting-started"
+			}
+		]
+	},
+	{
+		"id": "python-automation",
+		"title": "Python Automation Basics",
+		"author": "365 Careers",
+		"rating": 4.6,
+		"learners": 21034,
+		"thumbnail": "/images/python-automation.png",
+		"level": "Beginner",
+		"duration": "3h",
+		"tags": ["python", "automation", "backend"],
+		"description": "Automate tasks with Python: files, APIs, schedulers, and simple web scraping.",
+		"videos": [
+			{
+				"title": "Python Automation",
+				"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk"
+			}
+		],
+		"docs": [{ "title": "Python Cheatsheet", "url": "/docs/dummy.pdf" }],
+		"links": [{ "label": "Python Docs", "url": "https://docs.python.org/3/" }]
 	}
 ]

@@ -1,11 +1,14 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import CoursePage from './pages/CoursePage';
+import CourseDetails from './components/CourseDetails';
 
-function App() {
+export default function App() {
 	return (
-		<div>
-			<CoursePage />
-		</div>
+		<BrowserRouter>
+			<Routes>
+				<Route path="/" element={<CoursePage />} />
+				<Route path="/courses/:id" element={<CourseDetails />} />
+			</Routes>
+		</BrowserRouter>
 	);
 }
-
-export default App;
