@@ -40,3 +40,16 @@
 .read-the-docs {
   color: #888;
 }
+/*
+html, body {
+  height: 100%;           /* Ensure body fills viewport */
+  /* margin: 0;              /* Remove default margin */
+  /* padding: 0;
+} */ */
+
+/* body {
+  background: linear-gradient(180deg, #f2e9e4 0%, rgba(201,173,167,0.28) 100%),
+              linear-gradient(135deg, rgba(74,78,105,0.20) 0%, rgba(34,34,59,0.08) 60%, transparent 100%);
+  background-blend-mode: overlay, normal;
+  font-family: 'Arial', sans-serif; /* or your preferred font */
+/* } */ */
