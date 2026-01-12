@@ -41,9 +41,9 @@ const LoginPage = ({ data, setData, errors, status, onSubmit, onSwitchToRegister
 
         {/* Password with show/hide */}
         <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <label className="form-label mb-0">Password</label>
-            <div className="form-check form-switch">
+          {/* <div className="d-flex justify-content-between align-items-center"> */}
+            <label className="form-label ">Password</label>
+            {/* <div className="form-check form-switch">
               <input
                 className="form-check-input"
                 type="checkbox"
@@ -54,8 +54,8 @@ const LoginPage = ({ data, setData, errors, status, onSubmit, onSwitchToRegister
               <label className="form-check-label" htmlFor="loginShowPassword">
                 Show
               </label>
-            </div>
-          </div>
+            </div> */}
+          {/* </div> */}
           <input
             type={showPassword ? 'text' : 'password'}
             className={`form-control soft-input ${errors.password ? 'is-invalid' : ''}`}

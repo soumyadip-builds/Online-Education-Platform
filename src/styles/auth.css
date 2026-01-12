@@ -54,7 +54,7 @@ body {
 }
 
 /* Card container spacing */
-.auth-card { max-width: 1000px; }
+.auth-card { max-width: 600px; }
 
 /* Toggle pill */
 .toggle-pill {
@@ -256,3 +256,86 @@ body {
 @media (max-width: 576px) {
   .pill-btn { padding: 8px 16px; }
 }
+
+
+/* ===========================
+   Custom styled radios (EdStream palette)
+   =========================== */
+.occ-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* pushes one to left, one to right */
+  gap: 1rem;
+  background: linear-gradient(135deg, var(--parchment), var(--almond-silk));
+  border: 1px solid rgba(201, 173, 167, 0.6);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+/* Each radio group (input + label) */
+.occ-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Hide default radio (but keep it accessible and focusable) */
+.occ-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border-radius: 50%;
+  outline: none;
+  border: 2px solid var(--dusty-grape);
+  background: var(--parchment);
+  display: inline-block;
+  position: relative;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
+}
+
+/* Checked state: gradient ring + inner dot */
+.occ-option input[type="radio"]:checked {
+  border-color: var(--space-indigo);
+  box-shadow: 0 0 0 4px rgba(74, 78, 105, 0.18);
+  background: linear-gradient(135deg, var(--dusty-grape), var(--lilac-ash));
+}
+
+/* Inner dot via pseudo-element */
+.occ-option input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 4px;           /* creates inner dot */
+  border-radius: 50%;
+  background: var(--parchment);
+}
+
+/* Hover / Focus */
+.occ-option input[type="radio"]:hover {
+  transform: translateY(-1px);
+  border-color: var(--lilac-ash);
+}
+.occ-option input[type="radio"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(34, 34, 59, 0.25);
+  border-color: var(--space-indigo);
+}
+
+/* Label styling to match palette */
+.occ-option .occ-label {
+  font-weight: 600;
+  color: var(--space-indigo);
+  transition: color 160ms ease, transform 160ms ease;
+}
+.occ-option:hover .occ-label {
+  color: var(--dusty-grape);
+  transform: translateY(-1px);
+}
+
+/* Validation message spacing */
+.occ-error {
+  margin-top: 6px;
+}
+
