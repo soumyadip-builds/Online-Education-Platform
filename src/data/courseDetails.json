@@ -5,7 +5,7 @@
 		"author": "365 Careers",
 		"rating": 4.6,
 		"learners": 14486,
-		"thumbnail": "/images/react-basics.png",
+		"thumbnail": "/images/react-basics.jpg",
 		"level": "Beginner",
 		"duration": "3h 20m",
 		"tags": ["react", "javascript", "frontend"],
@@ -18,31 +18,16 @@
 			{ "title": "JSX & Components", "url": "https://youtu.be/MhkGQAoc7bc" }
 		],
 		"docs": [{ "title": "Slides", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "React Docs", "url": "https://react.dev" }]
+		"links": [{ "label": "React Docs", "url": "https://react.dev" }],
+		"isBestseller": true
 	},
-	{
-		"id": "node-api",
-		"title": "Node.js APIs",
-		"author": "KRISHAI Technologies",
-		"rating": 4.5,
-		"learners": 9271,
-		"thumbnail": "/images/node-api.png",
-		"level": "Intermediate",
-		"duration": "4h",
-		"tags": ["node", "api", "backend"],
-		"description": "Build and test REST APIs with Node.js, Express, and Postman.",
-		"videos": [],
-		"docs": [{ "title": "API Design Guide", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Express Docs", "url": "https://expressjs.com/" }]
-	},
-
 	{
 		"id": "typescript-essentials",
 		"title": "TypeScript Essentials",
 		"author": "Code Academy",
 		"rating": 4.7,
 		"learners": 18340,
-		"thumbnail": "/images/typescript-essentials.png",
+		"thumbnail": "/images/typescript-essentials.jpg",
 		"level": "Beginner",
 		"duration": "3h",
 		"tags": ["typescript", "javascript", "frontend", "backend"],
@@ -59,7 +44,8 @@
 				"label": "TypeScript Handbook",
 				"url": "https://www.typescriptlang.org/docs/"
 			}
-		]
+		],
+		"isBestseller": true
 	},
 	{
 		"id": "redux-toolkit",
@@ -67,7 +53,7 @@
 		"author": "Code Academy",
 		"rating": 4.5,
 		"learners": 12650,
-		"thumbnail": "/images/redux-toolkit.png",
+		"thumbnail": "/images/redux-toolkit.jpg",
 		"level": "Intermediate",
 		"duration": "2h 30m",
 		"tags": ["redux", "react", "state-management"],
@@ -84,32 +70,12 @@
 		]
 	},
 	{
-		"id": "nextjs-fundamentals",
-		"title": "Next.js Fundamentals",
-		"author": "365 Careers",
-		"rating": 4.6,
-		"learners": 15420,
-		"thumbnail": "/images/nextjs-fundamentals.png",
-		"level": "Intermediate",
-		"duration": "3h 15m",
-		"tags": ["nextjs", "react", "ssr", "frontend"],
-		"description": "Learn routing, data fetching, and rendering strategies (SSR/SSG/ISR) with Next.js.",
-		"videos": [
-			{
-				"title": "Next.js Crash Course",
-				"url": "https://www.youtube.com/watch?v=vwqS0fZ2xG0"
-			}
-		],
-		"docs": [{ "title": "Next.js Notes", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Next.js Docs", "url": "https://nextjs.org/docs" }]
-	},
-	{
 		"id": "express-auth",
 		"title": "Express Authentication & Authorization",
 		"author": "Code Academy",
 		"rating": 4.4,
 		"learners": 10987,
-		"thumbnail": "/images/express-auth.png",
+		"thumbnail": "/images/express-auth.jpg",
 		"level": "Intermediate",
 		"duration": "2h 45m",
 		"tags": ["express", "auth", "jwt", "backend"],
@@ -131,7 +97,7 @@
 		"author": "KRISHAI Technologies",
 		"rating": 4.5,
 		"learners": 13452,
-		"thumbnail": "/images/mongodb-basics.png",
+		"thumbnail": "/images/mongodb-basics.jpg",
 		"level": "Beginner",
 		"duration": "2h",
 		"tags": ["mongodb", "database", "backend"],
@@ -146,34 +112,12 @@
 		"links": [{ "label": "MongoDB Docs", "url": "https://www.mongodb.com/docs/" }]
 	},
 	{
-		"id": "postgres-sql",
-		"title": "PostgreSQL & SQL Fundamentals",
-		"author": "365 Careers",
-		"rating": 4.6,
-		"learners": 15873,
-		"thumbnail": "/images/postgres-sql.png",
-		"level": "Beginner",
-		"duration": "3h",
-		"tags": ["postgresql", "sql", "database"],
-		"description": "Master SQL basics, joins, transactions, indexes, and PostgreSQL tooling.",
-		"videos": [
-			{
-				"title": "PostgreSQL Tutorial",
-				"url": "https://www.youtube.com/watch?v=2GVaH1bYHeY"
-			}
-		],
-		"docs": [{ "title": "SQL Cheatsheet", "url": "/docs/dummy.pdf" }],
-		"links": [
-			{ "label": "PostgreSQL Docs", "url": "https://www.postgresql.org/docs/" }
-		]
-	},
-	{
 		"id": "docker-basics",
 		"title": "Docker Basics",
 		"author": "KRISHAI Technologies",
 		"rating": 4.5,
 		"learners": 12014,
-		"thumbnail": "/images/docker-basics.png",
+		"thumbnail": "/images/docker-basics.jpg",
 		"level": "Beginner",
 		"duration": "2h 30m",
 		"tags": ["docker", "devops", "containers"],
@@ -193,7 +137,7 @@
 		"author": "Code Academy",
 		"rating": 4.4,
 		"learners": 9875,
-		"thumbnail": "/images/kubernetes-intro.png",
+		"thumbnail": "/images/kubernetes-intro.jpg",
 		"level": "Intermediate",
 		"duration": "3h",
 		"tags": ["kubernetes", "devops", "containers", "orchestration"],
@@ -215,7 +159,7 @@
 		"author": "365 Careers",
 		"rating": 4.6,
 		"learners": 19270,
-		"thumbnail": "/images/git-github-workflow.png",
+		"thumbnail": "/images/git-github-workflow.jpg",
 		"level": "Beginner",
 		"duration": "2h",
 		"tags": ["git", "github", "version-control", "workflow"],
@@ -227,7 +171,8 @@
 			}
 		],
 		"docs": [{ "title": "Git Commands", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Pro Git Book", "url": "https://git-scm.com/book/en/v2" }]
+		"links": [{ "label": "Pro Git Book", "url": "https://git-scm.com/book/en/v2" }],
+		"isBestseller": true
 	},
 	{
 		"id": "jest-testing",
@@ -235,7 +180,7 @@
 		"author": "Code Academy",
 		"rating": 4.5,
 		"learners": 11204,
-		"thumbnail": "/images/jest-testing.png",
+		"thumbnail": "/images/jest-testing.jpg",
 		"level": "Intermediate",
 		"duration": "2h 15m",
 		"tags": ["testing", "jest", "react", "node"],
@@ -257,7 +202,7 @@
 		"author": "KRISHAI Technologies",
 		"rating": 4.4,
 		"learners": 8742,
-		"thumbnail": "/images/prisma-orm.png",
+		"thumbnail": "/images/prisma-orm.jpg",
 		"level": "Intermediate",
 		"duration": "2h",
 		"tags": ["prisma", "node", "orm", "database"],
@@ -271,35 +216,14 @@
 		"docs": [{ "title": "Prisma Notes", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Prisma Docs", "url": "https://www.prisma.io/docs" }]
 	},
-	{
-		"id": "playwright-e2e",
-		"title": "End-to-End Testing with Playwright",
-		"author": "365 Careers",
-		"rating": 4.5,
-		"learners": 10231,
-		"thumbnail": "/images/playwright-e2e.png",
-		"level": "Intermediate",
-		"duration": "2h 20m",
-		"tags": ["testing", "playwright", "e2e", "automation"],
-		"description": "Automate browsers with Playwright: parallel runs, fixtures, traces, and CI.",
-		"videos": [
-			{
-				"title": "Playwright Tutorial",
-				"url": "https://www.youtube.com/watch?v=Kx_3bM5YkGQ"
-			}
-		],
-		"docs": [{ "title": "Playwright Tips", "url": "/docs/dummy.pdf" }],
-		"links": [
-			{ "label": "Playwright Docs", "url": "https://playwright.dev/docs/intro" }
-		]
-	},
+	
 	{
 		"id": "graphql-basics",
 		"title": "GraphQL Basics",
 		"author": "Code Academy",
 		"rating": 4.3,
 		"learners": 7654,
-		"thumbnail": "/images/graphql-basics.png",
+		"thumbnail": "/images/graphql-basics.jpg",
 		"level": "Beginner",
 		"duration": "2h",
 		"tags": ["graphql", "api", "frontend", "backend"],
@@ -319,7 +243,7 @@
 		"author": "KRISHAI Technologies",
 		"rating": 4.4,
 		"learners": 8421,
-		"thumbnail": "/images/react-native-intro.png",
+		"thumbnail": "/images/react-native-intro.jpg",
 		"level": "Beginner",
 		"duration": "2h 10m",
 		"tags": ["react-native", "mobile", "frontend"],
@@ -344,7 +268,7 @@
 		"author": "365 Careers",
 		"rating": 4.6,
 		"learners": 21034,
-		"thumbnail": "/images/python-automation.png",
+		"thumbnail": "/images/python-automation.jpg",
 		"level": "Beginner",
 		"duration": "3h",
 		"tags": ["python", "automation", "backend"],
@@ -356,6 +280,7 @@
 			}
 		],
 		"docs": [{ "title": "Python Cheatsheet", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Python Docs", "url": "https://docs.python.org/3/" }]
+		"links": [{ "label": "Python Docs", "url": "https://docs.python.org/3/" }],
+		"isBestseller": true
 	}
 ]

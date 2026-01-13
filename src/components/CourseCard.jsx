@@ -44,8 +44,8 @@ export default function CourseCard({ course }) {
 
 				{/* Bestseller badge */}
 				{isBestseller && (
-					<span className="badge badge--bestseller" aria-label="Bestseller">
-						Bestseller
+					<span className="my_badge badge--bestseller badge--inline">
+						Bestseller <i class="bi bi-award-fill"></i>
 					</span>
 				)}
 			</div>

@@ -89,8 +89,8 @@ export default function CourseDetails() {
 					<div className="course-details__hero-thumb">
 						<img src={thumbnail} alt={`${title} cover`} />
 						{isBestseller && (
-							<span className="badge badge--bestseller badge--hero">
-								Bestseller
+							<span className="my_badge badge--bestseller badge-hero">
+								Bestseller <i class="bi bi-award-fill"></i>
 							</span>
 						)}
 					</div>
@@ -99,9 +99,9 @@ export default function CourseDetails() {
 				<div className="course-details__hero-content">
 					<h1 className="course-details__title">
 						{title}
-						{!thumbnail && isBestseller && (
-							<span className="badge badge--bestseller badge--inline">
-								Bestseller
+						{isBestseller && (
+							<span className="my_badge badge--bestseller badge--inline">
+								Bestseller <i class="bi bi-award-fill"></i>
 							</span>
 						)}
 					</h1>
@@ -118,7 +118,7 @@ export default function CourseDetails() {
 
 					{!enrolled ? (
 						<button
-							className="btn btn--primary btn--xl"
+							className="mybtn mybtn--primary mybtn--xl"
 							onClick={handleEnroll}
 							aria-label={`Enroll in ${title}`}
 						>
