@@ -79,7 +79,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
   return (
     <form className="needs-validation" noValidate onSubmit={onSubmit}>
       <h2 className="section-title mb-3">Create Your Account</h2>
-      <p className="mb-3 text-muted">
+      <p className="mb-3 login-page-text">
         Join EdStream as an <strong>Instructor</strong> or a <strong>Learner</strong>.
       </p>
 
@@ -174,7 +174,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
             style={{ width: `${strength.percent}%` }}
           />
         </div>
-        <small className="text-muted">{strength.label}</small>
+        <small className="login-page-text"><strong>{strength.label}</strong></small>
       </div>
 
       {/* Confirm Password */}
