@@ -144,7 +144,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
           <label className="form-label">Password</label>
 
           {/* Show Password Toggle */}
-          <div className="form-check form-switch">
+          {/* <div className="form-check form-switch">
             <input
               className="form-check-input"
               type="checkbox"
@@ -155,7 +155,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
             <label className="form-check-label" htmlFor="regShowPasswords">
               Show
             </label>
-          </div>
+          </div> */}
         </div>
 
         <input
