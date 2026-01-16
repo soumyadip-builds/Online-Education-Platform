@@ -6,7 +6,7 @@ import Footer from './components/FooterComponent';
 
 // import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AuthPage from './pages/AuthPage';
-import NavbarComponent from './components/NavbarComponent';
+
 
 
 function App() {
@@ -14,7 +14,7 @@ function App() {
   return (
     <div>
       <NavbarComponent />
-      
+      <AuthPage />
       
       <Footer />
     </div>
