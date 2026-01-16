@@ -10,7 +10,6 @@ import {
   Image,
 } from 'react-bootstrap';
 import '../styles/EdNavbar.css';
-
 const NavbarComponent = () => {
   return (
     <Navbar expand="lg" className="ed-navbar">
@@ -23,7 +22,6 @@ const NavbarComponent = () => {
         />
         <span className="navbar-title">EdStream</span>
       </Navbar.Brand>
-
       {/* Explore Dropdown */}
       <Nav className="mx-3">
         <NavDropdown
@@ -45,7 +43,6 @@ const NavbarComponent = () => {
           </NavDropdown.Item>
         </NavDropdown>
       </Nav>
-
       {/* Search Box */}
       <Form className="d-flex mx-auto navbar-search">
         <FormControl
@@ -76,7 +73,6 @@ const NavbarComponent = () => {
           </NavDropdown.Item>
         </NavDropdown>
       </Nav>
-
       {/* Profile Avatar Dropdown */}
       <Nav>
         <NavDropdown

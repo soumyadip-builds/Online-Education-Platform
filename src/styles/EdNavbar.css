@@ -48,7 +48,7 @@
 .dropdown-item.active,
 .dropdown-item:active {
   background-color: #000000 !important; /* parchment background */
-  color: white !important;            /* dusty grape (blue tone) text */
+  color: white !important; /* dusty grape (blue tone) text */
 }
 
 .dropdown-item {
@@ -66,7 +66,6 @@
   flex-grow: 1;
   max-width: 400px;
 }
-
 .search-input {
   border-radius: 20px;
   padding: 8px 15px;
@@ -92,12 +91,10 @@
   color: var(--space-indigo);
   transition: transform 0.3s ease, background 0.3s ease;
 }
-
 .search-btn:hover {
   background: var(--almond-silk);
   transform: scale(1.1);
 }
-
 /* Profile Avatar */
 .profile-avatar {
   width: 40px;
@@ -105,7 +102,6 @@
   border: 2px solid var(--almond-silk);
   transition: transform 0.3s ease, border-color 0.3s ease;
 }
-
 .profile-avatar:hover {
   transform: scale(1.1);
   border-color: var(--parchment);
