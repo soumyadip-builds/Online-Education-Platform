@@ -1,5 +1,6 @@
 // src/components/Navbar.jsx
 import React from 'react';
+import edLogo from '../assets/edLogo.png';
 import {
   Navbar,
   Nav,
@@ -16,7 +17,7 @@ const NavbarComponent = () => {
       {/* Left Section: Logo + App Name */}
       <Navbar.Brand href="/" className="d-flex align-items-center">
         <img
-          src="/logo192.png" // Replace with actual logo path
+          src={edLogo} // Replace with actual logo path
           alt="EdStream Logo"
           className="navbar-logo"
         />

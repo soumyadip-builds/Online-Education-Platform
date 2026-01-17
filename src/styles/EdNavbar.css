@@ -23,7 +23,7 @@
 .navbar-logo {
   width: 40px;
   height: 40px;
-  margin-right: 10px;
+  margin-left: 10px;
   transition: transform 0.3s ease;
 }
 
