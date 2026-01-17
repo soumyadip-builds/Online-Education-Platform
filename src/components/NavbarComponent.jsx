@@ -1,6 +1,7 @@
 // src/components/Navbar.jsx
 import React from 'react';
 import edLogo from '../assets/edLogo.png';
+import userLogo from '../assets/userLogo.png';
 import {
   Navbar,
   Nav,
@@ -78,7 +79,7 @@ const NavbarComponent = () => {
       <Nav>
         <NavDropdown
           title={
-            <Image src="/avatar.png" roundedCircle className="profile-avatar" />
+            <Image src={userLogo} roundedCircle className="profile-avatar" />
           }
           id="profile-dropdown"
           align="end"
