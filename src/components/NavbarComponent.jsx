@@ -16,7 +16,7 @@ const NavbarComponent = () => {
       {/* Left Section: Logo + App Name */}
       <Navbar.Brand href="/" className="d-flex align-items-center">
         <img
-          src="/logo192.png" // Replace with actual logo path
+          src="/images/Logos/App_Logo.png" // Replace with actual logo path
           alt="EdStream Logo"
           className="navbar-logo"
         />

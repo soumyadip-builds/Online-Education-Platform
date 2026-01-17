@@ -36,6 +36,8 @@ import Pmi from "/images/certifications/PMI.png";
 import Acc1 from "/images/accelerators/Acc1.png";
 import Acc2 from "/images/accelerators/Acc3.png";
 import Acc3 from "/images/accelerators/Acc4.png";
+import NavbarComponent from "../components/NavbarComponent";
+import Footer from "../components/FooterComponent";
 
 
 const heroSlides = [
@@ -151,7 +153,9 @@ export default function Home() {
 
   return (
     <main className="home">
-      <div className="nav-spacer">{/* Navbar placeholder */}</div>
+      <div className="nav-spacer">{/* Navbar placeholder */}
+        <NavbarComponent/>
+      </div>
 
       {/* HERO SECTION */}
       <section className="hero" aria-roledescription="carousel">
@@ -379,7 +383,9 @@ export default function Home() {
       </section>
 
       {/* Footer placeholder */}
-      <div className="footer-spacer">{/* <Footer/> will be mounted here */}</div>
+      <div className="footer-spacer">{/* <Footer/> will be mounted here */}
+        <Footer/>
+      </div>
     </main>
   );
 }
