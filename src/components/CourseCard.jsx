@@ -41,20 +41,18 @@ export default function CourseCard({ course }) {
 				) : (
 					<div className="course-card__thumb--placeholder" />
 				)}
-
-				{/* Bestseller badge */}
-				{isBestseller && (
-					<span className="my_badge badge--bestseller badge--inline">
-						Bestseller <i class="bi bi-award-fill"></i>
-					</span>
-				)}
 			</div>
 
 			{/* Meta */}
 			<div className="course-card__compact-body">
 				<h3 className="course-card__compact-title">{title}</h3>
 				<p className="course-card__compact-author">{author}</p>
-
+				{/* Bestseller badge */}
+				{isBestseller && (
+					<span className="my_badge badge--bestseller badge-hero">
+						Bestseller <i class="bi bi-award-fill"></i>
+					</span>
+				)}
 				<div className="course-card__compact-stats">
 					<span
 						className="rating-chip"

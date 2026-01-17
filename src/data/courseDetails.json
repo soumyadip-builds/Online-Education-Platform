@@ -10,6 +10,24 @@
 		"duration": "3h 20m",
 		"tags": ["react", "javascript", "frontend"],
 		"description": "Learn the fundamentals of React: components, JSX, props, and state.",
+		"whatYouWillLearn": [
+			"Build React components and compose UIs with JSX",
+			"Manage data with props and component state",
+			"Handle events and controlled form inputs",
+			"Structure small apps and organize components"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 3.3,
+			"articles": 2,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Getting Started with React", "lectures": 5, "length": "25min" },
+			{ "title": "JSX, Props & State", "lectures": 8, "length": "54min" },
+			{ "title": "Events & Forms", "lectures": 6, "length": "41min" }
+		],
 		"videos": [
 			{
 				"title": "Intro to React",
@@ -32,6 +50,24 @@
 		"duration": "3h",
 		"tags": ["typescript", "javascript", "frontend", "backend"],
 		"description": "Get started with TypeScript: types, interfaces, generics, and tooling for safer JavaScript.",
+		"whatYouWillLearn": [
+			"Set up a TypeScript project and compiler options",
+			"Declare types, interfaces, and generics effectively",
+			"Use TypeScript with modern tooling and bundlers",
+			"Refactor JS codebases to TypeScript safely"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 3,
+			"articles": 2,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Type System Basics", "lectures": 6, "length": "42min" },
+			{ "title": "Interfaces & Generics", "lectures": 7, "length": "55min" },
+			{ "title": "Tooling & Integrations", "lectures": 5, "length": "36min" }
+		],
 		"videos": [
 			{
 				"title": "TypeScript Crash Course",
@@ -58,6 +94,24 @@
 		"duration": "2h 30m",
 		"tags": ["redux", "react", "state-management"],
 		"description": "Learn Redux Toolkit patterns: slices, RTK Query, and best practices for scalable state management.",
+		"whatYouWillLearn": [
+			"Create slices and reducers with Redux Toolkit",
+			"Normalize and structure scalable Redux stores",
+			"Use RTK Query for data fetching and caching",
+			"Apply testing and debugging best practices"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2.5,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Redux Toolkit Fundamentals", "lectures": 6, "length": "38min" },
+			{ "title": "RTK Query & Async Data", "lectures": 5, "length": "34min" },
+			{ "title": "Patterns & Best Practices", "lectures": 4, "length": "28min" }
+		],
 		"videos": [
 			{
 				"title": "Redux Toolkit Overview",
@@ -80,6 +134,24 @@
 		"duration": "2h 45m",
 		"tags": ["express", "auth", "jwt", "backend"],
 		"description": "Implement secure login flows with JWT, sessions, and role-based access control in Express.",
+		"whatYouWillLearn": [
+			"Implement JWT- and session-based authentication",
+			"Protect routes with role-based access control",
+			"Harden Express apps against common threats",
+			"Design secure login and password flows"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2.75,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Auth Fundamentals", "lectures": 5, "length": "32min" },
+			{ "title": "JWT & Sessions", "lectures": 6, "length": "41min" },
+			{ "title": "RBAC & Security", "lectures": 5, "length": "32min" }
+		],
 		"videos": [
 			{
 				"title": "JWT Auth with Express",
@@ -102,6 +174,23 @@
 		"duration": "2h",
 		"tags": ["mongodb", "database", "backend"],
 		"description": "Learn document modeling, CRUD operations, indexing, and aggregation in MongoDB.",
+		"whatYouWillLearn": [
+			"Model documents and collections effectively",
+			"Perform CRUD operations with drivers",
+			"Use indexes for query performance",
+			"Write aggregation pipelines for insights"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Data Modeling & CRUD", "lectures": 5, "length": "35min" },
+			{ "title": "Indexes & Aggregation", "lectures": 5, "length": "33min" }
+		],
 		"videos": [
 			{
 				"title": "MongoDB Crash Course",
@@ -122,6 +211,23 @@
 		"duration": "2h 30m",
 		"tags": ["docker", "devops", "containers"],
 		"description": "Build, tag, and run containers; write efficient Dockerfiles and manage images.",
+		"whatYouWillLearn": [
+			"Understand images, containers, and layers",
+			"Write efficient, secure Dockerfiles",
+			"Use volumes and networking for apps",
+			"Tag, push, and pull images from registries"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2.5,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Images & Containers", "lectures": 5, "length": "34min" },
+			{ "title": "Dockerfiles & Best Practices", "lectures": 6, "length": "41min" }
+		],
 		"videos": [
 			{
 				"title": "Docker Crash Course",
@@ -142,6 +248,23 @@
 		"duration": "3h",
 		"tags": ["kubernetes", "devops", "containers", "orchestration"],
 		"description": "Core K8s concepts: pods, deployments, services, and basic YAML configuration.",
+		"whatYouWillLearn": [
+			"Deploy workloads using pods and deployments",
+			"Expose services and understand networking",
+			"Work with manifests and K8s YAML",
+			"Operate clusters with basic kubectl commands"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 3,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Core Concepts", "lectures": 6, "length": "46min" },
+			{ "title": "Services & Networking", "lectures": 5, "length": "42min" }
+		],
 		"videos": [
 			{
 				"title": "Kubernetes Basics",
@@ -164,6 +287,23 @@
 		"duration": "2h",
 		"tags": ["git", "github", "version-control", "workflow"],
 		"description": "Branching strategies, pull requests, code reviews, and release tagging.",
+		"whatYouWillLearn": [
+			"Use branching and merging strategies effectively",
+			"Open pull requests and conduct code reviews",
+			"Resolve conflicts and maintain clean history",
+			"Version releases and tags with best practices"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Git Fundamentals", "lectures": 5, "length": "30min" },
+			{ "title": "GitHub Collaboration", "lectures": 6, "length": "38min" }
+		],
 		"videos": [
 			{
 				"title": "Git & GitHub Tutorial",
@@ -185,6 +325,23 @@
 		"duration": "2h 15m",
 		"tags": ["testing", "jest", "react", "node"],
 		"description": "Write unit and integration tests with Jest, React Testing Library, and supertest.",
+		"whatYouWillLearn": [
+			"Write unit tests with Jest and Mocks",
+			"Test React components with RTL",
+			"Test APIs with supertest",
+			"Measure coverage and debug failing tests"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2.25,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Jest Fundamentals", "lectures": 5, "length": "34min" },
+			{ "title": "React & API Testing", "lectures": 6, "length": "41min" }
+		],
 		"videos": [
 			{
 				"title": "Jest Crash Course",
@@ -207,6 +364,23 @@
 		"duration": "2h",
 		"tags": ["prisma", "node", "orm", "database"],
 		"description": "Model data with Prisma, run migrations, and build type-safe queries in Node.js.",
+		"whatYouWillLearn": [
+			"Define Prisma schema and relations",
+			"Run migrations and seed databases",
+			"Query data with the Prisma Client",
+			"Integrate Prisma in Node/Express apps"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Schema & Migrations", "lectures": 5, "length": "33min" },
+			{ "title": "Queries & Integrations", "lectures": 5, "length": "31min" }
+		],
 		"videos": [
 			{
 				"title": "Prisma Crash Course",
@@ -216,7 +390,6 @@
 		"docs": [{ "title": "Prisma Notes", "url": "/docs/dummy.pdf" }],
 		"links": [{ "label": "Prisma Docs", "url": "https://www.prisma.io/docs" }]
 	},
-	
 	{
 		"id": "graphql-basics",
 		"title": "GraphQL Basics",
@@ -228,6 +401,23 @@
 		"duration": "2h",
 		"tags": ["graphql", "api", "frontend", "backend"],
 		"description": "Define schemas, write resolvers, and query GraphQL from clients with best practices.",
+		"whatYouWillLearn": [
+			"Design GraphQL schemas and types",
+			"Implement resolvers for queries and mutations",
+			"Fetch data from clients safely and efficiently",
+			"Apply validation, pagination, and caching patterns"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Schema & Resolvers", "lectures": 5, "length": "31min" },
+			{ "title": "Client Queries & Mutations", "lectures": 5, "length": "33min" }
+		],
 		"videos": [
 			{
 				"title": "GraphQL Crash Course",
@@ -248,6 +438,23 @@
 		"duration": "2h 10m",
 		"tags": ["react-native", "mobile", "frontend"],
 		"description": "Build native mobile apps with React Native: components, navigation, and APIs.",
+		"whatYouWillLearn": [
+			"Build mobile UIs with core RN components",
+			"Navigate screens with modern routers",
+			"Access device APIs (camera, storage, network)",
+			"Optimize and debug React Native apps"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 2.17,
+			"articles": 1,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Core Components & Styling", "lectures": 5, "length": "34min" },
+			{ "title": "Navigation & APIs", "lectures": 6, "length": "41min" }
+		],
 		"videos": [
 			{
 				"title": "React Native Tutorial",
@@ -273,6 +480,23 @@
 		"duration": "3h",
 		"tags": ["python", "automation", "backend"],
 		"description": "Automate tasks with Python: files, APIs, schedulers, and simple web scraping.",
+		"whatYouWillLearn": [
+			"Automate filesystem and text processing tasks",
+			"Call APIs and handle JSON & errors",
+			"Schedule jobs and run CLI scripts",
+			"Scrape simple pages responsibly"
+		],
+		"includes": {
+			"hoursOnDemandVideo": 3,
+			"articles": 2,
+			"downloadableResources": 1,
+			"accessOnMobile": true,
+			"certificate": true
+		},
+		"sections": [
+			{ "title": "Files & CLI Automation", "lectures": 6, "length": "44min" },
+			{ "title": "APIs & Scheduling", "lectures": 6, "length": "46min" }
+		],
 		"videos": [
 			{
 				"title": "Python Automation",
