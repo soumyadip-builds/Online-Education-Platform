@@ -1,24 +1,66 @@
 // src/components/CoursePage.jsx
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import CourseCard from '../components/CourseCard';
-import coursesData from '../data/courseDetails.json'; // bundled import (recommended)
 import '../styles/course.css';
 
+/**
+ * Courses listing page
+ * - Fetches /data/courseDetails.json (public/data/)
+ * - Search by title/author
+ * - Toggle to filter bestsellers
+ * - Renders CourseCard for each course
+ */
 export default function CoursePage() {
-	const courses = Array.isArray(coursesData) ? coursesData : [];
+	const [courses, setCourses] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [loadErr, setLoadErr] = useState('');
+
 	const [query, setQuery] = useState('');
-	const [showBest, setShowBest] = useState(false); // <-- NEW: bestseller toggle
+	const [showBest, setShowBest] = useState(false);
+
+	useEffect(() => {
+		let alive = true;
+		(async () => {
+			try {
+				setLoading(true);
+				setLoadErr('');
+
+				// Fetch from public/data
+				const res = await fetch('/data/courseDetails.json');
+				if (!res.ok) {
+					throw new Error(`HTTP ${res.status} fetching courseDetails.json`);
+				}
+				const ct = res.headers.get('content-type') || '';
+				if (!ct.includes('application/json')) {
+					const text = await res.text();
+					throw new Error(
+						`Expected JSON but got '${ct}'. First bytes: ${text.slice(0, 80)}`,
+					);
+				}
+				const data = await res.json();
+				if (!Array.isArray(data))
+					throw new Error('courseDetails.json must be an array');
+
+				if (alive) setCourses(data);
+			} catch (e) {
+				if (alive) setLoadErr(e.message || 'Failed to load courses');
+			} finally {
+				if (alive) setLoading(false);
+			}
+		})();
+		return () => {
+			alive = false;
+		};
+	}, []);
 
 	const filtered = useMemo(() => {
 		const q = query.trim().toLowerCase();
 
-		// 1) Text filter (title/author), 2) Bestseller filter, 3) Sort by title
-		return courses
+		return (Array.isArray(courses) ? courses : [])
 			.filter((c) => {
-				const matchesText = q
-					? `${c.title ?? ''} ${c.author ?? ''}`.toLowerCase().includes(q)
-					: true;
-
+				const title = (c.title ?? '').toLowerCase();
+				const author = (c.author ?? '').toLowerCase();
+				const matchesText = q ? `${title} ${author}`.includes(q) : true;
 				const matchesBest = showBest ? c.isBestseller === true : true;
 				return matchesText && matchesBest;
 			})

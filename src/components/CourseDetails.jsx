@@ -1,7 +1,6 @@
 // src/components/CourseDetails.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import coursesData from '../data/courseDetails.json';
+import { useParams, Link } from 'react-router-dom';
 import '../styles/course.css';
 
 /** Prefix a path with app base (Vite BASE_URL or CRA PUBLIC_URL). */
@@ -15,21 +14,19 @@ function withBase(path) {
 	const b = base.endsWith('/') ? base : `${base}/`;
 	return path?.startsWith('/') ? `${b}${path.slice(1)}` : `${b}${path ?? ''}`;
 }
-
 /** Resolve a doc URL coming from JSON so it works in dev & prod. */
 function resolveDocUrl(raw) {
 	if (!raw || typeof raw !== 'string') return undefined;
 	if (/^https?:\/\//i.test(raw)) return raw; // absolute
 	if (raw.startsWith('/')) return withBase(raw); // root-relative
 	let normalized = raw
-		.replace(/^\.?\.\//, '')
-		.replace(/^\.?\.\//, '')
+		.replace(/^\.?\.?\//, '')
+		.replace(/^\.?\.?\//, '')
 		.replace(/^\.{1,2}\\/, '');
 	if (/^docs\//i.test(normalized)) normalized = `/${normalized}`;
 	if (!normalized.startsWith('/')) normalized = `/${normalized}`;
 	return withBase(normalized);
 }
-
 function Star({ filled }) {
 	return (
 		<svg
@@ -48,11 +45,97 @@ function Star({ filled }) {
 }
 
 export default function CourseDetails() {
+	// ✅ Ensure id is available before using it in effects
 	const { id } = useParams();
-	const course = (coursesData || []).find((c) => c.id === id);
 
-	if (!course) return <div className="course-details">Course not found.</div>;
+	// Fetch state
+	const [loading, setLoading] = useState(true);
+	const [loadErr, setLoadErr] = useState('');
+	const [course, setCourse] = useState(null);
 
+	// For resources panel
+	const [assignments, setAssignments] = useState([]);
+	const [quizzes, setQuizzes] = useState([]);
+
+	// Enrollment
+	const [enrolled, setEnrolled] = useState(false);
+	useEffect(() => {
+		const saved = localStorage.getItem(`enrolled:${id}`);
+		if (saved === 'true') setEnrolled(true);
+	}, [id]);
+	const handleEnroll = () => {
+		setEnrolled(true);
+		localStorage.setItem(`enrolled:${id}`, 'true');
+	};
+
+	// ✅ Fetch from public/data/
+	useEffect(() => {
+		let alive = true;
+		(async () => {
+			try {
+				setLoading(true);
+				setLoadErr('');
+
+				const [cRes, aRes, qRes] = await Promise.all([
+					fetch('/data/courseDetails.json'),
+					fetch('/data/assignmentData.json'),
+					fetch('/data/quizData.json'),
+				]);
+
+				if (!cRes.ok)
+					throw new Error(`HTTP ${cRes.status} fetching courseDetails.json`);
+				if (!aRes.ok)
+					throw new Error(`HTTP ${aRes.status} fetching assignmentData.json`);
+				if (!qRes.ok)
+					throw new Error(`HTTP ${qRes.status} fetching quizData.json`);
+
+				const [coursesJson, assignmentsJson, quizzesJson] = await Promise.all([
+					cRes.json(),
+					aRes.json(),
+					qRes.json(),
+				]);
+
+				const foundCourse =
+					(Array.isArray(coursesJson) ? coursesJson : []).find(
+						(c) => c.id === id,
+					) || null;
+				const aForCourse = (
+					Array.isArray(assignmentsJson) ? assignmentsJson : []
+				).filter((a) => a.courseId === id);
+				const qForCourse = (Array.isArray(quizzesJson) ? quizzesJson : []).filter(
+					(q) => q.courseId === id,
+				);
+
+				if (!alive) return;
+				setCourse(foundCourse);
+				setAssignments(aForCourse);
+				setQuizzes(qForCourse);
+				if (!foundCourse) setLoadErr('Course not found.');
+			} catch (e) {
+				if (!alive) return;
+				setLoadErr(e.message || 'Failed to load course.');
+			} finally {
+				if (alive) setLoading(false);
+			}
+		})();
+		return () => {
+			alive = false;
+		};
+	}, [id]);
+
+	// Loading / Error handling (so we don't bail out before fetch completes)
+	if (loading) {
+		return (
+			<div className="course-details">
+				<p>Loading course…</p>
+			</div>
+		);
+	}
+	if (loadErr || !course) {
+		return <div className="course-details">{loadErr || 'Course not found.'}</div>;
+	}
+
+	// Destructure only after course exists
 	const {
 		title,
 		author,
@@ -71,18 +154,6 @@ export default function CourseDetails() {
 		docs = [],
 		links = [],
 	} = course;
-
-	const [enrolled, setEnrolled] = useState(false);
-
-	useEffect(() => {
-		const saved = localStorage.getItem(`enrolled:${id}`);
-		if (saved === 'true') setEnrolled(true);
-	}, [id]);
-
-	const handleEnroll = () => {
-		setEnrolled(true);
-		localStorage.setItem(`enrolled:${id}`, 'true');
-	};
 
 	const stars = Math.round(Number(rating || 0));
 	const formattedLearners = new Intl.NumberFormat().format(learners || 0);
@@ -159,137 +230,96 @@ export default function CourseDetails() {
 						</div>
 					)}
 				</div>
+
+				{/* Right-side resources panel */}
 				<div className="resources">
 					{/* VIDEOS */}
 					{videos?.length > 0 && (
 						<section className="course-details__section">
 							{/* <h3 className="section-title">Videos ({videos.length})</h3> */}
 							<div className="video-grid">
-								{videos.map((v, i) => (
-									<article className="video-card" key={i}>
-										<div className="video-thumb">
-											{thumbnail ? (
-												<img
-													src={withBase(thumbnail)}
-													alt={`Video ${i + 1}`}
-												/>
-											) : (
-												<div className="video-thumb__placeholder">
-													Video {i + 1}
-												</div>
-											)}
-											{!enrolled && (
-												<div className="lock-overlay">
-													<div className="lock-text">
-														Enroll to Play
+								{videos.map((v, i) =>
+									i === 0 ? (
+										<article className="video-card" key={i}>
+											<div className="video-thumb">
+												{thumbnail ? (
+													<img
+														src={withBase(thumbnail)}
+														alt={`Video ${i + 1}`}
+													/>
+												) : (
+													<div className="video-thumb__placeholder">
+														Video {i + 1}
 													</div>
-												</div>
-											)}
-										</div>
-										<div className="video-info">
-											<h4 className="video-title">
-												{v.title || `Video ${i + 1}`}
-											</h4>
-											<a
-												href={v.url}
-												className={`video-link ${
-													!enrolled
-														? 'video-link--disabled'
-														: ''
-												}`}
-												onClick={(e) => {
-													if (!enrolled) e.preventDefault();
-												}}
-											>
-												▶ Watch
-											</a>
-										</div>
-									</article>
-								))}
+												)}
+												{!enrolled && (
+													<div className="lock-overlay">
+														<div className="lock-text">
+															Enroll to Play
+														</div>
+													</div>
+												)}
+											</div>
+											<div className="video-info">
+												<h4 className="video-title">
+													{v.title || `Video ${i + 1}`}
+												</h4>
+												<a
+													href={v.url}
+													className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
+													target="_blank"
+													rel="noopener noreferrer"
+													onClick={(e) => {
+														if (!enrolled) e.preventDefault();
+													}}
+												>
+													▶ Watch
+												</a>
+											</div>
+										</article>
+									) : (
+										<div></div>
+									),
+								)}
 							</div>
 						</section>
 					)}
-
-					{/* DOCUMENTATION */}
-					{docs?.length > 0 && (
-						<section className="course-details__section">
-							<h3 className="section-title">
-								Documentation ({docs.length})
-							</h3>
-							<ul className="resource-list">
-								{docs.map((d, i) => {
-									const url = resolveDocUrl(d.url);
-									return (
-										<li key={i}>
-											<a
-												className={`resource-link ${
-													!enrolled
-														? 'resource-link--disabled'
-														: ''
-												}`}
-												href={url}
-												onClick={(e) => {
-													if (!enrolled) e.preventDefault();
-												}}
-											>
-												📄 {d.title || d.url}
-											</a>
-										</li>
-									);
-								})}
-							</ul>
-						</section>
-					)}
-
-					{/* RESOURCES */}
-					{links?.length > 0 && (
-						<section className="course-details__section">
-							<h3 className="section-title">Resources ({links.length})</h3>
-							<ul className="resource-list">
-								{links.map((l, i) => (
-									<li key={i}>
-										<a
-											className={`resource-link ${
-												!enrolled ? 'resource-link--disabled' : ''
-											}`}
-											href={l.url}
-											onClick={(e) => {
-												if (!enrolled) e.preventDefault();
-											}}
-										>
-											🔗 {l.label || l.url}
-										</a>
-									</li>
-								))}
-							</ul>
-						</section>
-					)}
-					{/* ASSIGNMENTS */}
-					{/* {links?.length > 0 && (
-						<section className="course-details__section">
-							<h3 className="section-title">
-								Assignments ({links.length})
-							</h3>
-							<ul className="resource-list">
-								{links.map((l, i) => (
-									<li key={i}>
-										<a
-											className={`resource-link ${
-												!enrolled ? 'resource-link--disabled' : ''
-											}`}
-											href={l.url}
-											onClick={(e) => {
-												if (!enrolled) e.preventDefault();
-											}}
-										>
-											<i class="bi bi-pencil-square"></i>{' '}
-											{l.label || l.url}
-										</a>
-									</li>
-								))}
-							</ul>
-						</section>
-					)} */}
+					{/* THIS COURSE INCLUDES */}
+					<section className="course-details__section">
+						<h3 className="section-title">This course includes</h3>
+						<ul className="includes-list">
+							{'hoursOnDemandVideo' in includes && (
+								<li>
+									<span className="icon">🎬</span>
+									{includes.hoursOnDemandVideo} hours on‑demand video
+								</li>
+							)}
+							{'articles' in includes && (
+								<li>
+									<span className="icon">📰</span>
+									{includes.articles} articles
+								</li>
+							)}
+							{'downloadableResources' in includes && (
+								<li>
+									<span className="icon">📥</span>
+									{includes.downloadableResources} downloadable
+									resource(s)
+								</li>
+							)}
+							{includes.accessOnMobile && (
+								<li>
+									<span className="icon">📱</span>Access on mobile
+								</li>
+							)}
+							{includes.certificate && (
+								<li>
+									<span className="icon">🎓</span>Certificate of
+									completion
+								</li>
+							)}
+						</ul>
+					</section>
 				</div>
 			</section>
 
@@ -307,41 +337,6 @@ export default function CourseDetails() {
 					</ul>
 				</section>
 			)}
-
-			{/* THIS COURSE INCLUDES */}
-			<section className="course-details__section">
-				<h3 className="section-title">This course includes</h3>
-				<ul className="includes-list">
-					{'hoursOnDemandVideo' in includes && (
-						<li>
-							<span className="icon">🎬</span>
-							{includes.hoursOnDemandVideo} hours on‑demand video
-						</li>
-					)}
-					{'articles' in includes && (
-						<li>
-							<span className="icon">📰</span>
-							{includes.articles} articles
-						</li>
-					)}
-					{'downloadableResources' in includes && (
-						<li>
-							<span className="icon">📥</span>
-							{includes.downloadableResources} downloadable resource(s)
-						</li>
-					)}
-					{includes.accessOnMobile && (
-						<li>
-							<span className="icon">📱</span>Access on mobile
-						</li>
-					)}
-					{includes.certificate && (
-						<li>
-							<span className="icon">🎓</span>Certificate of completion
-						</li>
-					)}
-				</ul>
-			</section>
 
 			{/* COURSE CONTENT / SECTIONS (compact summary) */}
 			{sections.length > 0 && (
@@ -364,7 +359,150 @@ export default function CourseDetails() {
 					</ul>
 				</section>
 			)}
+
+			{/* VIDEOS */}
+			{videos?.length > 0 && (
+				<section className="course-details__section">
+					<h3 className="section-title">Videos ({videos.length})</h3>
+					<div className="video-grid">
+						{videos.map((v, i) => (
+							<article className="video-card" key={i}>
+								<div className="video-info">
+									<h4 className="video-title">
+										{v.title || `Video ${i + 1}`}
+									</h4>
+									<a
+										href={v.url}
+										className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										onClick={(e) => {
+											if (!enrolled) e.preventDefault();
+										}}
+									>
+										▶ Watch
+									</a>
+								</div>
+							</article>
+						))}
+					</div>
+				</section>
+			)}
+
+			{/* DOCUMENTATION */}
+			{docs?.length > 0 && (
+				<section className="course-details__section">
+					<h3 className="section-title">Documentation ({docs.length})</h3>
+					<ul className="resource-list">
+						{docs.map((d, i) => {
+							const url = resolveDocUrl(d.url);
+							return (
+								<li key={i}>
+									<a
+										className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+										href={url}
+										target="_blank"
+										rel="noopener noreferrer"
+										onClick={(e) => {
+											if (!enrolled) e.preventDefault();
+										}}
+									>
+										📄 {d.title || d.url}
+									</a>
+								</li>
+							);
+						})}
+					</ul>
+				</section>
+			)}
+
+			{/* RESOURCES */}
+			{links?.length > 0 && (
+				<section className="course-details__section">
+					<h3 className="section-title">Resources ({links.length})</h3>
+					<ul className="resource-list">
+						{links.map((l, i) => (
+							<li key={i}>
+								<a
+									className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+									href={l.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={(e) => {
+										if (!enrolled) e.preventDefault();
+									}}
+								>
+									🔗 {l.label || l.url}
+								</a>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			{/* NEW: Assignments list for this course */}
+			{assignments.length > 0 && (
+				<section className="course-details__section">
+					<h3 className="section-title">Assignments ({assignments.length})</h3>
+					<ul className="resource-list">
+						{assignments.map((a) => (
+							<li key={a.id} className="course-item">
+								<Link
+									className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+									to={`/assignment/${a.id}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={(e) => {
+										if (!enrolled) {
+											e.preventDefault();
+											alert('Please enroll to access assignments.');
+										}
+									}}
+								>
+									📘 {a.title}
+								</Link>
+								<span className="course-meta-right">
+									{a.dueAt
+										? `Due: ${new Date(a.dueAt).toLocaleString()}`
+										: ''}
+								</span>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			{/* NEW: Quizzes list for this course */}
+			{quizzes.length > 0 && (
+				<section className="course-details__section">
+					<h3 className="section-title">Quizzes ({quizzes.length})</h3>
+					<ul className="resource-list">
+						{quizzes.map((q) => (
+							<li key={q.id} className="course-item">
+								<Link
+									className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+									to={`/quiz/${q.id}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={(e) => {
+										if (!enrolled) {
+											e.preventDefault();
+											alert('Please enroll to attempt quizzes.');
+										}
+									}}
+								>
+									📝 {q.title}
+								</Link>
+								<span className="course-meta-right">
+									{q.dueAt
+										? `Due: ${new Date(q.dueAt).toLocaleString()}`
+										: ''}
+								</span>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
 		</div>
 	);
 }
-``;
