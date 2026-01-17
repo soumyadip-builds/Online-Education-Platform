@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import React from 'react';
 import {
   Navbar,
@@ -9,7 +10,6 @@ import {
   Image,
 } from 'react-bootstrap';
 import '../styles/EdNavbar.css';
- 
 const NavbarComponent = () => {
   return (
     <Navbar expand="lg" className="ed-navbar">
@@ -22,7 +22,6 @@ const NavbarComponent = () => {
         />
         <span className="navbar-title">EdStream</span>
       </Navbar.Brand>
- 
       {/* Explore Dropdown */}
       <Nav className="mx-3">
         <NavDropdown
@@ -44,7 +43,6 @@ const NavbarComponent = () => {
           </NavDropdown.Item>
         </NavDropdown>
       </Nav>
- 
       {/* Search Box */}
       <Form className="d-flex mx-auto navbar-search">
         <FormControl
@@ -52,11 +50,11 @@ const NavbarComponent = () => {
           placeholder="Search courses, assignments..."
           className="search-input"
         />
-        <Button variant="outline-light" className="search-btn">
-          🔍
+        <Button variant="dark" className="search-btn">
+          <i className="fas fa-search"></i>
         </Button>
       </Form>
- 
+
       {/* My Learning Dropdown */}
       <Nav className="mx-3">
         <NavDropdown
@@ -75,7 +73,6 @@ const NavbarComponent = () => {
           </NavDropdown.Item>
         </NavDropdown>
       </Nav>
- 
       {/* Profile Avatar Dropdown */}
       <Nav>
         <NavDropdown
@@ -95,5 +92,5 @@ const NavbarComponent = () => {
     </Navbar>
   );
 };
- 
+
 export default NavbarComponent;

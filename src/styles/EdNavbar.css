@@ -5,18 +5,20 @@
   --almond-silk: #c9ada7ff;
   --parchment: #f2e9e4ff;
 }
- 
+
 /* Navbar Base */
 .ed-navbar {
-  background: linear-gradient(90deg, var(--space-indigo), var(--dusty-grape));
+  background: white;
   padding: 10px 20px;
   transition: background 0.5s ease;
+  border: 1px solid black;
+  border-radius: 5px;
 }
- 
+/* 
 .ed-navbar:hover {
   background: linear-gradient(90deg, var(--dusty-grape), var(--lilac-ash));
-}
- 
+} */
+
 /* Logo + Title */
 .navbar-logo {
   width: 40px;
@@ -24,42 +26,46 @@
   margin-right: 10px;
   transition: transform 0.3s ease;
 }
- 
-.navbar-logo:hover {
+
+/* .navbar-logo:hover {
   transform: rotate(10deg) scale(1.1);
-}
- 
+} */
+
 .navbar-title {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--parchment);
+  color: var(--space-indigo);
 }
- 
+
 /* Dropdowns */
 .explore-dropdown .dropdown-menu,
 .mylearning-dropdown .dropdown-menu,
 .profile-dropdown .dropdown-menu {
-  background: var(--dusty-grape);
-  border-radius: 8px;
-  animation: fadeIn 0.3s ease-in-out;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
- 
+/* Override Bootstrap active state */
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: #000000 !important; /* parchment background */
+  color: white !important; /* dusty grape (blue tone) text */
+}
+
 .dropdown-item {
   color: var(--parchment);
   transition: background 0.3s ease, transform 0.2s ease;
 }
- 
-.dropdown-item:hover {
+
+/* .dropdown-item:hover {
   background: var(--lilac-ash);
-  transform: translateX(5px);
-}
- 
+  transform: scale(1.05);
+} */
+
 /* Search Box */
 .navbar-search {
   flex-grow: 1;
   max-width: 400px;
 }
- 
 .search-input {
   border-radius: 20px;
   padding: 8px 15px;
@@ -67,11 +73,17 @@
   outline: none;
   transition: box-shadow 0.3s ease;
 }
- 
+
+.search-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
 .search-input:focus {
   box-shadow: 0 0 10px var(--almond-silk);
 }
- 
+
 .search-btn {
   margin-left: 10px;
   border-radius: 20px;
@@ -79,12 +91,10 @@
   color: var(--space-indigo);
   transition: transform 0.3s ease, background 0.3s ease;
 }
- 
 .search-btn:hover {
   background: var(--almond-silk);
   transform: scale(1.1);
 }
- 
 /* Profile Avatar */
 .profile-avatar {
   width: 40px;
@@ -92,14 +102,19 @@
   border: 2px solid var(--almond-silk);
   transition: transform 0.3s ease, border-color 0.3s ease;
 }
- 
 .profile-avatar:hover {
   transform: scale(1.1);
   border-color: var(--parchment);
 }
- 
+
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
