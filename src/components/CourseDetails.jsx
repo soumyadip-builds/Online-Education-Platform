@@ -163,7 +163,7 @@ export default function CourseDetails() {
 					{/* VIDEOS */}
 					{videos?.length > 0 && (
 						<section className="course-details__section">
-							<h3 className="section-title">Videos ({videos.length})</h3>
+							{/* <h3 className="section-title">Videos ({videos.length})</h3> */}
 							<div className="video-grid">
 								{videos.map((v, i) => (
 									<article className="video-card" key={i}>
@@ -265,7 +265,7 @@ export default function CourseDetails() {
 						</section>
 					)}
 					{/* ASSIGNMENTS */}
-					{links?.length > 0 && (
+					{/* {links?.length > 0 && (
 						<section className="course-details__section">
 							<h3 className="section-title">
 								Assignments ({links.length})
@@ -289,7 +289,7 @@ export default function CourseDetails() {
 								))}
 							</ul>
 						</section>
-					)}
+					)} */}
 				</div>
 			</section>
 
