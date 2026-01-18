@@ -464,3 +464,6 @@
 	inset: 0;
 	background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.05));
 }
+#all_course_content {
+	width: fit-content;
+}

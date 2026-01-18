@@ -360,149 +360,165 @@ export default function CourseDetails() {
 				</section>
 			)}
 
-			{/* VIDEOS */}
-			{videos?.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">Videos ({videos.length})</h3>
-					<div className="video-grid">
-						{videos.map((v, i) => (
-							<article className="video-card" key={i}>
-								<div className="video-info">
-									<h4 className="video-title">
-										{v.title || `Video ${i + 1}`}
-									</h4>
-									<a
-										href={v.url}
-										className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										onClick={(e) => {
-											if (!enrolled) e.preventDefault();
-										}}
-									>
-										▶ Watch
-									</a>
-								</div>
-							</article>
-						))}
-					</div>
-				</section>
-			)}
+			<div id='all_course_content' className="bg-info-subtle p-2 rounded-4 my-3">
+				{/* VIDEOS */}
+				{videos?.length > 0 && (
+					<section className="course-details__section">
+						<h3 className="section-title fw-bolder">
+							Videos ({videos.length})
+						</h3>
+						<div className="video-grid">
+							{videos.map((v, i) => (
+								<article className="video-card" key={i}>
+									<div className="video-info">
+										<h4 className="video-title">
+											{v.title || `Video ${i + 1}`}
+										</h4>
+										<a
+											href={v.url}
+											className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
+											target="_blank"
+											rel="noopener noreferrer"
+											onClick={(e) => {
+												if (!enrolled) e.preventDefault();
+											}}
+										>
+											▶ Watch
+										</a>
+									</div>
+								</article>
+							))}
+						</div>
+					</section>
+				)}
 
-			{/* DOCUMENTATION */}
-			{docs?.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">Documentation ({docs.length})</h3>
-					<ul className="resource-list">
-						{docs.map((d, i) => {
-							const url = resolveDocUrl(d.url);
-							return (
+				{/* DOCUMENTATION */}
+				{docs?.length > 0 && (
+					<section className="course-details__section">
+						<h3 className="section-title fw-bolder">
+							Documentation ({docs.length})
+						</h3>
+						<ul className="resource-list">
+							{docs.map((d, i) => {
+								const url = resolveDocUrl(d.url);
+								return (
+									<li key={i}>
+										<a
+											className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+											href={url}
+											target="_blank"
+											rel="noopener noreferrer"
+											onClick={(e) => {
+												if (!enrolled) e.preventDefault();
+											}}
+										>
+											📄 {d.title || d.url}
+										</a>
+									</li>
+								);
+							})}
+						</ul>
+					</section>
+				)}
+
+				{/* RESOURCES */}
+				{links?.length > 0 && (
+					<section className="course-details__section">
+						<h3 className="section-title fw-bolder">
+							Resources ({links.length})
+						</h3>
+						<ul className="resource-list">
+							{links.map((l, i) => (
 								<li key={i}>
 									<a
 										className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-										href={url}
+										href={l.url}
 										target="_blank"
 										rel="noopener noreferrer"
 										onClick={(e) => {
 											if (!enrolled) e.preventDefault();
 										}}
 									>
-										📄 {d.title || d.url}
+										🔗 {l.label || l.url}
 									</a>
 								</li>
-							);
-						})}
-					</ul>
-				</section>
-			)}
+							))}
+						</ul>
+					</section>
+				)}
 
-			{/* RESOURCES */}
-			{links?.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">Resources ({links.length})</h3>
-					<ul className="resource-list">
-						{links.map((l, i) => (
-							<li key={i}>
-								<a
-									className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-									href={l.url}
-									target="_blank"
-									rel="noopener noreferrer"
-									onClick={(e) => {
-										if (!enrolled) e.preventDefault();
-									}}
-								>
-									🔗 {l.label || l.url}
-								</a>
-							</li>
-						))}
-					</ul>
-				</section>
-			)}
+				{/* NEW: Assignments list for this course */}
+				{assignments.length > 0 && (
+					<section className="course-details__section">
+						<h3 className="section-title fw-bold">
+							Assignments ({assignments.length})
+						</h3>
+						<ul className="resource-list">
+							{assignments.map((a) => (
+								<li key={a.id} className="course-item">
+									<Link
+										className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+										to={`/assignment/${a.id}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										onClick={(e) => {
+											if (!enrolled) {
+												e.preventDefault();
+												alert(
+													'Please enroll to access assignments.',
+												);
+											}
+										}}
+									>
+										📘 {a.title}
+									</Link>
+									<span className="course-meta-right">
+										{a.dueAt
+											? `Due: ${new Date(a.dueAt).toLocaleString()}`
+											: ''}
+									</span>
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
 
-			{/* NEW: Assignments list for this course */}
-			{assignments.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">Assignments ({assignments.length})</h3>
-					<ul className="resource-list">
-						{assignments.map((a) => (
-							<li key={a.id} className="course-item">
-								<Link
-									className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-									to={`/assignment/${a.id}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									onClick={(e) => {
-										if (!enrolled) {
-											e.preventDefault();
-											alert('Please enroll to access assignments.');
-										}
-									}}
-								>
-									📘 {a.title}
-								</Link>
-								<span className="course-meta-right">
-									{a.dueAt
-										? `Due: ${new Date(a.dueAt).toLocaleString()}`
-										: ''}
-								</span>
-							</li>
-						))}
-					</ul>
-				</section>
-			)}
-
-			{/* NEW: Quizzes list for this course */}
-			{quizzes.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">Quizzes ({quizzes.length})</h3>
-					<ul className="resource-list">
-						{quizzes.map((q) => (
-							<li key={q.id} className="course-item">
-								<Link
-									className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-									to={`/quiz/${q.id}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									onClick={(e) => {
-										if (!enrolled) {
-											e.preventDefault();
-											alert('Please enroll to attempt quizzes.');
-										}
-									}}
-								>
-									📝 {q.title}
-								</Link>
-								<span className="course-meta-right">
-									{q.dueAt
-										? `Due: ${new Date(q.dueAt).toLocaleString()}`
-										: ''}
-								</span>
-							</li>
-						))}
-					</ul>
-				</section>
-			)}
+				{/* NEW: Quizzes list for this course */}
+				{quizzes.length > 0 && (
+					<section className="course-details__section">
+						<h3 className="section-title fw-bolder">
+							Quizzes ({quizzes.length})
+						</h3>
+						<ul className="resource-list">
+							{quizzes.map((q) => (
+								<li key={q.id} className="course-item">
+									<Link
+										className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+										to={`/quiz/${q.id}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										onClick={(e) => {
+											if (!enrolled) {
+												e.preventDefault();
+												alert(
+													'Please enroll to attempt quizzes.',
+												);
+											}
+										}}
+									>
+										📝 {q.title}
+									</Link>
+									<span className="course-meta-right">
+										{q.dueAt
+											? `Due: ${new Date(q.dueAt).toLocaleString()}`
+											: ''}
+									</span>
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
+			</div>
 		</div>
 	);
 }

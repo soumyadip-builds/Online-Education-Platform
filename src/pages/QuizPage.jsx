@@ -266,14 +266,14 @@ export default function QuizPage() {
 						label="Time Limit"
 						value={`${quiz.settings?.timeLimitMins ?? '—'} mins`}
 					/>
-					<Meta
+					{/* <Meta
 						label="Shuffle Qs"
 						value={quiz.settings?.shuffleQuestions ? 'Yes' : 'No'}
 					/>
 					<Meta
 						label="Shuffle Options"
 						value={quiz.settings?.shuffleOptions ? 'Yes' : 'No'}
-					/>
+					/> */}
 				</div>
 
 				{quiz.description && (
