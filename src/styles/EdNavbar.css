@@ -11,7 +11,7 @@
   background: white;
   padding: 10px 20px;
   transition: background 0.5s ease;
-  border: 1px solid black;
+  border: 1px black;
   border-radius: 5px;
 }
 /* 
@@ -25,6 +25,7 @@
   height: 40px;
   margin-left: 10px;
   transition: transform 0.3s ease;
+  margin-left: 10px;
 }
 
 /* .navbar-logo:hover {

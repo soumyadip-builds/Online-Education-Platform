@@ -57,7 +57,14 @@ const Footer = () => {
             <div className="col-12 col-md-6 col-lg-4">
               <div className="d-flex align-items-center gap-2 mb-3">
                 <div className="logo-blob" aria-hidden="true">
-                  <span className="logo-dot" />
+                  {/* <span className="logo-dot" /> */}
+                  <a href='/'>
+                    <img
+                      src="/images/Logos/Footer_Logo.png" // Replace with actual logo path
+                      alt="EdStream Logo"
+                      className="footer-logo"
+                    />
+                  </a>
                 </div>
                 <h5 className="m-0 fw-bold">EdStream</h5>
               </div>
