@@ -10,17 +10,12 @@ import QuizEditor from './QuizEditor';
  * Props:
  * - assignmentService: { create: (payload) => Promise<any> }
  * - onCreated?: (createdItem) => void
- *
- * Notes:
- * - No course selector (added from course tab context elsewhere).
- * - No reference field.
- * - Uses global theme variables from assignmentCard.css (:root with --bg, --text, --accent, etc.).
  */
 const AssignmentCard = ({ assignmentService, onCreated }) => {
   // ----- Core form state -----
   const [workType, setWorkType] = useState('assignment'); // 'assignment' | 'quiz'
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState('');     // assignments only
   const [dueDate, setDueDate] = useState(
     new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
   );
@@ -28,15 +23,15 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
   const [passingScore, setPassingScore] = useState(40);
   const [estimatedMinutes, setEstimatedMinutes] = useState(60);
   const [status, setStatus] = useState('published');
-  const [attachment, setAttachment] = useState(null);
+  const [attachment, setAttachment] = useState(null);     // assignments only
 
-  // ----- Quiz state (used when workType === 'quiz') -----
+  // ----- Quiz state (only in quiz mode) -----
   const [quizData, setQuizData] = useState({
     timeLimitMinutes: 30,
     shuffleQuestions: true,
     shuffleOptions: true,
     showAnswersAfterSubmit: true,
-    questions: [], // each { id, title, type: 'single'|'multiple', points, options: [{id,text,isCorrect}], explanation? }
+    questions: [],
   });
 
   // ----- UI/Request state -----
@@ -64,10 +59,9 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
   // ----- Validation -----
   const validate = () => {
     const errors = [];
-    if (!title.trim()) errors.push('Title is required.');
-    if (!description.trim()) errors.push('Description is required.');
-    if (!dueDate) errors.push('Due date & time is required.');
 
+    if (!title.trim()) errors.push('Title is required.');
+    if (!dueDate) errors.push('Due date & time is required.');
     const due = new Date(dueDate);
     if (Number.isNaN(due.getTime())) errors.push('Due date is invalid.');
     else if (due <= new Date()) errors.push('Due date must be in the future.');
@@ -85,6 +79,12 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
     const est = Number(estimatedMinutes);
     if (!Number.isFinite(est) || est <= 0) errors.push('Estimated time must be a positive number (minutes).');
 
+    // ✅ Assignments only: require description
+    if (workType === 'assignment') {
+      if (!description.trim()) errors.push('Description is required for assignments.');
+    }
+
+    // ✅ Quiz-only validation
     if (workType === 'quiz') {
       const q = quizData.questions || [];
       if (q.length === 0) errors.push('Add at least one quiz question.');
@@ -105,29 +105,24 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
   };
 
   // ----- Custom radio chip (no black) -----
-  const Radio = ({ label, name, value, checked, onChange }) => {
-    return (
-      <label className="assignment-card__radio-label">
-        <span
-          className="assignment-card__radio-visual"
-          aria-hidden="true"
-          style={{
-            // CSS sets border color from var(--accent); we add dot only when checked.
-            boxShadow: checked ? 'inset 0 0 0 6px var(--accent)' : 'none',
-          }}
-        />
-        <input
-          type="radio"
-          name={name}
-          value={value}
-          checked={checked}
-          onChange={onChange}
-          className="assignment-card__radio-input-native"
-        />
-        <span>{label}</span>
-      </label>
-    );
-  };
+  const Radio = ({ label, name, value, checked, onChange }) => (
+    <label className="assignment-card__radio-label">
+      <span
+        className="assignment-card__radio-visual"
+        aria-hidden="true"
+        style={{ boxShadow: checked ? 'inset 0 0 0 6px var(--accent)' : 'none' }}
+      />
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={onChange}
+        className="assignment-card__radio-input-native"
+      />
+      <span>{label}</span>
+    </label>
+  );
 
   // ----- Submit -----
   const handleSubmit = async (e) => {
@@ -141,31 +136,34 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
       return;
     }
 
-    const payloadBase = {
+    const base = {
       type: workType, // 'assignment' | 'quiz'
       title: title.trim(),
-      description: description.trim(),
       dueAt: new Date(dueDate).toISOString(),
-      maxScore: Number(maxScore),        // manual (assignment) or auto (quiz)
+      maxScore: Number(maxScore),
       passingScore: Number(passingScore),
       estimatedMinutes: Number(estimatedMinutes),
       status,
     };
 
+    // ✅ Build payload conditionally
     const payload =
       workType === 'quiz'
-        ? { ...payloadBase, quiz: { ...quizData } }
-        : payloadBase;
+        ? { ...base, quiz: { ...quizData } } // no description/attachment
+        : { ...base, description: description.trim() };
 
     setSubmitting(true);
     try {
+      // Pass attachment name only when it's an assignment AND there is a file
       const created = await assignmentService.create(
-        attachment ? { ...payload, attachmentName: attachment.name } : payload
+        workType === 'assignment' && attachment
+          ? { ...payload, attachmentName: attachment.name }
+          : payload
       );
 
       setSuccessMsg(`${workType === 'quiz' ? 'Quiz' : 'Assignment'} created successfully.`);
 
-      // Reset everything
+      // Reset
       setWorkType('assignment');
       setTitle('');
       setDescription('');
@@ -193,7 +191,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
     }
   };
 
-  // ----- Reset handler -----
+  // ----- Reset -----
   const handleReset = () => {
     setWorkType('assignment');
     setTitle('');
@@ -220,7 +218,6 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
       <div className="assignment-card">
         <div className="assignment-card__stripe" />
 
-        {/* Header */}
         <div className="assignment-card__header">
           <h1 className="assignment-card__title">Add {workType === 'quiz' ? 'Quiz' : 'Assignment'}</h1>
           <span className="assignment-card__subtle">
@@ -228,7 +225,6 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
           </span>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} noValidate>
           <div className="assignment-card__grid">
             {/* Work Type */}
@@ -279,7 +275,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
               />
             </div>
 
-            {/* Max score (read-only in quiz mode) */}
+            {/* Max score */}
             <div className="assignment-card__group">
               <label htmlFor="maxScore" className="assignment-card__label">
                 Max Score * {workType === 'quiz' && <span className="assignment-card__subtle">(auto)</span>}
@@ -350,45 +346,43 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
               </div>
             </div>
 
-            {/* Description (full width) */}
-            <div className="assignment-card__group assignment-card__group--full">
-              <label htmlFor="description" className="assignment-card__label">Description *</label>
-              <textarea
-                id="description"
-                placeholder={
-                  workType === 'quiz'
-                    ? 'Describe the quiz scope, rules, and rubric…'
-                    : 'Describe the assignment, instructions, and rubric…'
-                }
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={6}
-                className="assignment-card-textarea"
-                required
-              />
-            </div>
+            {/* ✅ Assignments-only fields */}
+            {workType === 'assignment' && (
+              <>
+                {/* Description (full width) */}
+                <div className="assignment-card__group assignment-card__group--full">
+                  <label htmlFor="description" className="assignment-card__label">Description *</label>
+                  <textarea
+                    id="description"
+                    placeholder="Describe the assignment, instructions, and rubric…"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={6}
+                    className="assignment-card-textarea"
+                    required={workType === 'assignment'}
+                  />
+                </div>
 
-            {/* Attachment (full width) */}
-            <div className="assignment-card__group assignment-card__group--full">
-              <label htmlFor="attachment" className="assignment-card__label">Attachment (optional)</label>
-              <input
-                id="attachment"
-                type="file"
-                onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                className="assignment-card-file"
-              />
-              {attachment && (
-                <span className="assignment-card__subtle">Selected: {attachment.name}</span>
-              )}
-            </div>
+                {/* Attachment (full width) */}
+                <div className="assignment-card__group assignment-card__group--full">
+                  <label htmlFor="attachment" className="assignment-card__label">Attachment (optional)</label>
+                  <input
+                    id="attachment"
+                    type="file"
+                    onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                    className="assignment-card-file"
+                  />
+                  {attachment && (
+                    <span className="assignment-card__subtle">Selected: {attachment.name}</span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Quiz editor renders below when type is quiz */}
           {workType === 'quiz' && (
-            <QuizEditor
-              value={quizData}
-              onChange={setQuizData}
-            />
+            <QuizEditor value={quizData} onChange={setQuizData} />
           )}
 
           {/* Messages */}

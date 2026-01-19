@@ -365,6 +365,7 @@ html, body {
   border:1px solid rgba(31,41,55,0.15);
   background:transparent;
   border-radius:8px;
+  
 }
 
 @media(max-width:420px){
@@ -375,4 +376,16 @@ html, body {
     grid-column:2;
     justify-self:end;
   }
+}
+
+
+
+/* Add visual spacing between each option */
+.quiz-option {
+  margin-bottom: 8px !important; /* clean spacing between options */
+}
+
+/* Optional: last option should not add extra bottom space */
+.quiz-option:last-child {
+  margin-bottom: 4px !important;
 }
