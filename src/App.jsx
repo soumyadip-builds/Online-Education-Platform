@@ -13,11 +13,11 @@ function App() {
   
   return (
     <div>
-      {/* <NavbarComponent />
+      <NavbarComponent />
       <AuthPage />
       
-      <Footer /> */}
-      <ForumPage />
+      <Footer />
+      {/* <ForumPage /> */}
     </div>
   );
 }
