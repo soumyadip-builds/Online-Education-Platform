@@ -53,7 +53,7 @@
 }
 
 .dropdown-item {
-  color: var(--parchment);
+  color: var(--space-indigo);
   transition: background 0.3s ease, transform 0.2s ease;
 }
 

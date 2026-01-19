@@ -2,6 +2,7 @@
 // src/components/Footer.jsx
 import React, { useEffect, useState } from 'react';
 import '../styles/EdFooter.css';
+import edLogo from '../assets/edLogo.png';
 
 const Footer = () => {
   const [showToTop, setShowToTop] = useState(false);
@@ -60,7 +61,7 @@ const Footer = () => {
                   {/* <span className="logo-dot" /> */}
                   <a href='/'>
                     <img
-                      src="/images/Logos/Footer_Logo.png" // Replace with actual logo path
+                      src={edLogo} // Replace with actual logo path
                       alt="EdStream Logo"
                       className="footer-logo"
                     />
