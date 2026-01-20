@@ -1,8 +1,9 @@
 
-import React, { useMemo, useCallback, useState } from "react";
+import React, { useMemo } from "react";
 import "../styles/assignmentCard.css";
 
 export default function QuizEditor({ value, onChange }) {
+  // Default quiz structure
   const quiz = value || {
     timeLimitMinutes: 30,
     shuffleQuestions: true,
@@ -11,6 +12,7 @@ export default function QuizEditor({ value, onChange }) {
     questions: [],
   };
 
+  // Utilities
   const update = (patch) => onChange?.({ ...quiz, ...patch });
   const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -18,36 +20,6 @@ export default function QuizEditor({ value, onChange }) {
     () => quiz.questions.reduce((s, q) => s + (Number(q.points) || 0), 0),
     [quiz.questions]
   );
-
-  /* -------------------------- DRAG & DROP -------------------------- */
-  const [dragOverId, setDragOverId] = useState(null);
-
-  const startDrag = (qid) => (e) => {
-    e.dataTransfer.setData("text", qid);
-    e.dataTransfer.effectAllowed = "move";
-  };
-  const overDrag = (qid) => (e) => {
-    e.preventDefault();
-    setDragOverId(qid);
-  };
-  const leaveDrag = (qid) => () =>
-    setDragOverId((x) => (x === qid ? null : x));
-
-  const dropOn = (targetId) => (e) => {
-    e.preventDefault();
-    const sourceId = e.dataTransfer.getData("text");
-    setDragOverId(null);
-    if (!sourceId || sourceId === targetId) return;
-
-    const items = [...quiz.questions];
-    const src = items.findIndex((q) => q.id === sourceId);
-    const tgt = items.findIndex((q) => q.id === targetId);
-    if (src === -1 || tgt === -1) return;
-
-    const [m] = items.splice(src, 1);
-    items.splice(tgt, 0, m);
-    update({ questions: items });
-  };
 
   /* ----------------------- QUESTION CRUD ------------------------ */
   const addQ = () =>
@@ -73,14 +45,13 @@ export default function QuizEditor({ value, onChange }) {
 
   const patchQ = (id, p) =>
     update({
-      questions: quiz.questions.map((q) =>
-        q.id === id ? { ...q, ...p } : q
-      ),
+      questions: quiz.questions.map((q) => (q.id === id ? { ...q, ...p } : q)),
     });
 
   /* ------------------------ OPTION CRUD -------------------------- */
   const addOpt = (qid) => {
     const q = quiz.questions.find((x) => x.id === qid);
+    if (!q) return;
     patchQ(qid, {
       options: [...q.options, { id: "o_" + uid(), text: "", isCorrect: false }],
     });
@@ -88,11 +59,13 @@ export default function QuizEditor({ value, onChange }) {
 
   const rmOpt = (qid, oid) => {
     const q = quiz.questions.find((x) => x.id === qid);
+    if (!q) return;
     patchQ(qid, { options: q.options.filter((o) => o.id !== oid) });
   };
 
   const patchOpt = (qid, oid, p) => {
     const q = quiz.questions.find((x) => x.id === qid);
+    if (!q) return;
     patchQ(qid, {
       options: q.options.map((o) => (o.id === oid ? { ...o, ...p } : o)),
     });
@@ -100,8 +73,10 @@ export default function QuizEditor({ value, onChange }) {
 
   const setCorrect = (qid, oid, checked) => {
     const q = quiz.questions.find((x) => x.id === qid);
+    if (!q) return;
 
     if (q.type === "single") {
+      // Only one correct for "single"
       patchQ(qid, {
         options: q.options.map((o) => ({
           ...o,
@@ -109,6 +84,7 @@ export default function QuizEditor({ value, onChange }) {
         })),
       });
     } else {
+      // Multiple allowed
       patchOpt(qid, oid, { isCorrect: checked });
     }
   };
@@ -153,7 +129,7 @@ export default function QuizEditor({ value, onChange }) {
                 <label className="quiz-editor__toggle" key={key}>
                   <input
                     type="checkbox"
-                    checked={quiz[key]}
+                    checked={!!quiz[key]}
                     onChange={(e) => update({ [key]: e.target.checked })}
                     className="quiz-editor__checkbox"
                   />
@@ -184,28 +160,12 @@ export default function QuizEditor({ value, onChange }) {
         )}
 
         {quiz.questions.map((q, i) => (
-          <div
-            key={q.id}
-            className={`quiz-question ${
-              dragOverId === q.id ? "quiz-question--over" : ""
-            }`}
-            draggable={false}
-            onDragOver={overDrag(q.id)}
-            onDragLeave={leaveDrag(q.id)}
-            onDrop={dropOn(q.id)}
-          >
+          <div key={q.id} className="quiz-question">
             {/* Top */}
             <div className="quiz-question__top">
               <span className="quiz-question__index">Q{i + 1}</span>
 
-              <button
-                draggable
-                onDragStart={startDrag(q.id)}
-                className="quiz-question__handle"
-                title="Drag to reorder"
-              >
-                ⠿
-              </button>
+              {/* Drag handle removed */}
 
               <button
                 type="button"
@@ -250,7 +210,9 @@ export default function QuizEditor({ value, onChange }) {
                   min="1"
                   value={q.points}
                   onChange={(e) =>
-                    patchQ(q.id, { points: Math.max(1, Number(e.target.value)) })
+                    patchQ(q.id, {
+                      points: Math.max(1, Number(e.target.value || 1)),
+                    })
                   }
                   className="assignment-card-input"
                 />
@@ -313,3 +275,4 @@ export default function QuizEditor({ value, onChange }) {
     </div>
   );
 }
+
