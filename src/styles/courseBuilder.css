@@ -303,3 +303,124 @@
 /* Slightly tighter in the item row cell */
 .cb-duration .duration-field__h { width: 56px; }
 .cb-duration .duration-field__m { width: 64px; }
+
+
+
+/* =====================================
+   PRIORITIZE TIME — SHRINK TITLE & URL
+   ===================================== */
+
+/* 1) Grid: fix time width, shrink title & URL first */
+.cb-item {
+  grid-template-columns:
+    auto                      /* left: drag + badge */
+    minmax(140px, 1fr)        /* title: allow smaller min */
+    156px                     /* time: fixed width (fits H + M + suffix) */
+    minmax(200px, 1fr)        /* url: lower min so it yields space */
+    auto;                     /* actions */
+  /* areas unchanged */
+}
+
+/* 2) Make inner cells and inputs shrinkable */
+.cb-item__title,
+.cb-item__url,
+.cb-item__time,
+.cb-item__actions {
+  min-width: 0;               /* critical: allow shrinking */
+}
+
+.cb-item .assignment-card-input,
+.cb-item__title-input,
+.cb-url-input {
+  min-width: 0;               /* prevent implicit min-content sizing */
+  width: 100%;
+}
+
+/* 3) Duration field widths: compact to keep time in 156px without wrapping */
+.cb-duration .duration-field__h { width: 48px; }  /* hours */
+.cb-duration .duration-field__m { width: 56px; }  /* minutes */
+.duration-field__suffix { white-space: nowrap; }  /* keep "h" / "m" tight */
+
+/* 4) Title text & URL link: allow ellipsis rather than push neighbors */
+.cb-item__title-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cb-url-link {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 5) Keep actions at the right without stealing space */
+.cb-item__actions {
+  justify-self: end;
+  flex-wrap: nowrap;
+}
+
+/* 6) Medium screens: let URL wrap under Actions before collision */
+@media (max-width: 1100px) {
+  .cb-item {
+    grid-template-columns:
+      auto minmax(130px, 1fr) 156px 1fr auto;
+    grid-template-areas:
+      "left title time actions actions"
+      "left url   url  actions actions";
+  }
+}
+
+/* 7) Preserve your existing mobile stack while keeping shrinkability */
+@media (max-width: 900px) {
+  .cb-item {
+    grid-template-columns:
+      auto minmax(130px, 1fr) 156px 1fr auto;
+  }
+}
+
+
+
+/* Normal Edit button */
+.icon-btn.edit {
+  color: var(--text);
+  border-color: rgba(31,41,55,0.18);
+}
+
+/* When pressed/toggled */
+.icon-btn.edit[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-2) 82%);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+
+
+.cb-toggle {
+  background: #f0f4ff;
+  padding: 4px;
+  border-radius: 40px;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cb-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 18px;
+  border-radius: 30px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #4a4a6a;
+  transition: 0.2s;
+}
+
+.cb-toggle-btn.active {
+  background: linear-gradient(90deg, #4b6bff, #8f7bff);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+

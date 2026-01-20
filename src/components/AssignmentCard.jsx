@@ -211,56 +211,37 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="assignment-card__grid">
-            {/* Work Type */}
-            <div className="assignment-card__group">
+
+            {/* Work Type -> Segmented control (one line) */}
+            <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row">
               <span className="assignment-card__label">Work Type *</span>
-              <div className="assignment-card__radio-row">
-                <label className="assignment-card__radio-label">
-                  <span
-                    className="assignment-card__radio-visual"
-                    aria-hidden="true"
-                    style={{
-                      boxShadow:
-                        workType === 'assignment'
-                          ? 'inset 0 0 0 6px var(--accent)'
-                          : 'none',
-                    }}
-                  />
+              <div className="ac-segment" role="radiogroup" aria-label="Work Type">
+                <label className="ac-segment__option">
                   <input
                     type="radio"
                     name="workType"
                     value="assignment"
                     checked={workType === 'assignment'}
                     onChange={(e) => setField('workType', e.target.value)}
-                    className="assignment-card__radio-input-native"
+                    className="ac-segment__input"
                   />
-                  <span>Assignment</span>
+                  <span className="ac-segment__text">Assignment</span>
                 </label>
 
-                <label className="assignment-card__radio-label">
-                  <span
-                    className="assignment-card__radio-visual"
-                    aria-hidden="true"
-                    style={{
-                      boxShadow:
-                        workType === 'quiz'
-                          ? 'inset 0 0 0 6px var(--accent)'
-                          : 'none',
-                    }}
-                  />
+                <label className="ac-segment__option">
                   <input
                     type="radio"
                     name="workType"
                     value="quiz"
                     checked={workType === 'quiz'}
                     onChange={(e) => setField('workType', e.target.value)}
-                    className="assignment-card__radio-input-native"
+                    className="ac-segment__input"
                   />
-                  <span>Quiz</span>
+                  <span className="ac-segment__text">Quiz</span>
                 </label>
               </div>
             </div>
-
+            
             {/* Title */}
             <div className="assignment-card__group">
               <label htmlFor="title" className="assignment-card__label">
@@ -284,7 +265,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
             {/* Max score */}
             <div className="assignment-card__group">
               <label htmlFor="maxScore" className="assignment-card__label">
-                Max Score *{' '}
+                Max Score{' '}
                 {workType === 'quiz' && (
                   <span className="assignment-card__subtle">(auto)</span>
                 )}

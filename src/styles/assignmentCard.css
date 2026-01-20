@@ -455,3 +455,109 @@ html, body {
 
 /* Optional: make the module/item handle look consistent */
 .quiz-question__handle:focus { outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+
+
+
+/* =============================
+   Segmented Control (Work Type)
+============================= */
+.ac-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-2) 88%, var(--bg) 12%);
+  border: 1px solid rgba(31,41,55,0.10);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04) inset;
+}
+
+.ac-segment__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  /* Spread click target */
+  cursor: pointer;
+  user-select: none;
+  border-radius: 999px;
+}
+
+.ac-segment__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  align-items: center;
+}
+
+/* The visible pill */
+.ac-segment__text {
+  display: block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: all 160ms ease;
+}
+
+/* Focus ring (keyboard a11y) */
+.ac-segment__option:focus-within .ac-segment__text {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+/* Selected state -> gradient pill, white text */
+.ac-segment__input:checked + .ac-segment__text {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 6px 18px var(--shadow);
+}
+
+/* Hover nudge on unselected */
+.ac-segment__option:hover .ac-segment__text {
+  background: color-mix(in srgb, var(--bg) 20%, var(--bg-2) 80%);
+}
+
+/* Inline group: label + control on one line */
+.assignment-card__group--inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Keep label tight when inline */
+.assignment-card__group--inline .assignment-card__label {
+  margin: 0;
+}
+
+/* Responsive nicety for small screens */
+@media (max-width: 520px) {
+  .ac-segment__text {
+    padding: 8px 12px;
+  }
+}
+
+
+.assignment-card__group--inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* Center horizontally */
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+
+/* Make Work Type row full-width AND center the contents */
+.assignment-card__worktype-row {
+  display: flex;
+  flex-direction: column;     /* Label on top, toggle below */
+  align-items: center;        /* Center horizontally */
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 8px;
+}
