@@ -31,6 +31,7 @@ import AuthPage from './pages/AuthPage';
 import Home from './pages/Home'; // your home page component
 import NavbarComponent from './components/NavbarComponent';
 import Footer from './components/FooterComponent';
+import ForumPage from './pages/ForumPage';
 
 export default function App() {
   return (
@@ -43,9 +44,11 @@ export default function App() {
           </div>} />
         <Route path="/home" element={<Home />} />
         <Route path="*" element={<div>
-              <NavbarComponent />
-              <AuthPage />
-              <Footer />
+              {/* <NavbarComponent /> */}
+              {/* <AuthPage />
+              <Footer /> */}
+              <Home />
+              {/* <ForumPage/> */}
           </div>} />
       </Routes>
     </BrowserRouter>
