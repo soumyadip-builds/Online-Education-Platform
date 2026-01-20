@@ -203,7 +203,7 @@ body, #root, .home { background: var(--bg); color: var(--text); }
 /* COURSE CARD */
 .course-card{
   scroll-snap-align:start; min-width: 360px; background: #0e142a; border: 1px solid #2a3466;
-  border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,.35);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .course-card:hover{ transform: translateY(-6px); border-color:#4456b9; box-shadow: 0 16px 36px rgba(0,0,0,.45); }
