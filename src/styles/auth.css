@@ -1,0 +1,346 @@
+
+/* src/pages/auth.css */
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* Apply Inter globally */
+/* * {
+  font-family: "Inter", sans-serif !important;
+} */
+
+/* Enhance text rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Color Palette (new) */
+:root {
+  --bg: #f7f7fb;
+  --bg-2: #ffffff;
+  --surface: rgba(255,255,255,0.75);
+  --text: #1f2937;
+  --muted: #4b5563;
+  --accent: #7c3aed;
+  --accent-2: #0ea5e9;
+
+  /* Keep utility variables that are not part of the provided palette */
+  --shadow: rgba(0,0,0,0.18);
+}
+
+/* Page background wrapper uses the new palette */
+.auth-wrapper {
+  min-height: 100vh;
+  /* Soft gradient that blends bg with accents */
+  background: linear-gradient(130deg, var(--bg), var(--accent-2), var(--accent));
+  background-size: 200% 200%;
+  animation: bg-pan 3s ease-in-out infinite;
+  /* animation: bg-pan 3s cubic-bezier(0.455, 0.03, 0.515, 0.955); */
+  padding: 2rem 1rem;
+  /* border-radius: 25px; */
+  align-items: center;
+  font-family: "Inter", sans-serif !important;
+}
+
+@keyframes bg-pan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Glass Panel */
+.glass-panel {
+  border-radius: 16px;
+  /* Use surface with slight vertical blend */
+  background: linear-gradient(180deg, var(--surface), rgba(255,255,255,0.65));
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.60);
+}
+
+/* Card container spacing */
+.auth-card { max-width: 600px; }
+
+/* Toggle pill */
+.toggle-pill {
+  display: inline-flex;
+  background: linear-gradient(135deg, var(--bg-2), var(--bg));
+  border-radius: 999px;
+  padding: 6px;
+  box-shadow: 0 6px 18px var(--shadow);
+  position: relative;
+  isolation: isolate;
+}
+
+.pill-btn {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: color 220ms ease;
+}
+
+.pill-btn.active { color: var(--bg-2); }
+.pill-btn.active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  box-shadow: 0 6px 18px var(--shadow);
+  z-index: -1;
+  animation: pill-in 280ms ease forwards;
+}
+
+@keyframes pill-in {
+  from { transform: scale(0.98); opacity: 0.4; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Panel enter/leave */
+.auth-panel { transition: opacity 240ms ease, transform 240ms ease; }
+.auth-panel.show { opacity: 1; transform: translateX(0); position: relative; }
+.auth-panel.hide { opacity: 0; transform: translateX(-8px); position: absolute; inset: 0; pointer-events: none; }
+
+/* Titles */
+.section-title {
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Inputs: softened + focus effects */
+.soft-input {
+  border-radius: 10px;
+  border: 1px solid rgba(75, 85, 99, 0.35); /* based on --muted */
+  transition: box-shadow 200ms ease, border-color 200ms ease, transform 120ms ease;
+}
+.soft-input:focus {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.25); /* accent-2 glow */
+  transform: translateY(-1px);
+}
+
+/* Links */
+.link-muted {
+  color: var(--accent-2);
+  text-decoration: none;
+  transition: color 160ms ease, transform 160ms ease;
+}
+.link-muted:hover {
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Gradient button */
+.gradient-btn {
+  border: none;
+  color: var(--bg-2);
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 200ms ease;
+  /* box-shadow: 0 10px 18px var(--shadow); */
+}
+.gradient-btn:hover {
+  transform: translateY(-2px);
+  /* box-shadow: 0 16px 24px var(--shadow); */
+  filter: brightness(1.06);
+  color: var(--text);
+  background: linear-gradient(100deg, var(--bg), var(--accent-2));
+}
+.gradient-btn:active { transform: translateY(0); }
+
+/* Divider Label */
+.divider-label {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--bg), var(--bg-2));
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Role toggle buttons */
+.role-toggle {
+  display: inline-flex;
+  gap: 10px;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(255,255,255,0.70);
+  border-radius: 12px;
+  padding: 6px;
+}
+.role-btn {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  transition: background 180ms ease, color 180ms ease, transform 140ms ease;
+}
+.role-btn.active {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--bg-2);
+  box-shadow: 0 6px 12px var(--shadow);
+}
+.role-btn:hover { transform: translateY(-1px); }
+
+/* Chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 999px;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--bg), var(--bg-2));
+  box-shadow: 0 4px 12px var(--shadow);
+}
+.chip-close {
+  border: none; background: transparent; color: var(--muted);
+  font-weight: 700; cursor: pointer; transition: transform 120ms ease, color 160ms ease;
+}
+.chip-close:hover { color: var(--accent); transform: rotate(8deg); }
+
+/* Progress (Password Strength) */
+.password-progress {
+  height: 10px;
+  border-radius: 999px;
+  background-color: rgba(255,255,255,0.35);
+  overflow: hidden;
+}
+.password-progress .progress-bar {
+  transition: width 220ms ease, filter 200ms ease;
+}
+
+/* Strength gradient levels using new palette */
+.progress-bar.strength-1 {
+  background: linear-gradient(135deg, #e5e7eb, var(--bg)); /* pale */
+  filter: saturate(0.8);
+}
+.progress-bar.strength-2 {
+  background: linear-gradient(135deg, var(--bg-2), var(--accent-2));
+}
+.progress-bar.strength-3 {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+}
+.progress-bar.strength-4 {
+  background: linear-gradient(135deg, var(--accent), #5b21b6); /* deeper accent */
+}
+.progress-bar.strength-5 {
+  background: linear-gradient(135deg, #5b21b6, #1f2937); /* deepest to text */
+  filter: brightness(1.05);
+}
+
+/* Alerts tuned to palette */
+.alert-success {
+  color: #0f5132;
+  background: linear-gradient(135deg, #eafaf3, #d1f4e5);
+  border: 1px solid rgba(15, 81, 50, 0.25);
+}
+.alert-danger {
+  color: #842029;
+  background: linear-gradient(135deg, #fde7ea, #f9d1d6);
+  border: 1px solid rgba(132, 32, 41, 0.25);
+}
+
+/* Invalid feedback override for visibility */
+.invalid-feedback { display: block; }
+
+/* Footer text */
+.text-muted { color: var(--muted) !important; }
+
+/* Login Page header text */
+.login-page-text{
+  color: #556f92 !important; /* retaining readable header tint */
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .pill-btn { padding: 8px 16px; }
+}
+
+/* ===========================
+   Custom styled radios (new palette)
+   =========================== */
+.occ-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* pushes one to left, one to right */
+  gap: 1rem;
+  background: linear-gradient(135deg, var(--bg), var(--bg-2));
+  border: 1px solid rgba(255,255,255,0.60);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+/* Each radio group (input + label) */
+.occ-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Hide default radio (but keep it accessible and focusable) */
+.occ-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border-radius: 50%;
+  outline: none;
+  border: 2px solid var(--accent-2);
+  background: var(--bg-2);
+  display: inline-block;
+  position: relative;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
+}
+
+/* Checked state: gradient ring + inner dot */
+.occ-option input[type="radio"]:checked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+}
+
+/* Inner dot via pseudo-element */
+.occ-option input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 4px; /* creates inner dot */
+  border-radius: 50%;
+  background: var(--bg-2);
+}
+
+/* Hover / Focus */
+.occ-option input[type="radio"]:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+.occ-option input[type="radio"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.25);
+  border-color: var(--accent-2);
+}
+
+/* Label styling to match palette */
+.occ-option .occ-label {
+  font-weight: 600;
+  color: var(--text);
+  transition: color 160ms ease, transform 160ms ease;
+}
+.occ-option:hover .occ-label {
+  color: var(--muted);
+  transform: translateY(-1px);
+}
+
+/* Validation message spacing */
+.occ-error {
+  margin-top: 6px;
+}
