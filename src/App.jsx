@@ -12,7 +12,7 @@ export default function App() {
 	return (
 		<BrowserRouter>
 			<Routes>
-				<Route path="/" element={<CoursePage />} />
+				<Route path="/coursepage" element={<CoursePage />} />
 				<Route path="/courses/:id" element={<CourseDetails />} />
 				<Route path="/quiz/:quizId" element={<QuizPage />} />
 				<Route path="/assignment/:assignmentId" element={<AssignmentPage />} />

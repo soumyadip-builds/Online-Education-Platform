@@ -26,7 +26,7 @@ export default function CourseCard({ course }) {
 
 	return (
 		<article
-			className="course-card course-card--compact"
+			className="course_page_course_card course_page_course_card--compact"
 			role="button"
 			tabIndex={0}
 			onClick={handleClick}
@@ -35,25 +35,25 @@ export default function CourseCard({ course }) {
 		>
 			{/* Thumbnail */}
 
-			<div className="course-card__thumb">
+			<div className="course_page_course_card__thumb">
 				{thumbnail ? (
 					<img src={thumbnail} alt={`${title} thumbnail`} />
 				) : (
-					<div className="course-card__thumb--placeholder" />
+					<div className="course_page_course_card__thumb--placeholder" />
 				)}
 			</div>
 
 			{/* Meta */}
-			<div className="course-card__compact-body">
-				<h3 className="course-card__compact-title">{title}</h3>
-				<p className="course-card__compact-author">{author}</p>
+			<div className="course_page_course_card__compact-body">
+				<h3 className="course_page_course_card__compact-title">{title}</h3>
+				<p className="course_page_course_card__compact-author">{author}</p>
 				{/* Bestseller badge */}
 				{isBestseller && (
 					<span className="my_badge badge--bestseller badge-hero">
 						Bestseller <i class="bi bi-award-fill"></i>
 					</span>
 				)}
-				<div className="course-card__compact-stats">
+				<div className="course_page_course_card__compact-stats">
 					<span
 						className="rating-chip"
 						aria-label={`Rating ${rating} out of 5`}
