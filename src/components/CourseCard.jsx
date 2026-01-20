@@ -1,94 +1,81 @@
-
 // src/components/CourseCard.jsx
-import React from "react";
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+import '../styles/course.css';
 
-const Star = ({ filled }) => (
-  <svg
-    aria-hidden="true"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill={filled ? "#facc15" : "none"}
-    stroke="#facc15"
-    strokeWidth="2"
-    style={{ display: "inline-block" }}
-  >
-    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-  </svg>
-);
-
-const Rating = ({ value = 0 }) => {
-  const full = Math.round(value);
-  return (
-    <span className="rating">
-      <span className="rating-value">{value.toFixed(1)}</span>
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star key={i} filled={i < full} />
-      ))}
-    </span>
-  );
-};
-
-export default function CourseCard({ course, onClick }) {
-  // Accept multiple possible field names for the thumbnail
-  const thumbSrc = course.thumb || course.image || course.img || course.thumbnail;
-
-  return (
-    <article
-      className="course-card"
-      role="button"
-      tabIndex={0}
-      onClick={() => onClick?.(course)}
-      onKeyDown={(e) => e.key === "Enter" && onClick?.(course)}
-      aria-label={`Open course ${course.title}`}
-    >
-      {/* THUMBNAIL */}
-      <div className="thumb-wrap">
-        {thumbSrc ? (
-          <img
-            src={thumbSrc}
-            alt={`${course.title} thumbnail`}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : null}
-        {course.isBestseller && <span className="badge">Bestseller</span>}
-      </div>
-
-      {/* BODY */}
-      <div className="course-body">
-        <h3 className="course-title">{course.title}</h3>
-        <div className="author">{course.author}</div>
-
-        <div className="meta-row">
-          <Rating value={course.rating || 0} />
-          <span>•</span>
-          <span className="learners">
-            {Number(course.learners || 0).toLocaleString()} learners
-          </span>
-        </div>
-
-        <div className="pill-row">
-          <span className="pill">{course.level}</span>
-          <span className="pill">{course.duration}</span>
-        </div>
-
-        <div className="tags">
-          {(course.tags || []).slice(0, 3).map((t) => (
-            <span key={t}>#{t}</span>
-          ))}
-        </div>
-
-        <button
-          className="primary-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.(course);
-          }}
-        >
-          View details
-        </button>
-      </div>
-    </article>
-  );
+/** Prefix static paths with app base (Vite/CRA safe) */
+function withBase(path) {
+	const base =
+		typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL
+			? import.meta.env.BASE_URL
+			: process.env.PUBLIC_URL || '/';
+	const b = base.endsWith('/') ? base : `${base}/`;
+	return path?.startsWith('/') ? `${b}${path.slice(1)}` : `${b}${path || ''}`;
 }
+
+export default function CourseCard({ course }) {
+	const navigate = useNavigate();
+
+	const { id, title, author, rating, learners, thumbnail, isBestseller } = course; // ← added isBestseller
+
+	const handleClick = () => {
+		// Navigate to details page: /courses/:id
+		navigate(`/courses/${id}`);
+	};
+
+	return (
+		<article
+			className="course_page_course_card course_page_course_card--compact"
+			role="button"
+			tabIndex={0}
+			onClick={handleClick}
+			onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick()}
+			aria-label={`Open course: ${title}`}
+		>
+			{/* Thumbnail */}
+
+			<div className="course_page_course_card__thumb">
+				{thumbnail ? (
+					<img src={thumbnail} alt={`${title} thumbnail`} />
+				) : (
+					<div className="course_page_course_card__thumb--placeholder" />
+				)}
+			</div>
+
+			{/* Meta */}
+			<div className="course_page_course_card__compact-body">
+				<h3 className="course_page_course_card__compact-title">{title}</h3>
+				<p className="course_page_course_card__compact-author">{author}</p>
+				{/* Bestseller badge */}
+				{isBestseller && (
+					<span className="my_badge badge--bestseller badge-hero">
+						Bestseller <i class="bi bi-award-fill"></i>
+					</span>
+				)}
+				<div className="course_page_course_card__compact-stats">
+					<span
+						className="rating-chip"
+						aria-label={`Rating ${rating} out of 5`}
+					>
+						⭐ {Number(rating).toFixed(1)}
+					</span>
+					<span className="learners-chip" aria-label={`${learners} learners`}>
+						{Intl.NumberFormat().format(learners)} learners
+					</span>
+				</div>
+			</div>
+		</article>
+	);
+}
+
+CourseCard.propTypes = {
+	course: PropTypes.shape({
+		id: PropTypes.string.isRequired,
+		title: PropTypes.string.isRequired,
+		author: PropTypes.string.isRequired,
+		rating: PropTypes.number.isRequired,
+		learners: PropTypes.number.isRequired,
+		thumbnail: PropTypes.string,
+	}).isRequired,
+};
