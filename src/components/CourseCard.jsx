@@ -1,94 +1,103 @@
 
 // src/components/CourseCard.jsx
-import React from "react";
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+import '../styles/course.css';
 
-const Star = ({ filled }) => (
-  <svg
-    aria-hidden="true"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill={filled ? "#facc15" : "none"}
-    stroke="#facc15"
-    strokeWidth="2"
-    style={{ display: "inline-block" }}
-  >
-    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-  </svg>
-);
+/** Prefix static paths with app base (Vite/CRA safe) */
+function withBase(path) {
+  const base =
+    typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    import.meta.env.BASE_URL
+      ? import.meta.env.BASE_URL
+      : process.env.PUBLIC_URL || '/';
+  const b = base.endsWith('/') ? base : `${base}/`;
+  return path?.startsWith('/') ? `${b}${path.slice(1)}` : `${b}${path || ''}`;
+}
 
-const Rating = ({ value = 0 }) => {
-  const full = Math.round(value);
-  return (
-    <span className="rating">
-      <span className="rating-value">{value.toFixed(1)}</span>
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star key={i} filled={i < full} />
-      ))}
-    </span>
-  );
-};
+export default function CourseCard({ course }) {
+  const navigate = useNavigate();
 
-export default function CourseCard({ course, onClick }) {
-  // Accept multiple possible field names for the thumbnail
-  const thumbSrc = course.thumb || course.image || course.img || course.thumbnail;
+  const { id, title, author, rating, learners, thumbnail } = course;
+
+  const handleClick = () => {
+    navigate(`/courses/${id}`);
+  };
 
   return (
     <article
-      className="course-card"
+      className="course_page_course_card course_page_course_card--compact"
       role="button"
       tabIndex={0}
-      onClick={() => onClick?.(course)}
-      onKeyDown={(e) => e.key === "Enter" && onClick?.(course)}
-      aria-label={`Open course ${course.title}`}
+      onClick={handleClick}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ' ? handleClick() : null)}
+      aria-label={`Open course: ${title}`}
     >
-      {/* THUMBNAIL */}
-      <div className="thumb-wrap">
-        {thumbSrc ? (
-          <img
-            src={thumbSrc}
-            alt={`${course.title} thumbnail`}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : null}
-        {course.isBestseller && <span className="badge">Bestseller</span>}
+      {/* Thumbnail */}
+      <div className="ratio ratio-16x9 bg-light">
+        <img
+          src={thumbnail}
+          alt={title}
+          className="card-img-top object-fit-cover"
+          style={{
+            borderTopLeftRadius: '.375rem',
+            borderTopRightRadius: '.375rem',
+          }}
+          onError={(e) => {
+            e.currentTarget.src =
+              'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=60';
+          }}
+        />
       </div>
 
-      {/* BODY */}
-      <div className="course-body">
-        <h3 className="course-title">{course.title}</h3>
-        <div className="author">{course.author}</div>
+      {/* Body */}
+      <div className="card-body d-flex flex-column">
+        <div className="d-flex justify-content-between align-items-start mb-2">
+          {course.category && (
+            <span className="badge bg-primary-subtle text-primary">
+              {course.category}
+            </span>
+          )}
 
-        <div className="meta-row">
-          <Rating value={course.rating || 0} />
-          <span>•</span>
-          <span className="learners">
-            {Number(course.learners || 0).toLocaleString()} learners
-          </span>
+          {rating > 0 && (
+            <span className="text-warning small">★ {rating.toFixed(1)}</span>
+          )}
         </div>
 
-        <div className="pill-row">
-          <span className="pill">{course.level}</span>
-          <span className="pill">{course.duration}</span>
-        </div>
+        <h5 className="card-title mb-1">{title}</h5>
 
-        <div className="tags">
-          {(course.tags || []).slice(0, 3).map((t) => (
-            <span key={t}>#{t}</span>
-          ))}
-        </div>
+        {author && (
+          <div className="text-muted xsmall mb-2">by {author}</div>
+        )}
 
-        <button
-          className="primary-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.(course);
-          }}
-        >
-          View details
-        </button>
+        <p className="card-text text-muted small flex-grow-1">
+          {course.description?.length > 120
+            ? course.description.slice(0, 117) + '...'
+            : course.description}
+        </p>
+
+        {/* Learners only — buttons removed */}
+        <div className="d-flex justify-content-start align-items-center mt-auto">
+          <div className="text-muted small">
+            👥 {learners.toLocaleString()} learners
+          </div>
+        </div>
       </div>
     </article>
   );
 }
+
+CourseCard.propTypes = {
+  course: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    author: PropTypes.string.isRequired,
+    rating: PropTypes.number.isRequired,
+    learners: PropTypes.number.isRequired,
+    thumbnail: PropTypes.string,
+    category: PropTypes.string,
+    description: PropTypes.string,
+  }).isRequired,
+};

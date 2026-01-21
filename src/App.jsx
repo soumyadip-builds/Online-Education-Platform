@@ -1,32 +1,8 @@
-// import NavbarComponent from './components/NavbarComponent';
-// import './App.css';
-// import Footer from './components/FooterComponent';
-
-
-
-// // import { BrowserRouter, Routes, Route } from 'react-router-dom';
-// import AuthPage from './pages/AuthPage';
-// import Home from './pages/Home';
-
-
-
-// function App() {
-  
-//   return (
-//     <div>
-//       <NavbarComponent />
-//       <AuthPage />
-//       {/* <Home/> */}
-//       <Footer />
-//     </div>
-//   );
-// }
-
-// export default App;
-
-
-// Example in App.jsx (React Router v6)
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import CoursePage from './pages/CoursePage';
+import CourseDetails from './components/CourseDetails';
+import AssignmentPage from './pages/AssignmentPage';
+import QuizPage from './pages/QuizPage';
 import AuthPage from './pages/AuthPage';
 import Home from './pages/Home'; // your home page component
 import NavbarComponent from './components/NavbarComponent';
@@ -34,15 +10,21 @@ import Footer from './components/FooterComponent';
 import ForumPage from './pages/ForumPage';
 import EditProfile from './components/EditProfile';
 
+import MentorHome from './pages/InstructorHomePage';
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/auth" element={<div>
+        <Route
+          path="/auth"
+          element={
+            <div>
               <NavbarComponent />
               <AuthPage />
               <Footer />
-          </div>} />
+            </div>
+          }
+        />
         <Route path="/home" element={<Home />} />
         <Route path="*" element={<div>
               {/* <NavbarComponent /> */}
@@ -56,8 +38,27 @@ export default function App() {
           <EditProfile/>
           <Footer/>
         </div>} />
+        <Route
+          path="*"
+          element={
+            <div>
+              <NavbarComponent />
+              <AuthPage />
+              <Footer />
+            </div>
+          }
+        />
+        <Route
+          path="/mentorhome"
+          element={<MentorHome authorName={'KRISHAI Technologies'} />}
+        />
+        {/* <Home />  */}
+        {/* <Footer /> */}
+        <Route path="/coursepage" element={<CoursePage />} />
+        <Route path="/courses/:id" element={<CourseDetails />} />
+        <Route path="/quiz/:quizId" element={<QuizPage />} />
+        <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
