@@ -799,9 +799,9 @@ export default function CourseCreation({ courseService, assignmentService, onCre
             </div>
           </div>
 
-          {/* Preview (student-facing groups) */}
+          {/* Preview */}
           <aside className="cb-preview">
-            <h3 className="cb-preview__title">Preview (student-facing groups)</h3>
+            <h3 className="cb-preview__title">Preview</h3>
             <div className="quiz-editor__questions" style={{ maxHeight: "60vh" }}>
               {[
                 ["Videos", grouped.Videos],

@@ -206,7 +206,6 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
           <h1 className="assignment-card__title">
             Add {workType === 'quiz' ? 'Quiz' : 'Assignment'}
           </h1>
-          {/* Self-paced: no due date/time display */}
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
