@@ -4,7 +4,7 @@ import { useState } from 'react'
 import './App.css'
 import AssignmentCard from './components/AssignmentCard'
 import CourseCreator from './components/CourseCreator'
-
+import CourseCollapsibleSection from '.components/CourseCollapsibleSection'
 function App() {
   // const [count, setCount] = useState(0)
 
