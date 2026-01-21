@@ -2,6 +2,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import CourseCard from '../components/CourseCard';
 import '../styles/course.css';
+import NavbarComponent from '../components/NavbarComponent';
+import Footer from '../components/FooterComponent';
 
 /**
  * Courses listing page
@@ -68,44 +70,47 @@ export default function CoursePage() {
 	}, [courses, query, showBest]);
 
 	return (
-		<section className="course-page">
-			<h3>Courses</h3>
+		<div>
+			<NavbarComponent />
+			<section className="course-page">
+				<h3>Courses</h3>
+				{/* Controls row */}
+				<div className="course-page__controls">
+					<input
+						value={query}
+						onChange={(e) => setQuery(e.target.value)}
+						className="course-page__search"
+						aria-label="Search courses"
+						placeholder="Search by title or author…"
+						type="search"
+					/>
 
-			{/* Controls row */}
-			<div className="course-page__controls">
-				<input
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
-					className="course-page__search"
-					aria-label="Search courses"
-					placeholder="Search by title or author…"
-					type="search"
-				/>
-
-				{/* Bestseller toggle button */}
-				<button
-					type="button"
-					className={`mybtn ${showBest ? 'mybtn--active' : ''}`}
-					onClick={() => setShowBest((prev) => !prev)}
-					aria-pressed={showBest}
-					title={showBest ? 'Show all' : 'Show only bestsellers'}
-				>
-					{showBest ? 'Show all' : 'Show only bestsellers'}
-				</button>
-			</div>
-
-			{/* Results */}
-			{filtered.length === 0 && (
-				<p className="course-page__empty">No courses found.</p>
-			)}
-
-			{filtered.length > 0 && (
-				<div className="course-grid">
-					{filtered.map((course) => (
-						<CourseCard key={course.id} course={course} />
-					))}
+					{/* Bestseller toggle button */}
+					<button
+						type="button"
+						className={`mybtn ${showBest ? 'mybtn--active' : ''}`}
+						onClick={() => setShowBest((prev) => !prev)}
+						aria-pressed={showBest}
+						title={showBest ? 'Show all' : 'Show only bestsellers'}
+					>
+						{showBest ? 'Show all' : 'Show only bestsellers'}
+					</button>
 				</div>
-			)}
-		</section>
+
+				{/* Results */}
+				{filtered.length === 0 && (
+					<p className="course-page__empty">No courses found.</p>
+				)}
+
+				{filtered.length > 0 && (
+					<div className="course-grid">
+						{filtered.map((course) => (
+							<CourseCard key={course.id} course={course} />
+						))}
+					</div>
+				)}
+			</section>
+			<Footer />
+		</div>
 	);
 }

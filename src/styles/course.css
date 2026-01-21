@@ -225,7 +225,8 @@
 	position: fixed;
 	top: 0;
 	right: 0;
-	margin: 4rem;
+	margin-top: 5rem;
+	margin-right: 3rem;
 	background: linear-gradient(45deg, #ffffff, #f7f7fb);
 	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 	border-radius: 15px;

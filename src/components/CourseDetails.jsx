@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import '../styles/course.css';
+import NavbarComponent from './NavbarComponent';
+import Footer from './FooterComponent';
 
 /** Prefix a path with app base (Vite BASE_URL or CRA PUBLIC_URL). */
 function withBase(path) {
@@ -162,203 +164,213 @@ export default function CourseDetails() {
 		: null;
 
 	return (
-		<div className="course-details">
-			{/* HERO */}
-			<section className="course-details__hero">
-				<div>
-					<h1 className="course-details__title">{title}</h1>
+		<div>
+			<NavbarComponent />
+			<div className="course-details">
+				{/* HERO */}
+				<section className="course-details__hero">
+					<div>
+						<h1 className="course-details__title">{title}</h1>
 
-					<div className="course-details__chips">
-						<span className="chip" title="Rating">
-							<strong style={{ marginRight: 6 }}>
-								{Number(rating || 0).toFixed(1)}
-							</strong>
-							{Array.from({ length: 5 }).map((_, i) => (
-								<Star key={i} filled={i < stars} />
-							))}
-							{formattedRatings && (
-								<span style={{ marginLeft: 8 }}>
-									({formattedRatings} ratings)
+						<div className="course-details__chips">
+							<span className="chip" title="Rating">
+								<strong style={{ marginRight: 6 }}>
+									{Number(rating || 0).toFixed(1)}
+								</strong>
+								{Array.from({ length: 5 }).map((_, i) => (
+									<Star key={i} filled={i < stars} />
+								))}
+								{formattedRatings && (
+									<span style={{ marginLeft: 8 }}>
+										({formattedRatings} ratings)
+									</span>
+								)}
+							</span>
+
+							<span className="chip" title="Learners">
+								{formattedLearners} students
+							</span>
+
+							{author && (
+								<span className="chip">
+									Created by{' '}
+									<strong style={{ marginLeft: 6 }}>{author}</strong>
 								</span>
 							)}
-						</span>
 
-						<span className="chip" title="Learners">
-							{formattedLearners} students
-						</span>
+							{lastUpdated && (
+								<span className="chip">
+									Last updated{' '}
+									{new Date(lastUpdated).toLocaleDateString()}
+								</span>
+							)}
 
-						{author && (
-							<span className="chip">
-								Created by{' '}
-								<strong style={{ marginLeft: 6 }}>{author}</strong>
-							</span>
+							{(languages.audio ||
+								(languages.captions || []).length > 0) && (
+								<span className="chip">
+									{languages.audio ? `Audio: ${languages.audio}` : null}
+									{(languages.captions || []).length > 0
+										? ` • CC: ${(languages.captions || []).join(', ')}`
+										: ''}
+								</span>
+							)}
+						</div>
+
+						{description && (
+							<p className="course-details__desc">{description}</p>
 						)}
 
-						{lastUpdated && (
-							<span className="chip">
-								Last updated {new Date(lastUpdated).toLocaleDateString()}
-							</span>
-						)}
-
-						{(languages.audio || (languages.captions || []).length > 0) && (
-							<span className="chip">
-								{languages.audio ? `Audio: ${languages.audio}` : null}
-								{(languages.captions || []).length > 0
-									? ` • CC: ${(languages.captions || []).join(', ')}`
-									: ''}
-							</span>
+						{!enrolled ? (
+							<>
+								<button
+									className="mybtn mybtn-primary mybtn-xl"
+									onClick={handleEnroll}
+								>
+									Enroll now
+								</button>
+								<div className="enrollment-status">
+									Content is locked until you enroll
+								</div>
+							</>
+						) : (
+							<div className="enrollment-status">
+								✅ You’re enrolled. All content is unlocked.
+							</div>
 						)}
 					</div>
 
-					{description && <p className="course-details__desc">{description}</p>}
-
-					{!enrolled ? (
-						<>
-							<button
-								className="mybtn mybtn-primary mybtn-xl"
-								onClick={handleEnroll}
-							>
-								Enroll now
-							</button>
-							<div className="enrollment-status">
-								Content is locked until you enroll
-							</div>
-						</>
-					) : (
-						<div className="enrollment-status">
-							✅ You’re enrolled. All content is unlocked.
-						</div>
-					)}
-				</div>
-
-				{/* Right-side resources panel */}
-				<div className="resources">
-					{/* VIDEOS */}
-					{videos?.length > 0 && (
-						<section className="course-details__section">
-							{/* <h3 className="section-title">Videos ({videos.length})</h3> */}
-							<div className="video-grid">
-								{videos.map((v, i) =>
-									i === 0 ? (
-										<article className="video-card" key={i}>
-											<div className="video-thumb">
-												{thumbnail ? (
-													<img
-														src={withBase(thumbnail)}
-														alt={`Video ${i + 1}`}
-													/>
-												) : (
-													<div className="video-thumb__placeholder">
-														Video {i + 1}
-													</div>
-												)}
-												{!enrolled && (
-													<div className="lock-overlay">
-														<div className="lock-text">
-															Enroll to Play
+					{/* Right-side resources panel */}
+					<div className="resources">
+						{/* VIDEOS */}
+						{videos?.length > 0 && (
+							<section className="course-details__section">
+								{/* <h3 className="section-title">Videos ({videos.length})</h3> */}
+								<div className="video-grid">
+									{videos.map((v, i) =>
+										i === 0 ? (
+											<article className="video-card" key={i}>
+												<div className="video-thumb">
+													{thumbnail ? (
+														<img
+															src={withBase(thumbnail)}
+															alt={`Video ${i + 1}`}
+														/>
+													) : (
+														<div className="video-thumb__placeholder">
+															Video {i + 1}
 														</div>
-													</div>
-												)}
-											</div>
-											<div className="video-info">
-												<h4 className="video-title">
-													{v.title || `Video ${i + 1}`}
-												</h4>
-												<a
-													href={v.url}
-													className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
-													target="_blank"
-													rel="noopener noreferrer"
-													onClick={(e) => {
-														if (!enrolled) e.preventDefault();
-													}}
-												>
-													▶ Watch
-												</a>
-											</div>
-										</article>
-									) : (
-										<div></div>
-									),
+													)}
+													{!enrolled && (
+														<div className="lock-overlay">
+															<div className="lock-text">
+																Enroll to Play
+															</div>
+														</div>
+													)}
+												</div>
+												<div className="video-info">
+													<h4 className="video-title">
+														{v.title || `Video ${i + 1}`}
+													</h4>
+													<a
+														href={v.url}
+														className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
+														target="_blank"
+														rel="noopener noreferrer"
+														onClick={(e) => {
+															if (!enrolled)
+																e.preventDefault();
+														}}
+													>
+														▶ Watch
+													</a>
+												</div>
+											</article>
+										) : (
+											<div></div>
+										),
+									)}
+								</div>
+							</section>
+						)}
+						{/* THIS COURSE INCLUDES */}
+						<section className="course-details__section">
+							<h3 className="section-title">This course includes</h3>
+							<ul className="includes-list">
+								{'hoursOnDemandVideo' in includes && (
+									<li>
+										<span className="icon">🎬</span>
+										{includes.hoursOnDemandVideo} hours on‑demand
+										video
+									</li>
 								)}
-							</div>
+								{'articles' in includes && (
+									<li>
+										<span className="icon">📰</span>
+										{includes.articles} articles
+									</li>
+								)}
+								{'downloadableResources' in includes && (
+									<li>
+										<span className="icon">📥</span>
+										{includes.downloadableResources} downloadable
+										resource(s)
+									</li>
+								)}
+								{includes.accessOnMobile && (
+									<li>
+										<span className="icon">📱</span>Access on mobile
+									</li>
+								)}
+								{includes.certificate && (
+									<li>
+										<span className="icon">🎓</span>Certificate of
+										completion
+									</li>
+								)}
+							</ul>
 						</section>
-					)}
-					{/* THIS COURSE INCLUDES */}
+					</div>
+				</section>
+
+				{/* WHAT YOU'LL LEARN */}
+				{whatYouWillLearn.length > 0 && (
 					<section className="course-details__section">
-						<h3 className="section-title">This course includes</h3>
-						<ul className="includes-list">
-							{'hoursOnDemandVideo' in includes && (
-								<li>
-									<span className="icon">🎬</span>
-									{includes.hoursOnDemandVideo} hours on‑demand video
+						<h3 className="section-title">What you’ll learn</h3>
+						<ul className="learn-grid">
+							{whatYouWillLearn.map((item, i) => (
+								<li key={i}>
+									<span className="tick">✔</span>
+									{item}
 								</li>
-							)}
-							{'articles' in includes && (
-								<li>
-									<span className="icon">📰</span>
-									{includes.articles} articles
-								</li>
-							)}
-							{'downloadableResources' in includes && (
-								<li>
-									<span className="icon">📥</span>
-									{includes.downloadableResources} downloadable
-									resource(s)
-								</li>
-							)}
-							{includes.accessOnMobile && (
-								<li>
-									<span className="icon">📱</span>Access on mobile
-								</li>
-							)}
-							{includes.certificate && (
-								<li>
-									<span className="icon">🎓</span>Certificate of
-									completion
-								</li>
-							)}
+							))}
 						</ul>
 					</section>
-				</div>
-			</section>
+				)}
 
-			{/* WHAT YOU'LL LEARN */}
-			{whatYouWillLearn.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">What you’ll learn</h3>
-					<ul className="learn-grid">
-						{whatYouWillLearn.map((item, i) => (
-							<li key={i}>
-								<span className="tick">✔</span>
-								{item}
-							</li>
-						))}
-					</ul>
-				</section>
-			)}
-
-			{/* COURSE CONTENT / SECTIONS (compact summary) */}
-			{sections.length > 0 && (
-				<section className="course-details__section">
-					<h3 className="section-title">Course content</h3>
-					<ul className="sections-list">
-						{sections.map((s, i) => (
-							<li key={i}>
-								<span className="section-dot">•</span>
-								<span className="section-title-line">{s.title}</span>
-								{typeof s.lectures === 'number' && (
-									<span className="muted">
-										{' '}
-										· {s.lectures} lectures
-									</span>
-								)}
-								{s.length && <span className="muted"> · {s.length}</span>}
-							</li>
-						))}
-					</ul>
-				</section>
-			)}
+				{/* COURSE CONTENT / SECTIONS (compact summary) */}
+				{sections.length > 0 && (
+					<section className="course-details__section">
+						<h3 className="section-title">Course content</h3>
+						<ul className="sections-list">
+							{sections.map((s, i) => (
+								<li key={i}>
+									<span className="section-dot">•</span>
+									<span className="section-title-line">{s.title}</span>
+									{typeof s.lectures === 'number' && (
+										<span className="muted">
+											{' '}
+											· {s.lectures} lectures
+										</span>
+									)}
+									{s.length && (
+										<span className="muted"> · {s.length}</span>
+									)}
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
 
 			<div id="all_course_content" className="bg-info-subtle p-2 rounded-4 my-3">
 				{/* VIDEOS */}
@@ -392,60 +404,60 @@ export default function CourseDetails() {
 					</section>
 				)}
 
-				{/* DOCUMENTATION */}
-				{docs?.length > 0 && (
-					<section className="course-details__section">
-						<h3 className="section-title fw-bolder">
-							Documentation ({docs.length})
-						</h3>
-						<ul className="resource-list">
-							{docs.map((d, i) => {
-								const url = resolveDocUrl(d.url);
-								return (
+					{/* DOCUMENTATION */}
+					{docs?.length > 0 && (
+						<section className="course-details__section">
+							<h3 className="section-title fw-bolder">
+								Documentation ({docs.length})
+							</h3>
+							<ul className="resource-list">
+								{docs.map((d, i) => {
+									const url = resolveDocUrl(d.url);
+									return (
+										<li key={i}>
+											<a
+												className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
+												href={url}
+												target="_blank"
+												rel="noopener noreferrer"
+												onClick={(e) => {
+													if (!enrolled) e.preventDefault();
+												}}
+											>
+												📄 {d.title || d.url}
+											</a>
+										</li>
+									);
+								})}
+							</ul>
+						</section>
+					)}
+
+					{/* RESOURCES */}
+					{links?.length > 0 && (
+						<section className="course-details__section">
+							<h3 className="section-title fw-bolder">
+								Resources ({links.length})
+							</h3>
+							<ul className="resource-list">
+								{links.map((l, i) => (
 									<li key={i}>
 										<a
 											className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-											href={url}
+											href={l.url}
 											target="_blank"
 											rel="noopener noreferrer"
 											onClick={(e) => {
 												if (!enrolled) e.preventDefault();
 											}}
 										>
-											📄 {d.title || d.url}
+											🔗 {l.label || l.url}
 										</a>
 									</li>
-								);
-							})}
-						</ul>
-					</section>
-				)}
-
-				{/* RESOURCES */}
-				{links?.length > 0 && (
-					<section className="course-details__section">
-						<h3 className="section-title fw-bolder">
-							Resources ({links.length})
-						</h3>
-						<ul className="resource-list">
-							{links.map((l, i) => (
-								<li key={i}>
-									<a
-										className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-										href={l.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										onClick={(e) => {
-											if (!enrolled) e.preventDefault();
-										}}
-									>
-										🔗 {l.label || l.url}
-									</a>
-								</li>
-							))}
-						</ul>
-					</section>
-				)}
+								))}
+							</ul>
+						</section>
+					)}
 
 				{/* NEW: Assignments list for this course */}
 				{assignments.length > 0 && (
