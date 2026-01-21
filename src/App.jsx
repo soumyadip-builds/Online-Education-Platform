@@ -32,6 +32,7 @@ import Home from './pages/Home'; // your home page component
 import NavbarComponent from './components/NavbarComponent';
 import Footer from './components/FooterComponent';
 import ForumPage from './pages/ForumPage';
+import EditProfile from './components/EditProfile';
 
 export default function App() {
   return (
@@ -50,6 +51,11 @@ export default function App() {
               <Home />
               {/* <ForumPage/> */}
           </div>} />
+        <Route path="/edit-profile" element={<div>
+          <NavbarComponent/>
+          <EditProfile/>
+          <Footer/>
+        </div>} />
       </Routes>
     </BrowserRouter>
   );

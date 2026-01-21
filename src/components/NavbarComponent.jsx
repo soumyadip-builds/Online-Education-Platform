@@ -69,7 +69,7 @@ const handleLogout = useCallback(() => {
   navigate('/home', { replace: true });
 }, [navigate]);
 
-
+  const editProfile = React.useCallback(() => navigate('/edit-profile'), [navigate]);
 
   const navigateToAuth = useNavigate();
 
@@ -149,6 +149,7 @@ const handleLogout = useCallback(() => {
             >
               <NavDropdown.Item href="/settings">⚙️ Settings</NavDropdown.Item>
               <NavDropdown.Item href="/help">❓ Help</NavDropdown.Item>
+              <NavDropdown.Item as="button" onClick={editProfile}>✏️ Edit Profile</NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item as="button" onClick={handleLogout}>🚪 Logout</NavDropdown.Item>
             </NavDropdown>

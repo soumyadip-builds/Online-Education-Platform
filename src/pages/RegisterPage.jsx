@@ -143,19 +143,6 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
         <div className="d-flex justify-content-between">
           <label className="form-label">Password</label>
 
-          {/* Show Password Toggle */}
-          {/* <div className="form-check form-switch">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="regShowPasswords"
-              checked={showPasswords}
-              onChange={() => setShowPasswords((s) => !s)}
-            />
-            <label className="form-check-label" htmlFor="regShowPasswords">
-              Show
-            </label>
-          </div> */}
         </div>
 
         <input
