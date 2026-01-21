@@ -52,17 +52,6 @@ export default function AssignmentPage() {
 		return types.join(',');
 	}, [assignment]);
 
-	const isPastDue = useMemo(() => {
-		if (!assignment?.dueAt) return false;
-		return new Date(assignment.dueAt).getTime() < Date.now();
-	}, [assignment]);
-
-	const dueLabel = useMemo(() => {
-		if (!assignment?.dueAt) return '-';
-		const d = new Date(assignment.dueAt);
-		return d.toLocaleString();
-	}, [assignment]);
-
 	const onFileChange = (e) => {
 		setSubmitError('');
 		const f = e.target.files?.[0];
@@ -174,15 +163,6 @@ export default function AssignmentPage() {
 				<TopAccent />
 				<div className="ap-header">
 					<h1 className="ap-title">{assignment.title}</h1>
-					<div className="ap-rightMeta">
-						<span
-							className={`ap-badge ${assignment.status === 'published' ? 'ok' : ''}`}
-						>
-							<span className="ap-dot" />{' '}
-							{assignment.status?.[0]?.toUpperCase() +
-								assignment.status?.slice(1)}
-						</span>
-					</div>
 				</div>
 
 				<div className="ap-metaRow ap-pad">
@@ -192,7 +172,6 @@ export default function AssignmentPage() {
 						label="Expected Time"
 						value={`${assignment.expectedTimeMins} mins`}
 					/>
-					<Meta label="Due" value={dueLabel} danger={isPastDue} />
 				</div>
 
 				<div className="ap-section ap-pad">
@@ -290,14 +269,9 @@ export default function AssignmentPage() {
 						{submitSuccess && (
 							<div className="ap-alert ok">{submitSuccess}</div>
 						)}
-						{isPastDue && (
-							<div className="ap-alert warn">
-								This assignment is past due. You may no longer submit.
-							</div>
-						)}
 
 						<div className="ap-actions">
-							<button type="submit" className="ap-btn" disabled={isPastDue}>
+							<button type="submit" className="ap-btn">
 								Submit Assignment
 							</button>
 							<Link to="/" className="ap-btn ghost">

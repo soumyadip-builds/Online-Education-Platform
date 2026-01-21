@@ -360,7 +360,7 @@ export default function CourseDetails() {
 				</section>
 			)}
 
-			<div id='all_course_content' className="bg-info-subtle p-2 rounded-4 my-3">
+			<div id="all_course_content" className="bg-info-subtle p-2 rounded-4 my-3">
 				{/* VIDEOS */}
 				{videos?.length > 0 && (
 					<section className="course-details__section">
@@ -472,11 +472,6 @@ export default function CourseDetails() {
 									>
 										📘 {a.title}
 									</Link>
-									<span className="course-meta-right">
-										{a.dueAt
-											? `Due: ${new Date(a.dueAt).toLocaleString()}`
-											: ''}
-									</span>
 								</li>
 							))}
 						</ul>
@@ -508,11 +503,6 @@ export default function CourseDetails() {
 									>
 										📝 {q.title}
 									</Link>
-									<span className="course-meta-right">
-										{q.dueAt
-											? `Due: ${new Date(q.dueAt).toLocaleString()}`
-											: ''}
-									</span>
 								</li>
 							))}
 						</ul>

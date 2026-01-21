@@ -122,16 +122,6 @@ export default function QuizPage() {
 		return arr;
 	}
 
-	const formattedDue = useMemo(() => {
-		if (!quiz?.dueAt) return '-';
-		return new Date(quiz.dueAt).toLocaleString();
-	}, [quiz]);
-
-	const isPastDue = useMemo(() => {
-		if (!quiz?.dueAt) return false;
-		return new Date(quiz.dueAt).getTime() < Date.now();
-	}, [quiz]);
-
 	const remainingClock = useMemo(() => {
 		if (timeLeftSec == null) return null;
 		const m = Math.floor(timeLeftSec / 60);
@@ -240,21 +230,12 @@ export default function QuizPage() {
 
 				<div className="apq-header">
 					<h1 className="apq-title">{quiz.title}</h1>
-					<div className="apq-rightMeta">
-						<span
-							className={`apq-badge ${quiz.status === 'published' ? 'ok' : ''}`}
-						>
-							<span className="apq-dot" />{' '}
-							{quiz.status?.[0]?.toUpperCase() + quiz.status?.slice(1)}
-						</span>
-					</div>
 				</div>
 
 				<div className="apq-metaRow apq-pad">
 					<Meta label="Course" value={quiz.courseId.replace(/-/g, ' ')} />
 					<Meta label="Max Score" value={quiz.maxScore} />
 					<Meta label="Passing" value={quiz.passingScore} />
-					<Meta label="Due" value={formattedDue} danger={isPastDue} />
 				</div>
 
 				<div className="apq-metaRow apq-pad">
@@ -353,7 +334,6 @@ export default function QuizPage() {
 								<button
 									type="button"
 									className="apq-btn"
-									disabled={isPastDue}
 									onClick={() => handleSubmit(false)}
 								>
 									Submit Quiz
