@@ -164,6 +164,7 @@ export default function CourseDetails() {
 		: null;
 
 	return (
+		// <div></div>
 		<div>
 			<NavbarComponent />
 			<div className="course-details">
@@ -371,7 +372,7 @@ export default function CourseDetails() {
 						</ul>
 					</section>
 				)}
-
+			</div>
 			<div id="all_course_content" className="bg-info-subtle p-2 rounded-4 my-3">
 				{/* VIDEOS */}
 				{videos?.length > 0 && (
