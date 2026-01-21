@@ -7,6 +7,9 @@ import AuthPage from './pages/AuthPage';
 import Home from './pages/Home'; // your home page component
 import NavbarComponent from './components/NavbarComponent';
 import Footer from './components/FooterComponent';
+import ForumPage from './pages/ForumPage';
+import EditProfile from './components/EditProfile';
+
 import MentorHome from './pages/InstructorHomePage';
 export default function App() {
   return (
@@ -23,6 +26,18 @@ export default function App() {
           }
         />
         <Route path="/home" element={<Home />} />
+        <Route path="*" element={<div>
+              {/* <NavbarComponent /> */}
+              {/* <AuthPage />
+              <Footer /> */}
+              <Home />
+              {/* <ForumPage/> */}
+          </div>} />
+        <Route path="/edit-profile" element={<div>
+          <NavbarComponent/>
+          <EditProfile/>
+          <Footer/>
+        </div>} />
         <Route
           path="*"
           element={

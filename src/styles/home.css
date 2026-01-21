@@ -383,7 +383,7 @@ body,
 /* COURSE CARD */
 .course-card {
 	scroll-snap-align: start;
-	min-width: 360px;
+	/* min-width: 360px; */
 	background: #0e142a;
 	border: 1px solid #2a3466;
 	border-radius: 16px;

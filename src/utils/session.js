@@ -2,7 +2,7 @@
 
 // Keys
 const SESSION_KEY = 'edstream_current_user';
-const USERS_KEY = 'edstream_users';
+const USERS_KEY   = 'edstream_users';
 
 /**
  * Return currently signed-in (session) user.
@@ -79,9 +79,7 @@ const saveUsers = (users) => {
  */
 export const upsertUser = (user) => {
   const users = getUsers();
-  const idx = users.findIndex(
-    (u) => (u.email || '').toLowerCase() === (user.email || '').toLowerCase(),
-  );
+  const idx = users.findIndex(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
   if (idx > -1) {
     users[idx] = { ...users[idx], ...user };
   } else {
@@ -94,17 +92,12 @@ export const upsertUser = (user) => {
 export const getUserByEmail = (email) => {
   if (!email) return null;
   const users = getUsers();
-  return (
-    users.find((u) => (u.email || '').toLowerCase() === email.toLowerCase()) ||
-    null
-  );
+  return users.find(u => (u.email || '').toLowerCase() === email.toLowerCase()) || null;
 };
 
 export const updateUserByEmail = (email, updates = {}) => {
   const users = getUsers();
-  const idx = users.findIndex(
-    (u) => (u.email || '').toLowerCase() === (email || '').toLowerCase(),
-  );
+  const idx = users.findIndex(u => (u.email || '').toLowerCase() === (email || '').toLowerCase());
   if (idx === -1) return { ok: false, error: 'User not found' };
   users[idx] = { ...users[idx], ...updates };
   saveUsers(users);

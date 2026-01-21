@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import edLogo from '../assets/edLogo.png';
 import userLogo from '../assets/userLogo.png';
 import {
@@ -12,7 +12,68 @@ import {
   Image,
 } from 'react-bootstrap';
 import '../styles/EdNavbar.css';
+import { destroySession, getCurrentUser, isAuthenticated } from '../utils/session';
+import { useNavigate } from 'react-router-dom';
 const NavbarComponent = () => {
+
+  const [auth, setAuth] = useState({
+    isAuthed: false,
+    user: null,
+  });
+
+  // Initialize auth state from session.js (supports remembered sessions)
+  useEffect(() => {
+    setAuth({
+      isAuthed: isAuthenticated(),
+      user: getCurrentUser(),
+    });
+  }, []);
+
+  // Keep multiple tabs/windows in sync (e.g., logout in one tab)
+  useEffect(() => {
+    const onStorage = () => {
+      setAuth({
+        isAuthed: isAuthenticated(),
+        user: getCurrentUser(),
+      });
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  
+// const [auth, setAuth] = useState({ isAuthed: false, user: null });
+const navigate = useNavigate(); // <-- router navigation
+
+useEffect(() => {
+  setAuth({ isAuthed: isAuthenticated(), user: getCurrentUser() });
+}, []);
+
+useEffect(() => {
+  const onStorage = () => {
+    setAuth({ isAuthed: isAuthenticated(), user: getCurrentUser() });
+  };
+  window.addEventListener('storage', onStorage);
+  return () => window.removeEventListener('storage', onStorage);
+}, []);
+
+// single place to handle logout
+const handleLogout = useCallback(() => {
+  // 1) clear session (both sessionStorage & localStorage via destroySession)
+  destroySession();
+
+  // 2) update UI state
+  setAuth({ isAuthed: false, user: null });
+
+  // 3) navigate to home (change to '/' if that's your home route)
+  navigate('/home', { replace: true });
+}, [navigate]);
+
+  const editProfile = React.useCallback(() => navigate('/edit-profile'), [navigate]);
+
+  const navigateToAuth = useNavigate();
+
+
   return (
     <Navbar expand="lg" className="ed-navbar">
       {/* Left Section: Logo + App Name */}
@@ -77,19 +138,30 @@ const NavbarComponent = () => {
       </Nav>
       {/* Profile Avatar Dropdown */}
       <Nav>
-        <NavDropdown
-          title={
-            <Image src={userLogo} roundedCircle className="profile-avatar" />
-          }
-          id="profile-dropdown"
-          align="end"
-          className="profile-dropdown"
-        >
-          <NavDropdown.Item href="/settings">⚙️ Settings</NavDropdown.Item>
-          <NavDropdown.Item href="/help">❓ Help</NavDropdown.Item>
-          <NavDropdown.Divider />
-          <NavDropdown.Item href="/logout">🚪 Logout</NavDropdown.Item>
-        </NavDropdown>
+        {auth.isAuthed ? (
+            <NavDropdown
+              title={
+                <Image src={userLogo} roundedCircle className="profile-avatar" />
+              }
+              id="profile-dropdown"
+              align="end"
+              className="profile-dropdown"
+            >
+              <NavDropdown.Item href="/settings">⚙️ Settings</NavDropdown.Item>
+              <NavDropdown.Item href="/help">❓ Help</NavDropdown.Item>
+              <NavDropdown.Item as="button" onClick={editProfile}>✏️ Edit Profile</NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item as="button" onClick={handleLogout}>🚪 Logout</NavDropdown.Item>
+            </NavDropdown>
+        ):(
+          <>
+            <Button variant="outline-primary" onClick={() => navigateToAuth("/auth")}>
+              Login/Register
+            </Button>
+          </>
+        )
+
+        }
       </Nav>
     </Navbar>
   );

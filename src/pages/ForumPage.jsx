@@ -299,4 +299,4 @@ export default function ForumPage() {
     </section>
   );
 }
-``
+

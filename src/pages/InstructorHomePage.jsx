@@ -319,7 +319,7 @@ export default function InstructorHomePage({ authorName }) {
               <div className="row g-4">
                 {courses.map((c) => (
                   <div key={c.id} className="col-12 col-sm-6 col-lg-4">
-                    <div className="card h-100 shadow-sm border-0">
+                    <div className="border-0">
                       <CourseCard course={c} />
                     </div>
                     {/* End Inline Course Card */}
