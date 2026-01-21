@@ -1,0 +1,945 @@
+[
+	{
+		"id": "assg_react-basics_001",
+		"courseId": "react-basics",
+		"title": "Build a Todo List",
+		"description": "Complete the 'Build a Todo List' assignment for react basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-26T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_react-basics_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_react-basics_001",
+			"submit": "/assignment/assg_react-basics_001/submit"
+		}
+	},
+	{
+		"id": "assg_react-basics_002",
+		"courseId": "react-basics",
+		"title": "Props & State Mini Project",
+		"description": "Complete the 'Props & State Mini Project' assignment for react basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-27T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_react-basics_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_react-basics_002",
+			"submit": "/assignment/assg_react-basics_002/submit"
+		}
+	},
+	{
+		"id": "assg_typescript-essentials_001",
+		"courseId": "typescript-essentials",
+		"title": "Typing a Fetch Wrapper",
+		"description": "Complete the 'Typing a Fetch Wrapper' assignment for typescript essentials. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-27T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_typescript-essentials_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_typescript-essentials_001",
+			"submit": "/assignment/assg_typescript-essentials_001/submit"
+		}
+	},
+	{
+		"id": "assg_redux-toolkit_001",
+		"courseId": "redux-toolkit",
+		"title": "Counter Slice & Store",
+		"description": "Complete the 'Counter Slice & Store' assignment for redux toolkit. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-28T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_redux-toolkit_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_redux-toolkit_001",
+			"submit": "/assignment/assg_redux-toolkit_001/submit"
+		}
+	},
+	{
+		"id": "assg_redux-toolkit_002",
+		"courseId": "redux-toolkit",
+		"title": "Async Thunks with API",
+		"description": "Complete the 'Async Thunks with API' assignment for redux toolkit. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-29T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_redux-toolkit_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_redux-toolkit_002",
+			"submit": "/assignment/assg_redux-toolkit_002/submit"
+		}
+	},
+	{
+		"id": "assg_express-auth_001",
+		"courseId": "express-auth",
+		"title": "JWT Login API",
+		"description": "Complete the 'JWT Login API' assignment for express auth. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-29T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_express-auth_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_express-auth_001",
+			"submit": "/assignment/assg_express-auth_001/submit"
+		}
+	},
+	{
+		"id": "assg_express-auth_002",
+		"courseId": "express-auth",
+		"title": "Protect Routes Middleware",
+		"description": "Complete the 'Protect Routes Middleware' assignment for express auth. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-30T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_express-auth_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_express-auth_002",
+			"submit": "/assignment/assg_express-auth_002/submit"
+		}
+	},
+	{
+		"id": "assg_express-auth_003",
+		"courseId": "express-auth",
+		"title": "Refresh Tokens",
+		"description": "Complete the 'Refresh Tokens' assignment for express auth. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-31T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_express-auth_003/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_express-auth_003",
+			"submit": "/assignment/assg_express-auth_003/submit"
+		}
+	},
+	{
+		"id": "assg_mongodb-basics_001",
+		"courseId": "mongodb-basics",
+		"title": "CRUD with Mongoose",
+		"description": "Complete the 'CRUD with Mongoose' assignment for mongodb basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-30T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_mongodb-basics_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_mongodb-basics_001",
+			"submit": "/assignment/assg_mongodb-basics_001/submit"
+		}
+	},
+	{
+		"id": "assg_docker-basics_001",
+		"courseId": "docker-basics",
+		"title": "Dockerize Node App",
+		"description": "Complete the 'Dockerize Node App' assignment for docker basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-01-31T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_docker-basics_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_docker-basics_001",
+			"submit": "/assignment/assg_docker-basics_001/submit"
+		}
+	},
+	{
+		"id": "assg_docker-basics_002",
+		"courseId": "docker-basics",
+		"title": "Compose for Multi-Service",
+		"description": "Complete the 'Compose for Multi-Service' assignment for docker basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-01T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_docker-basics_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_docker-basics_002",
+			"submit": "/assignment/assg_docker-basics_002/submit"
+		}
+	},
+	{
+		"id": "assg_kubernetes-intro_001",
+		"courseId": "kubernetes-intro",
+		"title": "Deploy & Service",
+		"description": "Complete the 'Deploy & Service' assignment for kubernetes intro. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-01T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_kubernetes-intro_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_kubernetes-intro_001",
+			"submit": "/assignment/assg_kubernetes-intro_001/submit"
+		}
+	},
+	{
+		"id": "assg_git-github-workflow_001",
+		"courseId": "git-github-workflow",
+		"title": "Fork & PR Flow",
+		"description": "Complete the 'Fork & PR Flow' assignment for git github workflow. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-02T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_git-github-workflow_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_git-github-workflow_001",
+			"submit": "/assignment/assg_git-github-workflow_001/submit"
+		}
+	},
+	{
+		"id": "assg_git-github-workflow_002",
+		"courseId": "git-github-workflow",
+		"title": "Resolve Merge Conflicts",
+		"description": "Complete the 'Resolve Merge Conflicts' assignment for git github workflow. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-03T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_git-github-workflow_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_git-github-workflow_002",
+			"submit": "/assignment/assg_git-github-workflow_002/submit"
+		}
+	},
+	{
+		"id": "assg_git-github-workflow_003",
+		"courseId": "git-github-workflow",
+		"title": "GitHub Actions CI",
+		"description": "Complete the 'GitHub Actions CI' assignment for git github workflow. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-04T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_git-github-workflow_003/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_git-github-workflow_003",
+			"submit": "/assignment/assg_git-github-workflow_003/submit"
+		}
+	},
+	{
+		"id": "assg_jest-testing_001",
+		"courseId": "jest-testing",
+		"title": "Write Unit Tests",
+		"description": "Complete the 'Write Unit Tests' assignment for jest testing. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-03T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_jest-testing_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_jest-testing_001",
+			"submit": "/assignment/assg_jest-testing_001/submit"
+		}
+	},
+	{
+		"id": "assg_jest-testing_002",
+		"courseId": "jest-testing",
+		"title": "Mock HTTP Calls",
+		"description": "Complete the 'Mock HTTP Calls' assignment for jest testing. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-04T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_jest-testing_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_jest-testing_002",
+			"submit": "/assignment/assg_jest-testing_002/submit"
+		}
+	},
+	{
+		"id": "assg_prisma-orm_001",
+		"courseId": "prisma-orm",
+		"title": "Design Schema & Migrate",
+		"description": "Complete the 'Design Schema & Migrate' assignment for prisma orm. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-04T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_prisma-orm_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_prisma-orm_001",
+			"submit": "/assignment/assg_prisma-orm_001/submit"
+		}
+	},
+	{
+		"id": "assg_graphql-basics_001",
+		"courseId": "graphql-basics",
+		"title": "Schema & Resolver Basics",
+		"description": "Complete the 'Schema & Resolver Basics' assignment for graphql basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-05T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_graphql-basics_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_graphql-basics_001",
+			"submit": "/assignment/assg_graphql-basics_001/submit"
+		}
+	},
+	{
+		"id": "assg_graphql-basics_002",
+		"courseId": "graphql-basics",
+		"title": "Client Query with Apollo",
+		"description": "Complete the 'Client Query with Apollo' assignment for graphql basics. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-06T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_graphql-basics_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_graphql-basics_002",
+			"submit": "/assignment/assg_graphql-basics_002/submit"
+		}
+	},
+	{
+		"id": "assg_react-native-intro_001",
+		"courseId": "react-native-intro",
+		"title": "Build a Weather App",
+		"description": "Complete the 'Build a Weather App' assignment for react native intro. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-06T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_react-native-intro_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_react-native-intro_001",
+			"submit": "/assignment/assg_react-native-intro_001/submit"
+		}
+	},
+	{
+		"id": "assg_react-native-intro_002",
+		"courseId": "react-native-intro",
+		"title": "Navigation & Forms",
+		"description": "Complete the 'Navigation & Forms' assignment for react native intro. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-07T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_react-native-intro_002/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_react-native-intro_002",
+			"submit": "/assignment/assg_react-native-intro_002/submit"
+		}
+	},
+	{
+		"id": "assg_python-automation_001",
+		"courseId": "python-automation",
+		"title": "Automate CSV to Excel",
+		"description": "Complete the 'Automate CSV to Excel' assignment for python automation. Follow the README and submit your work.",
+		"status": "published",
+		"publishedAt": "2026-01-17T12:48:41+05:30",
+		"dueAt": "2026-02-07T12:48:41+05:30",
+		"maxScore": 100,
+		"expectedTimeMins": 90,
+		"submission": {
+			"type": "file|link",
+			"allowedFileTypes": [".zip", ".pdf", ".md"],
+			"maxSizeMB": 50,
+			"allowMultiple": false
+		},
+		"attachments": [
+			{
+				"name": "Instructions.md",
+				"url": "/static/assg_python-automation_001/instructions.md"
+			}
+		],
+		"rubric": [
+			{
+				"criterion": "Correctness",
+				"points": 50
+			},
+			{
+				"criterion": "Code quality",
+				"points": 30
+			},
+			{
+				"criterion": "Documentation",
+				"points": 20
+			}
+		],
+		"urls": {
+			"view": "/assignment/assg_python-automation_001",
+			"submit": "/assignment/assg_python-automation_001/submit"
+		}
+	}
+]

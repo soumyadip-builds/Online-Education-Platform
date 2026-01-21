@@ -1,0 +1,50 @@
+/* ===== Carousel Controls ===== */
+.carousel-ctrl {
+  z-index: 3;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fff;
+}
+
+/* ===== HERO Slide Sizing (big image) ===== */
+.carousel-item {
+  height: 60vh;
+  /* min-height: 500px; */
+}
+
+/* Large hero illustration with responsive limits */
+.hero-illustration-super {
+  max-height: 360px; /* big by default */
+  width: auto;
+  object-fit: contain;
+  transform: translateX(-12px); /* nudge toward center */
+}
+
+/* @media (min-width: 1200px) {
+  .hero-illustration-super { max-height: 720px; }
+}
+@media (max-width: 992px) {
+  .hero-illustration-super { max-height: 460px; }
+}
+@media (max-width: 576px) {
+  .hero-illustration-super { max-height: 320px; }
+} */
+
+/* ===== Small Utilities ===== */
+.xsmall {
+  font-size: 0.8rem;
+}
+.bg-primary-subtle {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+/* Keep brand marks tidy */
+.img-fluid {
+  max-height: 55px;
+  object-fit: contain;
+}
