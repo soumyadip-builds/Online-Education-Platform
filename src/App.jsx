@@ -8,6 +8,7 @@ import Home from './pages/Home'; // your home page component
 import NavbarComponent from './components/NavbarComponent';
 import Footer from './components/FooterComponent';
 import MentorHome from './pages/InstructorHomePage';
+import CourseCreator from './components/CourseCreator';
 export default function App() {
   return (
     <BrowserRouter>
@@ -33,6 +34,7 @@ export default function App() {
             </div>
           }
         />
+        
         <Route
           path="/mentorhome"
           element={<MentorHome authorName={'KRISHAI Technologies'} />}
@@ -43,6 +45,7 @@ export default function App() {
         <Route path="/courses/:id" element={<CourseDetails />} />
         <Route path="/quiz/:quizId" element={<QuizPage />} />
         <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
+        <Route path="/course-creator" element={<CourseCreator />} />
       </Routes>
     </BrowserRouter>
   );
