@@ -7,58 +7,43 @@ import AuthPage from './pages/AuthPage';
 import Home from './pages/Home'; // your home page component
 import NavbarComponent from './components/NavbarComponent';
 import Footer from './components/FooterComponent';
-import MentorHome from './pages/InstructorHomePage'
+import MentorHome from './pages/InstructorHomePage';
 export default function App() {
   return (
     <BrowserRouter>
-    <NavbarComponent />
-      {/* <Routes>
-        <Route path="/auth" element={<div>
+      <Routes>
+        <Route
+          path="/auth"
+          element={
+            <div>
               <NavbarComponent />
               <AuthPage />
               <Footer />
-          </div>} />
+            </div>
+          }
+        />
         <Route path="/home" element={<Home />} />
-        <Route path="*" element={<div>
+        <Route
+          path="*"
+          element={
+            <div>
               <NavbarComponent />
               <AuthPage />
               <Footer />
-          </div>} />
-      </Routes> */}
-       <MentorHome />
-      {/* <Home />  */}
-      <Footer />
+            </div>
+          }
+        />
+        <Route
+          path="/mentorhome"
+          element={<MentorHome authorName={'KRISHAI Technologies'} />}
+        />
+        {/* <Home />  */}
+        {/* <Footer /> */}
+        <Route path="/coursepage" element={<CoursePage />} />
+        <Route path="/courses/:id" element={<CourseDetails />} />
+        <Route path="/quiz/:quizId" element={<QuizPage />} />
+        <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
+      </Routes>
     </BrowserRouter>
   );
-	return (
-		<BrowserRouter>
-			<Routes>
-				<Route path="/coursepage" element={<CoursePage />} />
-				<Route path="/courses/:id" element={<CourseDetails />} />
-				<Route path="/quiz/:quizId" element={<QuizPage />} />
-				<Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
-				<Route
-					path="/auth"
-					element={
-						<div>
-							<NavbarComponent />
-							<AuthPage />
-							<Footer />
-						</div>
-					}
-				/>
-				<Route path="/home" element={<Home />} />
-				<Route
-					path="*"
-					element={
-						<div>
-							<NavbarComponent />
-							<AuthPage />
-							<Footer />
-						</div>
-					}
-				/>
-			</Routes>
-		</BrowserRouter>
-	);
 }

@@ -4,7 +4,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { COURSES } from "../data/courses";
 import CourseCard from "../components/CourseCard";
 import "../styles/home.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+
 // Home.jsx (top of file)
 import GenAI from "/images/GenAI.png";
 import ITCert from "/images/IT_Certifications.png";
@@ -296,24 +296,27 @@ export default function Home() {
       </section>
 
         {/* TRUST STRIP */}
-        <section className="trusted-by py-5">
-  <div className="container">
-    <h5 className="text-center mb-4 text-secondary fw-semibold">
-      Trusted by companies and millions of learners around the world
-    </h5>
+        <section className="trust" aria-labelledby="trust-title">
+        <p id="trust-title" className="trust-heading">
+            Trusted by companies and millions of learners around the world
+        </p>
 
-    {/* Logo rail */}
-    <div className="logo-rail d-flex flex-wrap justify-content-center align-items-center gap-4 gap-md-5">
-      {/* Put your actual file names from public/images/Logos */}
-      <LogoImg src="/images/Logos/Samsung.png" alt="Samsung" />
-      <LogoImg src="/images/Logos/Cisco.png" alt="Cisco" />
-      <LogoImg src="/images/Logos/HP.png" alt="HP" />
-      <LogoImg src="/images/Logos/Citi.png" alt="Citi" />
-      <LogoImg src="/images/Logos/Ericsson.png" alt="Ericsson" />
-      {/* <LogoImg src="/images/Logos/edstream-mark.png" alt="EdStream" /> */}
-    </div>
-  </div>
-</section>
+        <ul className="logo-row" role="list">
+            {logos.map((logo) => (
+            <li className="logo" key={logo.key}>
+                <img
+                src={logo.src}
+                alt={logo.alt}
+                loading="lazy"
+                decoding="async"
+                height="40"
+                // Width is auto based on SVG viewBox; height normalizes the row
+                />
+            </li>
+            ))}
+        </ul>
+        </section>
+
 
       {/* TESTIMONIALS */}
       <section className="testimonials">
@@ -386,19 +389,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-function LogoImg({ src, alt }) {
-  return (
-    <div className="logo-cell shadow-sm">
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        className="logo-img"
-      />
-    </div>
-  );
-}
-``

@@ -1,3 +1,4 @@
+
 // src/components/CourseCard.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -6,76 +7,97 @@ import '../styles/course.css';
 
 /** Prefix static paths with app base (Vite/CRA safe) */
 function withBase(path) {
-	const base =
-		typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL
-			? import.meta.env.BASE_URL
-			: process.env.PUBLIC_URL || '/';
-	const b = base.endsWith('/') ? base : `${base}/`;
-	return path?.startsWith('/') ? `${b}${path.slice(1)}` : `${b}${path || ''}`;
+  const base =
+    typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    import.meta.env.BASE_URL
+      ? import.meta.env.BASE_URL
+      : process.env.PUBLIC_URL || '/';
+  const b = base.endsWith('/') ? base : `${base}/`;
+  return path?.startsWith('/') ? `${b}${path.slice(1)}` : `${b}${path || ''}`;
 }
 
 export default function CourseCard({ course }) {
-	const navigate = useNavigate();
+  const navigate = useNavigate();
 
-	const { id, title, author, rating, learners, thumbnail, isBestseller } = course; // ← added isBestseller
+  const { id, title, author, rating, learners, thumbnail } = course;
 
-	const handleClick = () => {
-		// Navigate to details page: /courses/:id
-		navigate(`/courses/${id}`);
-	};
+  const handleClick = () => {
+    navigate(`/courses/${id}`);
+  };
 
-	return (
-		<article
-			className="course_page_course_card course_page_course_card--compact"
-			role="button"
-			tabIndex={0}
-			onClick={handleClick}
-			onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick()}
-			aria-label={`Open course: ${title}`}
-		>
-			{/* Thumbnail */}
+  return (
+    <article
+      className="course_page_course_card course_page_course_card--compact"
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ' ? handleClick() : null)}
+      aria-label={`Open course: ${title}`}
+    >
+      {/* Thumbnail */}
+      <div className="ratio ratio-16x9 bg-light">
+        <img
+          src={thumbnail}
+          alt={title}
+          className="card-img-top object-fit-cover"
+          style={{
+            borderTopLeftRadius: '.375rem',
+            borderTopRightRadius: '.375rem',
+          }}
+          onError={(e) => {
+            e.currentTarget.src =
+              'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=60';
+          }}
+        />
+      </div>
 
-			<div className="course_page_course_card__thumb">
-				{thumbnail ? (
-					<img src={thumbnail} alt={`${title} thumbnail`} />
-				) : (
-					<div className="course_page_course_card__thumb--placeholder" />
-				)}
-			</div>
+      {/* Body */}
+      <div className="card-body d-flex flex-column">
+        <div className="d-flex justify-content-between align-items-start mb-2">
+          {course.category && (
+            <span className="badge bg-primary-subtle text-primary">
+              {course.category}
+            </span>
+          )}
 
-			{/* Meta */}
-			<div className="course_page_course_card__compact-body">
-				<h3 className="course_page_course_card__compact-title">{title}</h3>
-				<p className="course_page_course_card__compact-author">{author}</p>
-				{/* Bestseller badge */}
-				{isBestseller && (
-					<span className="my_badge badge--bestseller badge-hero">
-						Bestseller <i class="bi bi-award-fill"></i>
-					</span>
-				)}
-				<div className="course_page_course_card__compact-stats">
-					<span
-						className="rating-chip"
-						aria-label={`Rating ${rating} out of 5`}
-					>
-						⭐ {Number(rating).toFixed(1)}
-					</span>
-					<span className="learners-chip" aria-label={`${learners} learners`}>
-						{Intl.NumberFormat().format(learners)} learners
-					</span>
-				</div>
-			</div>
-		</article>
-	);
+          {rating > 0 && (
+            <span className="text-warning small">★ {rating.toFixed(1)}</span>
+          )}
+        </div>
+
+        <h5 className="card-title mb-1">{title}</h5>
+
+        {author && (
+          <div className="text-muted xsmall mb-2">by {author}</div>
+        )}
+
+        <p className="card-text text-muted small flex-grow-1">
+          {course.description?.length > 120
+            ? course.description.slice(0, 117) + '...'
+            : course.description}
+        </p>
+
+        {/* Learners only — buttons removed */}
+        <div className="d-flex justify-content-start align-items-center mt-auto">
+          <div className="text-muted small">
+            👥 {learners.toLocaleString()} learners
+          </div>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 CourseCard.propTypes = {
-	course: PropTypes.shape({
-		id: PropTypes.string.isRequired,
-		title: PropTypes.string.isRequired,
-		author: PropTypes.string.isRequired,
-		rating: PropTypes.number.isRequired,
-		learners: PropTypes.number.isRequired,
-		thumbnail: PropTypes.string,
-	}).isRequired,
+  course: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    author: PropTypes.string.isRequired,
+    rating: PropTypes.number.isRequired,
+    learners: PropTypes.number.isRequired,
+    thumbnail: PropTypes.string,
+    category: PropTypes.string,
+    description: PropTypes.string,
+  }).isRequired,
 };
