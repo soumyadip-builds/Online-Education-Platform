@@ -466,3 +466,169 @@
 .ccs__itemTitle:hover { text-decoration: underline; }
 .ccs__itemDur { color: #666; font-size: 0.9rem; }
 
+
+
+/* =========================================================
+   Course meta cards (What you'll learn + Thumbnail)
+   Match existing CB theme: borders, bg-2, radius, focus glow
+   ========================================================= */
+
+.cb-meta-card {
+  border: 1px solid rgba(31,41,55,0.12);
+  border-radius: 14px;
+  background: var(--bg-2);
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+
+.cb-meta-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(31,41,55,0.12);
+  margin-bottom: 10px;
+}
+
+.cb-meta-title {
+  margin: 0;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.cb-meta-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.cb-meta-hint {
+  margin-top: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+/* =========================================================
+   Horizontally scrollable learning outcomes (bullet pills)
+   ========================================================= */
+
+.cb-outcomes-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 2px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* themed scrollbar similar to cb-modules */
+.cb-outcomes-scroll::-webkit-scrollbar { height: 8px; }
+.cb-outcomes-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px;
+}
+
+.cb-outcome-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(31,41,55,0.12);
+  background: color-mix(in srgb, var(--bg-2) 92%, var(--bg) 8%);
+  scroll-snap-align: start;
+  min-width: 340px; /* makes horizontal scrolling meaningful */
+}
+
+@media (max-width: 560px) {
+  .cb-outcome-pill { min-width: 280px; }
+}
+
+.cb-outcome-dot {
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cb-outcome-input {
+  width: 100%;
+  min-width: 160px;
+}
+
+/* =========================================================
+   Radio buttons row (thumbnail mode)
+   ========================================================= */
+
+.cb-radio-row {
+  display: inline-flex;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 55%, white 45%);
+  border: 1px solid rgba(31,41,55,0.12);
+}
+
+.cb-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--text) 70%, var(--muted) 30%);
+}
+
+.cb-radio input {
+  accent-color: var(--accent);
+}
+
+.cb-radio.is-active {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-2) 82%);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.cb-radio.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   Thumbnail link + preview
+   ========================================================= */
+
+.cb-thumb-link {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.cb-thumb-input {
+  width: 100%;
+}
+
+.cb-thumb-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cb-thumb-img {
+  width: 160px;
+  height: 90px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(31,41,55,0.12);
+  background: var(--bg);
+}
+
+

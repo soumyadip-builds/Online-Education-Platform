@@ -202,7 +202,20 @@ export default function CourseCreation({ courseService, assignmentService, onCre
   const [editingCourseTitle, setEditingCourseTitle] = useState(false);
   const courseTitleRef = useRef(null);
   const courseDescRef = useRef(null);
+// bullet points
+const [learningOutcomes, setLearningOutcomes] = useState([""]);
+const addOutcome = () => setLearningOutcomes((prev) => [...prev, ""]);
+const rmOutcome = (idx) =>
+  setLearningOutcomes((prev) => prev.filter((_, i) => i !== idx));
+const patchOutcome = (idx, value) =>
+  setLearningOutcomes((prev) => prev.map((v, i) => (i === idx ? value : v)));
 
+//thumbnail selection + link value
+const [thumbnailMode, setThumbnailMode] = useState("link"); // 'upload' | 'link'
+const [thumbnailLink, setThumbnailLink] = useState("");
+
+
+  
   const [modules, setModules] = useState([emptyModule()]);
   const [aqModal, setAqModal] = useState({ open: false, moduleId: null });
   const openAQ = (mid) => setAqModal({ open: true, moduleId: mid });
@@ -318,10 +331,24 @@ export default function CourseCreation({ courseService, assignmentService, onCre
       setMsg({ type: "error", text: errors.join(" ") });
       return;
     }
+    
+const cleanOutcomes = learningOutcomes
+  .map((s) => (s || "").trim())
+  .filter(Boolean);
 
     const payload = {
       title: title.trim(),
       description: description.trim(),
+      
+ // ✅ NEW: stored for later student view
+  learningOutcomes: cleanOutcomes,
+
+  // ✅ NEW: only link used for now
+  thumbnail: {
+    mode: thumbnailMode, // will be 'link' or 'upload' (upload not functional yet)
+    link: thumbnailMode === "link" ? thumbnailLink.trim() : "",
+  },
+
       totalEstimatedMinutes: totalMinutes,
       modules: modules.map((m) => ({
         id: m.id,
@@ -486,6 +513,149 @@ export default function CourseCreation({ courseService, assignmentService, onCre
             {description || "Add a short description for learners…"}
           </div>
         </div>
+
+
+{/* ✅ NEW: What you'll learn (bullets) */}
+<div className="cb-meta-card">
+  <div className="cb-meta-header">
+    <div>
+      <h3 className="cb-meta-title">What you’ll learn</h3>
+      <p className="cb-meta-subtitle">Add bullet points that will be shown to students.</p>
+    </div>
+
+    <button
+      type="button"
+      className="cb-link"
+      onClick={() => {
+        addOutcome();
+        showToast("Added learning outcome");
+        requestAnimationFrame(() => {
+          // scroll to end to show newly added pill
+          const el = document.getElementById("cb-outcomes-scroll");
+          if (el) el.scrollLeft = el.scrollWidth;
+        });
+      }}
+    >
+      {ICONS.plus} Add bullet
+    </button>
+  </div>
+
+  {/* Horizontal scroll container */}
+  <div className="cb-outcomes-scroll" id="cb-outcomes-scroll" role="list" aria-label="Learning outcomes">
+    {learningOutcomes.map((val, idx) => (
+      <div className="cb-outcome-pill" role="listitem" key={`outcome-${idx}`}>
+        <span className="cb-outcome-dot" aria-hidden="true">•</span>
+
+        <input
+          className="assignment-card-input cb-outcome-input"
+          value={val}
+          placeholder={`Outcome ${idx + 1}`}
+          onChange={(e) => patchOutcome(idx, e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addOutcome();
+              showToast("Added learning outcome");
+              requestAnimationFrame(() => {
+                const el = document.getElementById("cb-outcomes-scroll");
+                if (el) el.scrollLeft = el.scrollWidth;
+              });
+            }
+          }}
+        />
+
+        <button
+          type="button"
+          className="icon-btn danger"
+          title="Remove"
+          onClick={() => {
+            rmOutcome(idx);
+            showToast("Removed learning outcome");
+          }}
+          disabled={learningOutcomes.length === 1}
+        >
+          {ICONS.delete}
+        </button>
+      </div>
+    ))}
+  </div>
+
+  <div className="cb-meta-hint">
+    Tip: Press <b>Enter</b> to add a new bullet quickly.
+  </div>
+</div>
+
+
+
+{/* ✅ NEW: Thumbnail (upload or link) */}
+<div className="cb-meta-card">
+  <div className="cb-meta-header">
+    <div>
+      <h3 className="cb-meta-title">Course Thumbnail</h3>
+      <p className="cb-meta-subtitle">For now, only the link option works. Upload will be enabled later.</p>
+    </div>
+  </div>
+
+  <div className="cb-radio-row" role="radiogroup" aria-label="Thumbnail mode">
+    <label className={`cb-radio ${thumbnailMode === "link" ? "is-active" : ""}`}>
+      <input
+        type="radio"
+        name="thumbnailMode"
+        value="link"
+        checked={thumbnailMode === "link"}
+        onChange={() => setThumbnailMode("link")}
+      />
+      <span>Link</span>
+    </label>
+
+    <label className={`cb-radio is-disabled ${thumbnailMode === "upload" ? "is-active" : ""}`}>
+      <input
+        type="radio"
+        name="thumbnailMode"
+        value="upload"
+        checked={thumbnailMode === "upload"}
+        onChange={() => setThumbnailMode("upload")}
+      />
+      <span>Upload (coming soon)</span>
+    </label>
+  </div>
+
+  {thumbnailMode === "link" ? (
+    <div className="cb-thumb-link">
+      <input
+        className="assignment-card-input cb-thumb-input"
+        placeholder="https://example.com/thumbnail.jpg"
+        value={thumbnailLink}
+        onChange={(e) => setThumbnailLink(e.target.value)}
+      />
+
+      {!!thumbnailLink.trim() ? (
+        <div className="cb-thumb-preview">
+          <img
+            src={thumbnailLink}
+            alt="Thumbnail preview"
+            className="cb-thumb-img"
+            onError={(e) => {
+              // hide broken preview cleanly
+              e.currentTarget.style.display = "none";
+            }}
+          />
+          <div className="cb-meta-hint">Preview (if the link is valid)</div>
+        </div>
+      ) : (
+        <div className="cb-meta-hint">Paste an image URL to preview it.</div>
+      )}
+    </div>
+  ) : (
+    <div className="cb-thumb-upload">
+      <input type="file" accept="image/*" disabled />
+      <div className="cb-meta-hint" style={{ marginTop: 8 }}>
+        Upload is disabled for now. Please use a link.
+      </div>
+    </div>
+  )}
+</div>
+
 
         {/* Toolbar */}
         <div className="cb-toolbar">
