@@ -14,15 +14,6 @@ function formatDuration(total = 0) {
   return `${m}m`;
 }
 
-function formatDue(dueAt) {
-  if (!dueAt) return "";
-  try {
-    return new Date(dueAt).toLocaleString();
-  } catch {
-    return "";
-  }
-}
-
 /** Simple inline icons to keep this component standalone */
 const I = {
   chevronRight: () => <span aria-hidden>▶</span>,
@@ -42,11 +33,11 @@ export default function CourseCollapsibleSection({
 
   /** Behavior / callbacks */
   defaultCollapsed = false,
-  onEditModule,      // (moduleId) => void
-  onDeleteModule,    // (moduleId) => void
-  onEditItem,        // (moduleId, itemId) => void
-  onDeleteItem,      // (moduleId, itemId) => void
-  onToggleModule,    // (moduleId, collapsed) => void
+  onEditModule, // (moduleId) => void
+  onDeleteModule, // (moduleId) => void
+  onEditItem, // (moduleId, itemId) => void
+  onDeleteItem, // (moduleId, itemId) => void
+  onToggleModule, // (moduleId, collapsed) => void
 
   /** Link behavior */
   itemLinkTarget = "_blank",
@@ -93,12 +84,16 @@ export default function CourseCollapsibleSection({
     });
   };
 
+  // ✅ Turn resources into documents:
+  // - "link" type now behaves like "doc" for label and CSS type class
+  const normalizedType = (type) => (type === "link" ? "doc" : type);
+
   const badgeLabel = (type) => {
-    if (type === "video") return "Video";
-    if (type === "reading" || type === "doc") return "Document";
-    if (type === "link") return "Resource";
-    if (type === "assignment") return "Assignment";
-    if (type === "quiz") return "Quiz";
+    const t = normalizedType(type);
+    if (t === "video") return "Video";
+    if (t === "reading" || t === "doc") return "Document";
+    if (t === "assignment") return "Assignment";
+    if (t === "quiz") return "Quiz";
     return "Item";
   };
 
@@ -123,7 +118,9 @@ export default function CourseCollapsibleSection({
               >
                 {isCollapsed ? <I.chevronRight /> : <I.chevronDown />}
                 <span className="ccs__moduleIndex">{idx + 1}</span>
-                <span className="ccs__moduleTitle">{m.title || "Untitled module"}</span>
+                <span className="ccs__moduleTitle">
+                  {m.title || "Untitled module"}
+                </span>
               </button>
 
               <div className="ccs__spacer" />
@@ -166,17 +163,13 @@ export default function CourseCollapsibleSection({
                 <ul className="ccs__items">
                   {items.map((it) => {
                     const title = it.title || "(untitled)";
-                    const label = badgeLabel(it.type);
+                    const type = normalizedType(it.type); // ✅ "link" becomes "doc"
+                    const label = badgeLabel(type);
 
                     const dur =
                       (Number(it.estimatedMinutes) || 0) > 0
                         ? formatDuration(it.estimatedMinutes)
                         : null;
-
-                    const dueText =
-                      it.dueAt && (it.type === "assignment" || it.type === "quiz")
-                        ? `Due: ${formatDue(it.dueAt)}`
-                        : "";
 
                     // ✅ Clickability rules:
                     // - if it.to -> internal route via <Link>
@@ -186,24 +179,26 @@ export default function CourseCollapsibleSection({
 
                     const ItemInner = (
                       <>
-                        <span className={`ccs__badge type-${it.type}`}>{label}</span>
+                        <span className={`ccs__badge type-${type}`}>{label}</span>
 
-                        <span className="ccs__itemTitle">
-                          {title}
-                        </span>
+                        <span className="ccs__itemTitle">{title}</span>
 
                         <span className="ccs__itemRight">
-                          {dueText ? (
-                            <span className="ccs__itemDue">{dueText}</span>
+                          {dur ? (
+                            <span className="ccs__itemDur">— {dur}</span>
                           ) : null}
-                          {dur ? <span className="ccs__itemDur">— {dur}</span> : null}
-                          {isLocked ? <span className="ccs__itemLock">🔒</span> : null}
+                          {isLocked ? (
+                            <span className="ccs__itemLock">🔒</span>
+                          ) : null}
                         </span>
                       </>
                     );
 
                     return (
-                      <li className={`ccs__item ${isLocked ? "is-locked" : ""}`} key={it.id}>
+                      <li
+                        className={`ccs__item ${isLocked ? "is-locked" : ""}`}
+                        key={it.id}
+                      >
                         {/* ✅ INTERNAL route (Assignments / Quizzes) */}
                         {it?.to ? (
                           <Link
@@ -265,4 +260,3 @@ export default function CourseCollapsibleSection({
     </section>
   );
 }
-
