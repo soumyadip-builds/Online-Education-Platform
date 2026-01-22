@@ -1,7 +1,9 @@
 
 // src/components/CourseCollapsibleSection.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "../styles/courseBuilder.css";
+
 /** Utility: minutes → “1h 30m” */
 function formatDuration(total = 0) {
   const mins = Math.max(0, Number(total) || 0);
@@ -10,6 +12,15 @@ function formatDuration(total = 0) {
   if (h && m) return `${h}h ${m}m`;
   if (h) return `${h}h`;
   return `${m}m`;
+}
+
+function formatDue(dueAt) {
+  if (!dueAt) return "";
+  try {
+    return new Date(dueAt).toLocaleString();
+  } catch {
+    return "";
+  }
 }
 
 /** Simple inline icons to keep this component standalone */
@@ -22,12 +33,10 @@ const I = {
 };
 
 export default function CourseCollapsibleSection({
-  /** Array of modules with items; same shape you save from CourseCreator */
+  /** Array of modules with items */
   modules = [],
 
-  /** Role-based control (if 'instructor' → show edit/delete). 
-   * You can also override using showActions.
-   */
+  /** Role-based control (if 'instructor' → show edit/delete). */
   role = "learner",
   showActions, // optional hard override (boolean)
 
@@ -42,27 +51,42 @@ export default function CourseCollapsibleSection({
   /** Link behavior */
   itemLinkTarget = "_blank",
 }) {
-  const isInstructor = (typeof showActions === "boolean")
-    ? showActions
-    : role === "instructor";
+  const isInstructor =
+    typeof showActions === "boolean" ? showActions : role === "instructor";
 
   // local collapsed state per module
   const [collapsed, setCollapsed] = useState(() =>
-    Object.fromEntries(modules.map(m => [m.id, defaultCollapsed]))
+    Object.fromEntries((modules || []).map((m) => [m.id, defaultCollapsed]))
   );
+
+  // ✅ keep collapsed map in sync when modules prop changes
+  useEffect(() => {
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      for (const m of modules || []) {
+        if (typeof next[m.id] === "undefined") next[m.id] = defaultCollapsed;
+      }
+      // remove old keys that no longer exist
+      for (const k of Object.keys(next)) {
+        if (!(modules || []).some((m) => m.id === k)) delete next[k];
+      }
+      return next;
+    });
+  }, [modules, defaultCollapsed]);
 
   const totalsByModule = useMemo(() => {
     const map = {};
-    for (const m of modules) {
+    for (const m of modules || []) {
       map[m.id] = (m.items || []).reduce(
-        (s, it) => s + (Number(it.estimatedMinutes) || 0), 0
+        (s, it) => s + (Number(it.estimatedMinutes) || 0),
+        0
       );
     }
     return map;
   }, [modules]);
 
   const toggle = (mid) => {
-    setCollapsed(prev => {
+    setCollapsed((prev) => {
       const next = { ...prev, [mid]: !prev[mid] };
       onToggleModule?.(mid, next[mid]);
       return next;
@@ -71,7 +95,8 @@ export default function CourseCollapsibleSection({
 
   const badgeLabel = (type) => {
     if (type === "video") return "Video";
-    if (type === "reading") return "Document";
+    if (type === "reading" || type === "doc") return "Document";
+    if (type === "link") return "Resource";
     if (type === "assignment") return "Assignment";
     if (type === "quiz") return "Quiz";
     return "Item";
@@ -79,8 +104,11 @@ export default function CourseCollapsibleSection({
 
   return (
     <section className="ccs">
-      {modules.map((m, idx) => {
+      {(modules || []).map((m, idx) => {
         const isCollapsed = !!collapsed[m.id];
+        const items = m.items || [];
+        const total = totalsByModule[m.id] || 0;
+
         return (
           <article className="ccs__module" key={m.id}>
             {/* Header */}
@@ -100,8 +128,8 @@ export default function CourseCollapsibleSection({
 
               <div className="ccs__spacer" />
 
-              <div className="ccs__meta">
-                <I.clock /> <span>{formatDuration(totalsByModule[m.id] || 0)}</span>
+              <div className="ccs__meta" title="Total duration">
+                <I.clock /> <span>{formatDuration(total)}</span>
               </div>
 
               {isInstructor && (
@@ -136,33 +164,72 @@ export default function CourseCollapsibleSection({
                 ) : null}
 
                 <ul className="ccs__items">
-                  {(m.items || []).map((it) => {
-                    const dur = (Number(it.estimatedMinutes) || 0) > 0
-                      ? formatDuration(it.estimatedMinutes)
-                      : null;
-
-                    const isLinkType = it.type === "video" || it.type === "reading";
+                  {items.map((it) => {
                     const title = it.title || "(untitled)";
                     const label = badgeLabel(it.type);
 
-                    return (
-                      <li className="ccs__item" key={it.id}>
+                    const dur =
+                      (Number(it.estimatedMinutes) || 0) > 0
+                        ? formatDuration(it.estimatedMinutes)
+                        : null;
+
+                    const dueText =
+                      it.dueAt && (it.type === "assignment" || it.type === "quiz")
+                        ? `Due: ${formatDue(it.dueAt)}`
+                        : "";
+
+                    // ✅ Clickability rules:
+                    // - if it.to -> internal route via <Link>
+                    // - else if it.url -> external via <a>
+                    // - else -> locked/static
+                    const isLocked = !it?.to && !it?.url;
+
+                    const ItemInner = (
+                      <>
                         <span className={`ccs__badge type-${it.type}`}>{label}</span>
 
-                        {isLinkType && it.url ? (
+                        <span className="ccs__itemTitle">
+                          {title}
+                        </span>
+
+                        <span className="ccs__itemRight">
+                          {dueText ? (
+                            <span className="ccs__itemDue">{dueText}</span>
+                          ) : null}
+                          {dur ? <span className="ccs__itemDur">— {dur}</span> : null}
+                          {isLocked ? <span className="ccs__itemLock">🔒</span> : null}
+                        </span>
+                      </>
+                    );
+
+                    return (
+                      <li className={`ccs__item ${isLocked ? "is-locked" : ""}`} key={it.id}>
+                        {/* ✅ INTERNAL route (Assignments / Quizzes) */}
+                        {it?.to ? (
+                          <Link
+                            className="ccs__itemLink"
+                            to={it.to}
+                            target={itemLinkTarget}
+                            rel="noopener noreferrer"
+                          >
+                            {ItemInner}
+                          </Link>
+                        ) : it?.url ? (
+                          /* ✅ EXTERNAL URL (Videos / Docs / Resources) */
                           <a
-                            className="ccs__itemTitle"
+                            className="ccs__itemLink"
                             href={it.url}
                             target={itemLinkTarget}
                             rel="noopener noreferrer"
                           >
-                            {title}
+                            {ItemInner}
                           </a>
                         ) : (
-                          <span className="ccs__itemTitle">{title}</span>
+                          /* 🔒 LOCKED / NON-CLICKABLE */
+                          <span className="ccs__itemLink ccs__itemLink--disabled">
+                            {ItemInner}
+                          </span>
                         )}
-
-                        {dur && <span className="ccs__itemDur">— {dur}</span>}
 
                         {isInstructor && (
                           <span className="ccs__itemActions">

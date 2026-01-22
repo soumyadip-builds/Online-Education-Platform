@@ -629,7 +629,7 @@ const cleanOutcomes = learningOutcomes
         onChange={(e) => setThumbnailLink(e.target.value)}
       />
 
-      {!!thumbnailLink.trim() ? (
+      {thumbnailLink.trim() ? (
         <div className="cb-thumb-preview">
           <img
             src={thumbnailLink}
