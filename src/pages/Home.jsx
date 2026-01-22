@@ -320,42 +320,6 @@ export default function Home() {
       </section>
 
       {/* TABBED COURSE ROW */}
-      {/* <section className="courses">
-        <div className="section-head">
-          <h2>Skills to transform your career and life</h2>
-          <div className="tabs" role="tablist" aria-label="Course filters">
-            {tabs.map(t => (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={activeTab === t.key}
-                className={`tab ${activeTab === t.key ? "active" : ""}`}
-                onClick={() => setActiveTab(t.key)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="course-row">
-          <button className="row-arrow left" aria-label="Scroll courses left" onClick={() => scrollBy(courseRowRef.current, -420)}>
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-          </button>
-          <div className="row-track" ref={courseRowRef}>
-            {filteredCourses.map((c) => (
-              <CourseCard key={c.id} course={c} onClick={openCourse} />
-            ))}
-          </div>
-          <button className="row-arrow right" aria-label="Scroll courses right" onClick={() => scrollBy(courseRowRef.current, 420)}>
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path d="M8.5 4.5 16 12l-7.5 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-          </button>
-        </div>
-      </section> */}
       <div className="d-flex flex-row overflow-scroll gap-4">
         {filteredCourses.map((c) => (
           <div key={c.id} className="col-12 col-sm-6 col-lg-4">
@@ -479,10 +443,10 @@ export default function Home() {
       </section>
 
       {/* Footer placeholder */}
-      <div className="footer-spacer">
-        {/* <Footer/> will be mounted here */}
+      {/* <div className="footer-spacer">
+        <Footer/> will be mounted here
         <Footer />
-      </div>
+      </div> */}
     </main>
   );
 }

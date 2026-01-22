@@ -4,15 +4,13 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../styles/auth.css';
 import { useNavigate } from 'react-router-dom';
-
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
-
 import { addUser, findUser } from '../utils/userStorage';
 import { createSession, getCurrentUser } from '../utils/session';
-import NavbarComponent from '../components/NavbarComponent';
 
-const HOME_PATH = '/home'; // change if your Home route is different
+const STUDENT_HOME_PATH = '/student-home';
+const MENTOR_HOME_PATH = '/mentor-home';
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -27,7 +25,7 @@ const AuthPage = () => {
     remember: false,
   });
   const [loginErrors, setLoginErrors] = useState({});
-  const [loginStatus, setLoginStatus] = useState(null); // { type: 'success' | 'error', message: string }
+  const [loginStatus, setLoginStatus] = useState(null); // { type: 'success'|'error', message: string }
 
   // ---- REGISTER STATE ----
   const [registerData, setRegisterData] = useState({
@@ -48,20 +46,24 @@ const AuthPage = () => {
     occupation: '', // 'student' | 'working'
   });
   const [registerErrors, setRegisterErrors] = useState({});
-  const [registerStatus, setRegisterStatus] = useState(null); // { type: 'success' | 'error', message: string }
+  const [registerStatus, setRegisterStatus] = useState(null); // { type: 'success'|'error', message: string }
 
-  // ---- OPTIONAL: If already authenticated, go Home immediately ----
+  // If already authenticated, redirect to role home
   useEffect(() => {
     const u = getCurrentUser();
-    if (u) navigate(HOME_PATH, { replace: true });
+    const roles = Array.isArray(u?.roles) ? u.roles : u?.role ? [u.role] : [];
+    if (roles.includes('instructor')) {
+      navigate(MENTOR_HOME_PATH, { replace: true });
+    } else if (roles.includes('learner')) {
+      navigate(STUDENT_HOME_PATH, { replace: true });
+    }
   }, [navigate]);
 
-  // ---- VALIDATION HELPERS (kept from your file) ----
+  // ---- VALIDATION ----
   const isEmailValid = (email) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
-
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? '').trim());
   const isStrongPassword = (password) =>
-    /^(?=.*[A-Z])(?=.*\d).{8,}$/.test(String(password || ''));
+    /^(?=.*[A-Z])(?=.*\d).{8,}$/.test(String(password ?? ''));
 
   const validateLogin = (data) => {
     const errs = {};
@@ -71,42 +73,47 @@ const AuthPage = () => {
     return errs;
   };
 
-  const validateRegister = (data) => {
-    const errs = {};
-    if (!data.role) errs.role = 'Please select a role.';
-    if (!data.name.trim()) errs.name = 'Name is required.';
-    if (!data.email.trim()) errs.email = 'Email is required.';
-    else if (!isEmailValid(data.email)) errs.email = 'Enter a valid email.';
-    if (!data.password) errs.password = 'Password is required.';
-    else if (!isStrongPassword(data.password))
-      errs.password = 'Password must be at least 8 chars, include an uppercase and a number.';
-    if (!data.confirmPassword) errs.confirmPassword = 'Confirm your password.';
-    else if (data.password !== data.confirmPassword)
-      errs.confirmPassword = 'Passwords do not match.';
-    if (!data.gender) errs.gender = 'Please select gender.';
+  
+// In src/pages/AuthPage.jsx
+const validateRegister = (data) => {
+  const errs = {};
+  if (!data.role) errs.role = 'Please select a role.';
+  if (!data.name.trim()) errs.name = 'Name is required.';
+  if (!data.email.trim()) errs.email = 'Email is required.';
+  else if (!isEmailValid(data.email)) errs.email = 'Enter a valid email.';
+  if (!data.password) errs.password = 'Password is required.';
+  else if (!isStrongPassword(data.password))
+    errs.password = 'Password must be at least 8 chars, include an uppercase and a number.';
+  if (!data.confirmPassword) errs.confirmPassword = 'Confirm your password.';
+  else if (data.password !== data.confirmPassword)
+    errs.confirmPassword = 'Passwords do not match.';
+  if (!data.gender) errs.gender = 'Please select gender.';
 
-    if (data.role === 'instructor') {
-      if (data.experience === '' || data.experience === null)
-        errs.experience = 'Experience is required.';
-      else if (isNaN(Number(data.experience)) || Number(data.experience) < 0)
-        errs.experience = 'Experience must be a non-negative number.';
-    }
+  // 🚫 Removed:
+  // - instructor: experience/skills requirements
+  // - learner: occupation/domainInterests requirements
 
-    if (data.role === 'learner') {
-      if (!data.occupation) errs.occupation = 'Choose student or working professional.';
-      if (!data.domainInterests || data.domainInterests.length === 0)
-        errs.domainInterests = 'Please add at least one domain interest.';
+  return errs;
+};
+
+
+  const navigateToUserHome = (user) => {
+    const roles = Array.isArray(user?.roles) ? user.roles : user?.role ? [user.role] : [];
+    if (roles.includes('learner')) {
+      navigate(STUDENT_HOME_PATH, { replace: true });
+    } else if (roles.includes('instructor')) {
+      navigate(MENTOR_HOME_PATH, { replace: true });
+    } else {
+      navigate('/not-authorized', { replace: true });
     }
-    return errs;
   };
 
-  // ---- SUBMIT HANDLERS ----
+  // ---- SUBMIT: LOGIN ----
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     const errs = validateLogin(loginData);
     setLoginErrors(errs);
     setLoginStatus(null);
-
     if (Object.keys(errs).length !== 0) {
       setActiveTab('login');
       return;
@@ -114,7 +121,6 @@ const AuthPage = () => {
 
     const user = findUser(loginData.email);
     if (!user) {
-      // If user doesn't exist -> go to Register, prefill email, show message
       setRegisterData((prev) => ({ ...prev, email: loginData.email }));
       setRegisterStatus({
         type: 'error',
@@ -130,17 +136,18 @@ const AuthPage = () => {
       return;
     }
 
-    // Success: create session and go Home
-    const sessionRes = createSession(user, !!loginData.remember);
+    // Create session on login, then redirect to role-based home
+    const sessionRes = createSession(user);
     if (!sessionRes.ok) {
       setLoginStatus({ type: 'error', message: 'Could not start a session. Please try again.' });
       setActiveTab('login');
       return;
     }
 
-    navigate(HOME_PATH, { replace: true });
+    navigateToUserHome(user);
   };
 
+  // ---- SUBMIT: REGISTER ----
   const handleRegisterSubmit = (e) => {
     e.preventDefault();
     const errs = validateRegister(registerData);
@@ -148,37 +155,33 @@ const AuthPage = () => {
     setRegisterStatus(null);
 
     if (Object.keys(errs).length !== 0) {
-      // Validation errors -> stay on Register so user can fix
       setActiveTab('register');
       return;
     }
 
     const { ok, error, user: createdUser } = addUser(registerData);
-
     if (!ok) {
-      // Storage-level failure (e.g., duplicate email) -> redirect to Login with the same error
-      setLoginStatus({ type: 'error', message: error || 'Registration failed. Try again.' });
-      setActiveTab('login');
+      // Stay on Register and show the error (e.g., duplicate email)
+      setRegisterStatus({ type: 'error', message: error ?? 'Registration failed. Try again.' });
+      setActiveTab('register');
       return;
     }
 
-    // Registration successful -> create session and go Home
-    const sessionRes = createSession(createdUser, false);
-    if (!sessionRes.ok) {
-      // Rare case: session creation failed; take user to login with info
-      setLoginStatus({
-        type: 'error',
-        message: 'Registered, but could not start a session. Please log in.',
-      });
-      setActiveTab('login');
-      return;
-    }
-
-    navigate(HOME_PATH, { replace: true });
+    // ✅ Do NOT create a session here.
+    // ✅ Switch to Login tab, prefill email, and show success message
+    setLoginData((prev) => ({
+      ...prev,
+      email: createdUser.email,
+      password: '', // never prefill password
+    }));
+    setLoginStatus({
+      type: 'success',
+      message: 'Registration successful! Please sign in to continue.',
+    });
+    setActiveTab('login');
   };
 
   return (
-    
     <div className="auth-wrapper d-flex align-items-center justify-content-center">
       <div className="auth-card container">
         <div className="row justify-content-center">
