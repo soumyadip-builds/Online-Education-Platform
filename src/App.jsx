@@ -37,7 +37,7 @@ export default function App() {
         
         <Route
           path="/mentorhome"
-          element={<MentorHome authorName={'KRISHAI Technologies'} />}
+          element={<MentorHome authorName={'Code Academy'} />}
         />
         {/* <Home />  */}
         {/* <Footer /> */}
