@@ -59,7 +59,8 @@ export default function App() {
         <Route path="/quiz/:quizId" element={<QuizPage />} />
         <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
       </Routes> */}
-      <ForumPage />
+      {/* <ForumPage /> */}
+      
     </BrowserRouter>
   );
 }
