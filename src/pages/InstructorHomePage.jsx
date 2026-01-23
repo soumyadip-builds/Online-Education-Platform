@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "../styles/instructorHome.css";
 import CourseCard from "../components/CourseCard";
 import NavbarComponent from "../components/NavbarComponent";
-import Footer from "../components/FooterComponent";
-import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../styles/instructorHome.css';
-import CourseCard from '../components/CourseCard';
-import NavbarComponent from '../components/NavbarComponent';
 import Footer from '../components/FooterComponent';
 import { useNavigate } from 'react-router-dom';
 

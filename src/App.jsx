@@ -22,6 +22,7 @@ import EditProfile from "./components/EditProfile";
 import MentorHome from "./pages/InstructorHomePage"; // Instructor Home
 import { getCurrentUser, isAuthenticated } from "./utils/session";
 import { useMemo } from "react";
+import CourseCreator from "./components/CourseCreator";
 
 // --- Helpers ---------------------------------------------------------------
 function roleHomePath(user) {
@@ -121,17 +122,6 @@ function AppShell({ children }) {
   );
 }
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import CoursePage from './pages/CoursePage';
-import CourseDetails from './components/CourseDetails';
-import AssignmentPage from './pages/AssignmentPage';
-import QuizPage from './pages/QuizPage';
-import AuthPage from './pages/AuthPage';
-import Home from './pages/Home'; // your home page component
-import NavbarComponent from './components/NavbarComponent';
-import Footer from './components/FooterComponent';
-import MentorHome from './pages/InstructorHomePage';
-import CourseCreator from './components/CourseCreator';
 export default function App() {
   const StudentHome = Home; // replace with StudentHomePage if you add one later
 
@@ -145,6 +135,14 @@ export default function App() {
           <Route path="/forum" element={<ForumPage />} />
           <Route path="/course/:courseId" element={<CoursePage />} />
           <Route path="/course/:courseId/details" element={<CourseDetails />} />
+          {/* <Route path="/coursepage" element={<CoursePage />} />
+          <Route path="/courses/:id" element={<CourseDetails />} /> */}
+          <Route path="/quiz/:quizId" element={<QuizPage />} />
+          <Route
+            path="/assignment/:assignmentId"
+            element={<AssignmentPage />}
+          />
+          <Route path="/course-creator" element={<CourseCreator />} />
           <Route
             path="/assignment/:assignmentId"
             element={<AssignmentPage />}
