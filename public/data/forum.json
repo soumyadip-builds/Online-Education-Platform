@@ -1,0 +1,40 @@
+
+{
+  "users": [
+    { "userId": "u1", "name": "Alice Kumar", "role": "Student" },
+    { "userId": "u2", "name": "Dr. Rao", "role": "Instructor" },
+    { "userId": "u3", "name": "Vijay", "role": "Student" }
+  ],
+  "courses": [
+    { "courseId": "c1", "name": "CS101 - Intro to CS" },
+    { "courseId": "c2", "name": "MATH201 - Calculus II" }
+  ],
+  "forumPosts": [
+    {
+      "postId": "p1",
+      "courseId": "c1",
+      "userId": "u2",
+      "message": "[Announcement] Welcome to CS101! Lecture slides are in Materials.",
+      "timestamp": "2026-01-10T09:00:00.000Z",
+      "replies": [
+        {
+          "replyId": "r1",
+          "userId": "u1",
+          "message": "Thanks, noted!",
+          "timestamp": "2026-01-10T10:15:00.000Z"
+        }
+      ]
+    }
+  ],
+  "notifications": [
+    {
+      "notificationId": "n1",
+      "userId": "u1",
+      "message": "Assignment 1 due on Jan 30",
+      "type": "Assignment Due",
+      "timestamp": "2026-01-12T08:00:00.000Z",
+      "read": false
+    }
+  ],
+  "currentUserId": "u1"
+}

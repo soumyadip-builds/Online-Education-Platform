@@ -14,7 +14,7 @@ import MentorHome from './pages/InstructorHomePage';
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      {/* <Routes>
         <Route
           path="/auth"
           element={
@@ -26,13 +26,13 @@ export default function App() {
           }
         />
         <Route path="/home" element={<Home />} />
-        <Route path="*" element={<div>
+        <Route path="*" element={<div> */}
               {/* <NavbarComponent /> */}
               {/* <AuthPage />
               <Footer /> */}
-              <Home />
+              {/* <Home /> */}
               {/* <ForumPage/> */}
-          </div>} />
+          {/* </div>} />
         <Route path="/edit-profile" element={<div>
           <NavbarComponent/>
           <EditProfile/>
@@ -47,18 +47,19 @@ export default function App() {
               <Footer />
             </div>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/mentorhome"
           element={<MentorHome authorName={'KRISHAI Technologies'} />}
-        />
+        /> */}
         {/* <Home />  */}
         {/* <Footer /> */}
-        <Route path="/coursepage" element={<CoursePage />} />
+        {/* <Route path="/coursepage" element={<CoursePage />} />
         <Route path="/courses/:id" element={<CourseDetails />} />
         <Route path="/quiz/:quizId" element={<QuizPage />} />
         <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
-      </Routes>
+      </Routes> */}
+      <ForumPage />
     </BrowserRouter>
   );
 }
