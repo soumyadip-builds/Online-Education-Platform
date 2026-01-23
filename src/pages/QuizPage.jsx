@@ -1,3 +1,4 @@
+
 // src/pages/QuizPage.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -12,436 +13,409 @@ import { useParams, Link } from 'react-router-dom';
  */
 
 export default function QuizPage() {
-	const { quizId } = useParams();
+    const { quizId } = useParams();
 
-	const [loading, setLoading] = useState(true);
-	const [err, setErr] = useState(null);
-	const [quiz, setQuiz] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [err, setErr] = useState(null);
+    const [quiz, setQuiz] = useState(null);
 
-	// Working copy after shuffling (questions & options)
-	const [renderQuestions, setRenderQuestions] = useState([]);
+    // Working copy after shuffling (questions & options)
+    const [renderQuestions, setRenderQuestions] = useState([]);
 
-	// Attempt state
-	const [answers, setAnswers] = useState({}); // { Q1: ["A"], Q2: ["B","C"], ... }
-	const [submitted, setSubmitted] = useState(false);
-	const [score, setScore] = useState(null);
-	const [maxScore, setMaxScore] = useState(0);
-	const [passed, setPassed] = useState(false);
-	const [gradingError, setGradingError] = useState('');
+    // Attempt state
+    const [answers, setAnswers] = useState({}); // { Q1: ["A"], Q2: ["B","C"], ... }
+    const [submitted, setSubmitted] = useState(false);
+    const [score, setScore] = useState(null);
+    const [maxScore, setMaxScore] = useState(0);
+    const [passed, setPassed] = useState(false);
+    const [gradingError, setGradingError] = useState('');
 
-	// Timer
-	const [timeLeftSec, setTimeLeftSec] = useState(null);
-	const timerRef = useRef(null);
+    // Timer
+    const [timeLeftSec, setTimeLeftSec] = useState(null);
+    const timerRef = useRef(null);
 
-	// Load the quiz (no answers inside)
-	useEffect(() => {
-		let alive = true;
-		(async () => {
-			try {
-				setLoading(true);
-				setErr(null);
-				const res = await fetch('/data/quizData.json');
-				if (!res.ok) throw new Error('Failed to fetch quizData.json');
-				const all = await res.json();
-				const found = all.find((q) => q.id === quizId) || null;
-				if (!found) throw new Error('Quiz not found');
+    // Load the quiz (no answers inside)
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                setLoading(true);
+                setErr(null);
+                const res = await fetch('/data/quizData.json');
+                if (!res.ok) throw new Error('Failed to fetch quizData.json');
+                const all = await res.json();
+                const found = all.find((q) => q.id === quizId) || null;
+                if (!found) throw new Error('Quiz not found');
 
-				// Prepare shuffled copies
-				const qCopy = JSON.parse(JSON.stringify(found));
-				const prepared = prepareQuestionsForRender(qCopy);
+                // Prepare shuffled copies
+                const qCopy = JSON.parse(JSON.stringify(found));
+                const prepared = prepareQuestionsForRender(qCopy);
 
-				if (alive) {
-					setQuiz(qCopy);
-					setRenderQuestions(prepared);
-					setMaxScore(prepared.reduce((s, q) => s + (q.points || 0), 0));
+                if (alive) {
+                    setQuiz(qCopy);
+                    setRenderQuestions(prepared);
+                    setMaxScore(prepared.reduce((s, q) => s + (q.points || 0), 0));
 
-					// Timer
-					const limitMin = qCopy?.settings?.timeLimitMins;
-					if (limitMin && Number.isFinite(limitMin)) {
-						setTimeLeftSec(limitMin * 60);
-					}
-				}
-			} catch (e) {
-				if (alive) setErr(e.message || 'Something went wrong');
-			} finally {
-				if (alive) setLoading(false);
-			}
-		})();
+                    // Timer
+                    const limitMin = qCopy?.settings?.timeLimitMins;
+                    if (limitMin && Number.isFinite(limitMin)) {
+                        setTimeLeftSec(limitMin * 60);
+                    }
+                }
+            } catch (e) {
+                if (alive) setErr(e.message || 'Something went wrong');
+            } finally {
+                if (alive) setLoading(false);
+            }
+        })();
 
-		return () => {
-			alive = false;
-			if (timerRef.current) clearInterval(timerRef.current);
-		};
-	}, [quizId]);
+        return () => {
+            alive = false;
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [quizId]);
 
-	// Start countdown when timeLeftSec is set the first time
-	useEffect(() => {
-		if (timeLeftSec == null || submitted) return;
-		if (timerRef.current) clearInterval(timerRef.current);
-		timerRef.current = setInterval(() => {
-			setTimeLeftSec((t) => {
-				if (t == null) return t;
-				if (t <= 1) {
-					clearInterval(timerRef.current);
-					// auto-submit on time up
-					handleSubmit(true);
-					return 0;
-				}
-				return t - 1;
-			});
-		}, 1000);
-		return () => {
-			if (timerRef.current) clearInterval(timerRef.current);
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [timeLeftSec, submitted]);
+    // Start countdown when timeLeftSec is set the first time
+    useEffect(() => {
+        if (timeLeftSec == null || submitted) return;
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+            setTimeLeftSec((t) => {
+                if (t == null) return t;
+                if (t <= 1) {
+                    clearInterval(timerRef.current);
+                    // auto-submit on time up
+                    handleSubmit(true);
+                    return 0;
+                }
+                return t - 1;
+            });
+        }, 1000);
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [timeLeftSec, submitted]);
 
-	function prepareQuestionsForRender(qz) {
-		const shuffleQ = !!qz?.settings?.shuffleQuestions;
-		const shuffleO = !!qz?.settings?.shuffleOptions;
+    function prepareQuestionsForRender(qz) {
+        const shuffleQ = !!qz?.settings?.shuffleQuestions;
+        const shuffleO = !!qz?.settings?.shuffleOptions;
 
-		const qs = (qz.questions || []).map((q) => {
-			const options = [...(q.options || [])];
-			if (shuffleO) shuffleInPlace(options);
-			return {
-				...q,
-				options,
-			};
-		});
+        const qs = (qz.questions || []).map((q) => {
+            const options = [...(q.options || [])];
+            if (shuffleO) shuffleInPlace(options);
+            return {
+                ...q,
+                options,
+            };
+        });
 
-		if (shuffleQ) shuffleInPlace(qs);
+        if (shuffleQ) shuffleInPlace(qs);
 
-		return qs;
-	}
+        return qs;
+    }
 
-	function shuffleInPlace(arr) {
-		for (let i = arr.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[arr[i], arr[j]] = [arr[j], arr[i]];
-		}
-		return arr;
-	}
+    function shuffleInPlace(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
 
-	const formattedDue = useMemo(() => {
-		if (!quiz?.dueAt) return '-';
-		return new Date(quiz.dueAt).toLocaleString();
-	}, [quiz]);
+    const remainingClock = useMemo(() => {
+        if (timeLeftSec == null) return null;
+        const m = Math.floor(timeLeftSec / 60);
+        const s = timeLeftSec % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }, [timeLeftSec]);
 
-	const isPastDue = useMemo(() => {
-		if (!quiz?.dueAt) return false;
-		return new Date(quiz.dueAt).getTime() < Date.now();
-	}, [quiz]);
+    // ✅ Passing Marks (dummy for now)
+    const passingMarks = useMemo(() => {
+        // Option A: Use quiz.passingScore if present
+        if (Number.isFinite(Number(quiz?.passingScore))) return Number(quiz.passingScore);
 
-	const remainingClock = useMemo(() => {
-		if (timeLeftSec == null) return null;
-		const m = Math.floor(timeLeftSec / 60);
-		const s = timeLeftSec % 60;
-		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-	}, [timeLeftSec]);
+        // Option B: Dummy 60% of max score
+        const max = Number(quiz?.maxScore || 100);
+        return Math.round(max * 0.6);
+    }, [quiz]);
 
-	const selectSingle = (qid, oid) => {
-		setAnswers((prev) => ({ ...prev, [qid]: [oid] }));
-	};
+    const selectSingle = (qid, oid) => {
+        setAnswers((prev) => ({ ...prev, [qid]: [oid] }));
+    };
 
-	const toggleMulti = (qid, oid) => {
-		setAnswers((prev) => {
-			const cur = new Set(prev[qid] || []);
-			if (cur.has(oid)) cur.delete(oid);
-			else cur.add(oid);
-			return { ...prev, [qid]: Array.from(cur) };
-		});
-	};
+    const toggleMulti = (qid, oid) => {
+        setAnswers((prev) => {
+            const cur = new Set(prev[qid] || []);
+            if (cur.has(oid)) cur.delete(oid);
+            else cur.add(oid);
+            return { ...prev, [qid]: Array.from(cur) };
+        });
+    };
 
-	const handleSubmit = async (auto = false) => {
-		if (submitted) return;
-		setGradingError('');
-		try {
-			// Fetch answers for this quizId
-			const res = await fetch('/data/quizAnswers.json');
-			if (!res.ok) throw new Error('Failed to fetch quizAnswers.json');
-			const all = await res.json();
-			const entry = all.find((x) => x.quizId === quizId);
-			if (!entry) throw new Error('Answers not found for this quiz');
+    const handleSubmit = async (auto = false) => {
+        if (submitted) return;
+        setGradingError('');
+        try {
+            // Fetch answers for this quizId
+            const res = await fetch('/data/quizAnswers.json');
+            if (!res.ok) throw new Error('Failed to fetch quizAnswers.json');
+            const all = await res.json();
+            const entry = all.find((x) => x.quizId === quizId);
+            if (!entry) throw new Error('Answers not found for this quiz');
 
-			// Build a quick lookup for correct answers
-			const correctMap = new Map(); // qid -> [A, C] etc
-			entry.answers.forEach((a) => correctMap.set(a.qid, a.correctOptionIds || []));
+            // Build a quick lookup for correct answers
+            const correctMap = new Map(); // qid -> [A, C] etc
+            entry.answers.forEach((a) => correctMap.set(a.qid, a.correctOptionIds || []));
 
-			// Grade
-			let s = 0;
-			renderQuestions.forEach((q) => {
-				const picked = new Set(answers[q.qid] || []);
-				const correct = new Set(correctMap.get(q.qid) || []);
-				if (q.type === 'multi') {
-					// full marks only when set matches exactly
-					if (eqSet(picked, correct)) s += q.points || 0;
-				} else {
-					// single correct
-					if (picked.size === 1 && eqSet(picked, correct)) s += q.points || 0;
-				}
-			});
+            // Grade
+            let s = 0;
+            renderQuestions.forEach((q) => {
+                const picked = new Set(answers[q.qid] || []);
+                const correct = new Set(correctMap.get(q.qid) || []);
+                if (q.type === 'multi') {
+                    // full marks only when set matches exactly
+                    if (eqSet(picked, correct)) s += q.points || 0;
+                } else {
+                    // single correct
+                    if (picked.size === 1 && eqSet(picked, correct)) s += q.points || 0;
+                }
+            });
 
-			setScore(s);
-			setSubmitted(true);
-			setPassed(s >= (quiz?.passingScore ?? 0));
-			if (timerRef.current) clearInterval(timerRef.current);
-		} catch (e) {
-			setGradingError(e.message || 'Grading failed');
-		}
-	};
+            setScore(s);
+            setSubmitted(true);
+            setPassed(s >= passingMarks);
+            if (timerRef.current) clearInterval(timerRef.current);
+        } catch (e) {
+            setGradingError(e.message || 'Grading failed');
+        }
+    };
 
-	function eqSet(a, b) {
-		if (a.size !== b.size) return false;
-		for (const v of a) if (!b.has(v)) return false;
-		return true;
-	}
+    function eqSet(a, b) {
+        if (a.size !== b.size) return false;
+        for (const v of a) if (!b.has(v)) return false;
+        return true;
+    }
 
-	if (loading) {
-		return (
-			<Page>
-				<Style />
-				<Card>
-					<TopAccent />
-					<div className="apq-pad">
-						<p>Loading…</p>
-					</div>
-				</Card>
-			</Page>
-		);
-	}
+    if (loading) {
+        return (
+            <Page>
+                <Style />
+                <Card>
+                    <TopAccent />
+                    <div className="apq-pad">
+                        <p>Loading…</p>
+                    </div>
+                </Card>
+            </Page>
+        );
+    }
 
-	if (err || !quiz) {
-		return (
-			<Page>
-				<Style />
-				<Card>
-					<TopAccent />
-					<div className="apq-pad">
-						<h2 className="apq-title">Quiz</h2>
-						<p className="apq-muted">{err || 'Not found'}</p>
-						<div style={{ marginTop: 16 }}>
-							<Link className="apq-link" to="/">
-								← Back
-							</Link>
-						</div>
-					</div>
-				</Card>
-			</Page>
-		);
-	}
+    if (err || !quiz) {
+        return (
+            <Page>
+                <Style />
+                <Card>
+                    <TopAccent />
+                    <div className="apq-pad">
+                        <h2 className="apq-title">Quiz</h2>
+                        <p className="apq-muted">{err || 'Not found'}</p>
+                        <div style={{ marginTop: 16 }}>
+                            <Link className="apq-link" to="/">
+                                ← Back
+                            </Link>
+                        </div>
+                    </div>
+                </Card>
+            </Page>
+        );
+    }
 
-	const showAnswersAfterSubmit = !!quiz?.settings?.showAnswersAfterSubmit;
+    const showAnswersAfterSubmit = !!quiz?.settings?.showAnswersAfterSubmit;
 
-	return (
-		<Page>
-			<Style />
-			<Card>
-				<TopAccent />
+    return (
+        <Page>
+            <Style />
+            <Card>
+                <TopAccent />
 
-				<div className="apq-header">
-					<h1 className="apq-title">{quiz.title}</h1>
-					<div className="apq-rightMeta">
-						<span
-							className={`apq-badge ${quiz.status === 'published' ? 'ok' : ''}`}
-						>
-							<span className="apq-dot" />{' '}
-							{quiz.status?.[0]?.toUpperCase() + quiz.status?.slice(1)}
-						</span>
-					</div>
-				</div>
+                <div className="apq-header">
+                    <h1 className="apq-title">{quiz.title}</h1>
+                    <div className="apq-rightMeta">
+                        <span className={`apq-badge ${quiz.status === 'published' ? 'ok' : ''}`}>
+                            <span className="apq-dot" />{' '}
+                            {quiz.status?.[0]?.toUpperCase() + quiz.status?.slice(1)}
+                        </span>
+                    </div>
+                </div>
 
-				<div className="apq-metaRow apq-pad">
-					<Meta label="Course" value={quiz.courseId.replace(/-/g, ' ')} />
-					<Meta label="Max Score" value={quiz.maxScore} />
-					<Meta label="Passing" value={quiz.passingScore} />
-					<Meta label="Due" value={formattedDue} danger={isPastDue} />
-				</div>
+                {/* ✅ Estimated Time removed */}
+                <div className="apq-metaRow apq-pad">
+                    <Meta label="Course" value={quiz.courseId.replace(/-/g, ' ')} />
+                    <Meta label="Max Score" value={quiz.maxScore} />
+                    <Meta label="Passing Marks" value={passingMarks} />
+                    <Meta label="Time Limit" value={`${quiz.settings?.timeLimitMins ?? '—'} mins`} />
+                </div>
 
-				<div className="apq-metaRow apq-pad">
-					<Meta
-						label="Estimated Time"
-						value={`${quiz.estimatedTimeMins} mins`}
-					/>
-					<Meta
-						label="Time Limit"
-						value={`${quiz.settings?.timeLimitMins ?? '—'} mins`}
-					/>
-					{/* <Meta
-						label="Shuffle Qs"
-						value={quiz.settings?.shuffleQuestions ? 'Yes' : 'No'}
-					/>
-					<Meta
-						label="Shuffle Options"
-						value={quiz.settings?.shuffleOptions ? 'Yes' : 'No'}
-					/> */}
-				</div>
+                {quiz.description && (
+                    <div className="apq-section apq-pad">
+                        <SectionTitle>Description</SectionTitle>
+                        <p className="apq-desc">{quiz.description}</p>
+                    </div>
+                )}
 
-				{quiz.description && (
-					<div className="apq-section apq-pad">
-						<SectionTitle>Description</SectionTitle>
-						<p className="apq-desc">{quiz.description}</p>
-					</div>
-				)}
+                {!!quiz.settings?.timeLimitMins && (
+                    <div className="apq-timerBar" role="timer" aria-live="polite">
+                        <div className="apq-pad apq-timerRow">
+                            <span>Time Left</span>
+                            <span
+                                className={`apq-timer ${
+                                    timeLeftSec !== null && timeLeftSec <= 30 ? 'danger' : ''
+                                }`}
+                            >
+                                {remainingClock}
+                            </span>
+                        </div>
+                    </div>
+                )}
 
-				{!!quiz.settings?.timeLimitMins && (
-					<div className="apq-timerBar" role="timer" aria-live="polite">
-						<div className="apq-pad apq-timerRow">
-							<span>Time Left</span>
-							<span
-								className={`apq-timer ${timeLeftSec !== null && timeLeftSec <= 30 ? 'danger' : ''}`}
-							>
-								{remainingClock}
-							</span>
-						</div>
-					</div>
-				)}
+                <div className="apq-section apq-pad">
+                    <SectionTitle>Questions</SectionTitle>
 
-				<div className="apq-section apq-pad">
-					<SectionTitle>Questions</SectionTitle>
+                    {renderQuestions.map((q, idx) => (
+                        <div key={q.qid} className="apq-question">
+                            <div className="apq-qHeader">
+                                <span className="apq-qNum">Q{idx + 1}</span>
+                                <span className="apq-qPts">
+                                    {q.points} pt{q.points !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <div className="apq-qText">{q.text}</div>
 
-					{renderQuestions.map((q, idx) => (
-						<div key={q.qid} className="apq-question">
-							<div className="apq-qHeader">
-								<span className="apq-qNum">Q{idx + 1}</span>
-								<span className="apq-qPts">
-									{q.points} pt{q.points !== 1 ? 's' : ''}
-								</span>
-							</div>
-							<div className="apq-qText">{q.text}</div>
+                            <div className="apq-options">
+                                {q.options.map((opt) => {
+                                    const isChecked = (answers[q.qid] || []).includes(opt.oid);
+                                    const inputType = q.type === 'multi' ? 'checkbox' : 'radio';
+                                    return (
+                                        <label className="apq-option" key={opt.oid}>
+                                            <input
+                                                type={inputType}
+                                                name={q.qid}
+                                                value={opt.oid}
+                                                checked={isChecked}
+                                                disabled={submitted}
+                                                onChange={() => {
+                                                    if (q.type === 'multi') toggleMulti(q.qid, opt.oid);
+                                                    else selectSingle(q.qid, opt.oid);
+                                                }}
+                                            />
+                                            <span className="apq-optionText">
+                                                <b>{opt.oid}.</b> {opt.text}
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
 
-							<div className="apq-options">
-								{q.options.map((opt) => {
-									const isChecked = (answers[q.qid] || []).includes(
-										opt.oid,
-									);
-									const inputType =
-										q.type === 'multi' ? 'checkbox' : 'radio';
-									return (
-										<label className="apq-option" key={opt.oid}>
-											<input
-												type={inputType}
-												name={q.qid}
-												value={opt.oid}
-												checked={isChecked}
-												disabled={submitted}
-												onChange={() => {
-													if (q.type === 'multi')
-														toggleMulti(q.qid, opt.oid);
-													else selectSingle(q.qid, opt.oid);
-												}}
-											/>
-											<span className="apq-optionText">
-												<b>{opt.oid}.</b> {opt.text}
-											</span>
-										</label>
-									);
-								})}
-							</div>
+                            {submitted && showAnswersAfterSubmit && (
+                                <AnswerReveal quizId={quiz.id} qid={q.qid} />
+                            )}
+                        </div>
+                    ))}
 
-							{/* If submitted and showAnswersAfterSubmit, highlight correctness */}
-							{submitted && showAnswersAfterSubmit && (
-								<AnswerReveal quizId={quiz.id} qid={q.qid} />
-							)}
-						</div>
-					))}
+                    {gradingError && <div className="apq-alert err">{gradingError}</div>}
 
-					{gradingError && <div className="apq-alert err">{gradingError}</div>}
-
-					<div className="apq-actions">
-						{!submitted ? (
-							<>
-								<button
-									type="button"
-									className="apq-btn"
-									disabled={isPastDue}
-									onClick={() => handleSubmit(false)}
-								>
-									Submit Quiz
-								</button>
-								<Link to="/" className="apq-btn ghost">
-									Cancel
-								</Link>
-							</>
-						) : (
-							<>
-								<div className={`apq-result ${passed ? 'ok' : 'warn'}`}>
-									<div className="apq-resultTitle">
-										{passed ? 'Passed' : 'Not Passed'}
-									</div>
-									<div className="apq-resultScore">
-										Score: {score} / {maxScore} (Passing:{' '}
-										{quiz.passingScore})
-									</div>
-								</div>
-								<Link to="/" className="apq-btn ghost">
-									Back
-								</Link>
-							</>
-						)}
-					</div>
-				</div>
-			</Card>
-		</Page>
-	);
+                    <div className="apq-actions">
+                        {!submitted ? (
+                            <>
+                                <button
+                                    type="button"
+                                    className="apq-btn"
+                                    onClick={() => handleSubmit(false)}
+                                >
+                                    Submit Quiz
+                                </button>
+                                <Link to="/" className="apq-btn ghost">
+                                    Cancel
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <div className={`apq-result ${passed ? 'ok' : 'warn'}`}>
+                                    <div className="apq-resultTitle">{passed ? 'Passed' : 'Not Passed'}</div>
+                                    <div className="apq-resultScore">
+                                        Score: {score} / {maxScore} (Passing: {passingMarks})
+                                    </div>
+                                </div>
+                                <Link to="/" className="apq-btn ghost">
+                                    Back
+                                </Link>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </Card>
+        </Page>
+    );
 }
 
 /* ---------- AnswerReveal (reads from quizAnswers.json once submitted) ---------- */
 
 function AnswerReveal({ quizId, qid }) {
-	const [correct, setCorrect] = useState([]);
-	const [err, setErr] = useState(null);
+    const [correct, setCorrect] = useState([]);
+    const [err, setErr] = useState(null);
 
-	useEffect(() => {
-		let alive = true;
-		(async () => {
-			try {
-				const res = await fetch('/data/quizAnswers.json');
-				if (!res.ok) throw new Error('Failed to fetch quizAnswers.json');
-				const all = await res.json();
-				const entry = all.find((x) => x.quizId === quizId);
-				const q = entry?.answers?.find((a) => a.qid === qid);
-				if (!q) throw new Error('Answer not found');
-				if (alive) setCorrect(q.correctOptionIds || []);
-			} catch (e) {
-				if (alive) setErr(e.message || 'Failed to load answers');
-			}
-		})();
-		return () => (alive = false);
-	}, [quizId, qid]);
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                const res = await fetch('/data/quizAnswers.json');
+                if (!res.ok) throw new Error('Failed to fetch quizAnswers.json');
+                const all = await res.json();
+                const entry = all.find((x) => x.quizId === quizId);
+                const q = entry?.answers?.find((a) => a.qid === qid);
+                if (!q) throw new Error('Answer not found');
+                if (alive) setCorrect(q.correctOptionIds || []);
+            } catch (e) {
+                if (alive) setErr(e.message || 'Failed to load answers');
+            }
+        })();
+        return () => (alive = false);
+    }, [quizId, qid]);
 
-	if (err) return <div className="apq-alert err">{err}</div>;
-	if (!correct.length) return null;
-	return <div className="apq-answer">Correct: {correct.join(', ')}</div>;
+    if (err) return <div className="apq-alert err">{err}</div>;
+    if (!correct.length) return null;
+    return <div className="apq-answer">Correct: {correct.join(', ')}</div>;
 }
 
 /* ---------- small building blocks ---------- */
 
 function Page({ children }) {
-	return <div className="ap-quiz-page">{children}</div>;
+    return <div className="ap-quiz-page">{children}</div>;
 }
 function Card({ children }) {
-	return <div className="apq-card">{children}</div>;
+    return <div className="apq-card">{children}</div>;
 }
 function TopAccent() {
-	return <div className="apq-topAccent" aria-hidden="true" />;
+    return <div className="apq-topAccent" aria-hidden="true" />;
 }
-function Meta({ label, value, danger }) {
-	return (
-		<div className={`apq-meta ${danger ? 'danger' : ''}`}>
-			<div className="apq-metaLabel">{label}</div>
-			<div className="apq-metaValue">{value}</div>
-		</div>
-	);
+function Meta({ label, value }) {
+    return (
+        <div className="apq-meta">
+            <div className="apq-metaLabel">{label}</div>
+            <div className="apq-metaValue">{value}</div>
+        </div>
+    );
 }
 function SectionTitle({ children }) {
-	return <h3 className="apq-sectionTitle">{children}</h3>;
+    return <h3 className="apq-sectionTitle">{children}</h3>;
 }
 
 /* ---------- Scoped Styles ---------- */
 
 function Style() {
-	return (
-		<style>{`
+    return (
+        <style>{`
       .ap-quiz-page{
         --bg: #f7f7fb;
         --surface: #ffffff;
@@ -499,7 +473,6 @@ function Style() {
       .ap-quiz-page .apq-meta{
         border:1px solid var(--border); border-radius:10px; padding:12px 14px; background:#fff;
       }
-      .ap-quiz-page .apq-meta.danger{ border-color:#ffd1d1; background:#fff8f8; }
       .ap-quiz-page .apq-metaLabel{ font-size:12px; color: var(--muted); margin-bottom:4px; }
       .ap-quiz-page .apq-metaValue{ font-weight:600; color: var(--text); }
 
@@ -557,8 +530,6 @@ function Style() {
         margin-top:14px; border-radius: 10px; padding: 10px 12px; font-size:14px; border:1px solid;
       }
       .ap-quiz-page .apq-alert.err{ color:#9b1c1c; background:#fff1f1; border-color:#ffd2d2; }
-      .ap-quiz-page .apq-alert.ok{ color:#065f46; background:#ecfdf5; border-color:#a7f3d0; }
-      .ap-quiz-page .apq-alert.warn{ color:#92400e; background:#fffbeb; border-color:#fde68a; }
 
       .ap-quiz-page .apq-actions{ display:flex; gap:10px; align-items:center; margin-top:18px; }
       .ap-quiz-page .apq-btn{
@@ -568,7 +539,6 @@ function Style() {
         text-decoration: none; display:inline-flex; align-items:center; justify-content:center;
       }
       .ap-quiz-page .apq-btn:hover{ background: var(--primary-600); }
-      .ap-quiz-page .apq-btn:disabled{ opacity: 0.6; cursor: not-allowed; box-shadow:none; }
       .ap-quiz-page .apq-btn.ghost{
         background: #fff; color: var(--text); border:1px solid var(--border);
         box-shadow:none;
@@ -590,5 +560,5 @@ function Style() {
         .ap-quiz-page .apq-header{ align-items:flex-start; gap:10px; flex-direction:column; }
       }
     `}</style>
-	);
+    );
 }

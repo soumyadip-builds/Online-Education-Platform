@@ -10,44 +10,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ---- Skills (Instructor) ----
-  const addSkill = () => {
-    const skill = (data.currentSkill || '').trim();
-    if (skill) {
-      setData((prev) => ({
-        ...prev,
-        skills: [...prev.skills, skill],
-        currentSkill: '',
-      }));
-    }
-  };
-
-  const removeSkill = (idx) => {
-    setData((prev) => ({
-      ...prev,
-      skills: prev.skills.filter((_, i) => i !== idx),
-    }));
-  };
-
-  // ---- Domain Interests (Learner) ----
-  const addInterest = () => {
-    const interest = (data.currentInterest || '').trim();
-    if (interest) {
-      setData((prev) => ({
-        ...prev,
-        domainInterests: [...prev.domainInterests, interest],
-        currentInterest: '',
-      }));
-    }
-  };
-
-  const removeInterest = (idx) => {
-    setData((prev) => ({
-      ...prev,
-      domainInterests: prev.domainInterests.filter((_, i) => i !== idx),
-    }));
-  };
-
+  
   // ---- Password Strength Calculation ----
   const strength = useMemo(() => {
     const pwd = data.password || '';
@@ -142,7 +105,6 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
       <div className="mb-3">
         <div className="d-flex justify-content-between">
           <label className="form-label">Password</label>
-
         </div>
 
         <input
@@ -206,137 +168,6 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
         {errors.gender && <div className="invalid-feedback">{errors.gender}</div>}
       </div>
 
-      {/* Instructor Section */}
-      {data.role === 'instructor' && (
-        <>
-          <div className="divider-label mt-3 mb-2">Instructor Details</div>
-
-          {/* Experience */}
-          <div className="mb-3">
-            <label className="form-label">Experience (years)</label>
-            <input
-              type="number"
-              className={`form-control soft-input ${errors.experience ? 'is-invalid' : ''}`}
-              name="experience"
-              value={data.experience}
-              onChange={handleChange}
-            />
-            {errors.experience && <div className="invalid-feedback">{errors.experience}</div>}
-          </div>
-
-          {/* Skills */}
-          <div className="mb-3">
-            <label className="form-label">Skills (optional)</label>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control soft-input"
-                name="currentSkill"
-                value={data.currentSkill}
-                onChange={handleChange}
-              />
-              <button className="btn gradient-btn" type="button" onClick={addSkill}>
-                + Add
-              </button>
-            </div>
-
-            {data.skills.length > 0 && (
-              <div className="chips mt-2">
-                {data.skills.map((s, idx) => (
-                  <span className="chip" key={idx}>
-                    {s}
-                    <button className="chip-close" onClick={() => removeSkill(idx)}>
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Learner Section */}
-      {data.role === 'learner' && (
-        <>
-          <div className="divider-label mt-3 mb-2">Learner Details</div>
-
-          
-            
-            
-            {/* Occupation */}
-            <div className="mb-3">
-            <label className="form-label d-block">Occupation</label>
-
-            {/* Left-right row */}
-            <div className="occ-row">
-                {/* Left: Student */}
-                <label className="occ-option" htmlFor="occ-student">
-                <input
-                    type="radio"
-                    id="occ-student"
-                    name="occupation"
-                    value="student"
-                    checked={data.occupation === 'student'}
-                    onChange={handleChange}
-                />
-                <span className="occ-label">Student</span>
-                </label>
-
-                {/* Right: Working Professional */}
-                <label className="occ-option" htmlFor="occ-working">
-                <input
-                    type="radio"
-                    id="occ-working"
-                    name="occupation"
-                    value="working"
-                    checked={data.occupation === 'working'}
-                    onChange={handleChange}
-                />
-                <span className="occ-label">Working Professional</span>
-                </label>
-            </div>
-
-            {errors.occupation && (
-                <div className="invalid-feedback d-block occ-error">{errors.occupation}</div>
-            )}
-            </div>
-
-
-          {/* Domain Interests */}
-          <div className="mb-3">
-            <label className="form-label">Domain Interests</label>
-            <div className="input-group">
-              <input
-                type="text"
-                className={`form-control soft-input ${errors.domainInterests ? 'is-invalid' : ''}`}
-                name="currentInterest"
-                value={data.currentInterest}
-                onChange={handleChange}
-              />
-              <button className="btn gradient-btn" type="button" onClick={addInterest}>
-                + Add
-              </button>
-            </div>
-            {errors.domainInterests && (
-              <div className="invalid-feedback d-block">{errors.domainInterests}</div>
-            )}
-
-            {data.domainInterests.length > 0 && (
-              <div className="chips mt-2">
-                {data.domainInterests.map((s, idx) => (
-                  <span className="chip" key={idx}>
-                    {s}
-                    <button className="chip-close" onClick={() => removeInterest(idx)}>
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
 
       {/* Buttons */}
       <div className="d-flex justify-content-between mt-3">

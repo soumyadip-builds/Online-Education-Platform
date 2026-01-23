@@ -5,8 +5,6 @@
 		"title": "Build a Todo List",
 		"description": "Complete the 'Build a Todo List' assignment for react basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-26T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -46,8 +44,6 @@
 		"title": "Props & State Mini Project",
 		"description": "Complete the 'Props & State Mini Project' assignment for react basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-27T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -87,8 +83,6 @@
 		"title": "Typing a Fetch Wrapper",
 		"description": "Complete the 'Typing a Fetch Wrapper' assignment for typescript essentials. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-27T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -128,8 +122,6 @@
 		"title": "Counter Slice & Store",
 		"description": "Complete the 'Counter Slice & Store' assignment for redux toolkit. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-28T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -169,8 +161,6 @@
 		"title": "Async Thunks with API",
 		"description": "Complete the 'Async Thunks with API' assignment for redux toolkit. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-29T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -210,8 +200,6 @@
 		"title": "JWT Login API",
 		"description": "Complete the 'JWT Login API' assignment for express auth. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-29T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -251,8 +239,6 @@
 		"title": "Protect Routes Middleware",
 		"description": "Complete the 'Protect Routes Middleware' assignment for express auth. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-30T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -292,8 +278,6 @@
 		"title": "Refresh Tokens",
 		"description": "Complete the 'Refresh Tokens' assignment for express auth. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-31T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -333,8 +317,6 @@
 		"title": "CRUD with Mongoose",
 		"description": "Complete the 'CRUD with Mongoose' assignment for mongodb basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-30T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -374,8 +356,6 @@
 		"title": "Dockerize Node App",
 		"description": "Complete the 'Dockerize Node App' assignment for docker basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-01-31T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -415,8 +395,6 @@
 		"title": "Compose for Multi-Service",
 		"description": "Complete the 'Compose for Multi-Service' assignment for docker basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-01T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -456,8 +434,6 @@
 		"title": "Deploy & Service",
 		"description": "Complete the 'Deploy & Service' assignment for kubernetes intro. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-01T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -497,8 +473,6 @@
 		"title": "Fork & PR Flow",
 		"description": "Complete the 'Fork & PR Flow' assignment for git github workflow. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-02T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -538,8 +512,6 @@
 		"title": "Resolve Merge Conflicts",
 		"description": "Complete the 'Resolve Merge Conflicts' assignment for git github workflow. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-03T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -579,8 +551,6 @@
 		"title": "GitHub Actions CI",
 		"description": "Complete the 'GitHub Actions CI' assignment for git github workflow. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-04T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -620,8 +590,6 @@
 		"title": "Write Unit Tests",
 		"description": "Complete the 'Write Unit Tests' assignment for jest testing. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-03T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -661,8 +629,6 @@
 		"title": "Mock HTTP Calls",
 		"description": "Complete the 'Mock HTTP Calls' assignment for jest testing. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-04T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -702,8 +668,6 @@
 		"title": "Design Schema & Migrate",
 		"description": "Complete the 'Design Schema & Migrate' assignment for prisma orm. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-04T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -743,8 +707,6 @@
 		"title": "Schema & Resolver Basics",
 		"description": "Complete the 'Schema & Resolver Basics' assignment for graphql basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-05T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -784,8 +746,6 @@
 		"title": "Client Query with Apollo",
 		"description": "Complete the 'Client Query with Apollo' assignment for graphql basics. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-06T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -825,8 +785,6 @@
 		"title": "Build a Weather App",
 		"description": "Complete the 'Build a Weather App' assignment for react native intro. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-06T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -866,8 +824,6 @@
 		"title": "Navigation & Forms",
 		"description": "Complete the 'Navigation & Forms' assignment for react native intro. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-07T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {
@@ -907,8 +863,6 @@
 		"title": "Automate CSV to Excel",
 		"description": "Complete the 'Automate CSV to Excel' assignment for python automation. Follow the README and submit your work.",
 		"status": "published",
-		"publishedAt": "2026-01-17T12:48:41+05:30",
-		"dueAt": "2026-02-07T12:48:41+05:30",
 		"maxScore": 100,
 		"expectedTimeMins": 90,
 		"submission": {

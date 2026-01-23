@@ -2,7 +2,17 @@
 
 // Keys
 const SESSION_KEY = 'edstream_current_user';
-const USERS_KEY   = 'edstream_users';
+const USERS_KEY = 'edstream_users';
+
+// A tiny helper to notify this-tab listeners that session changed
+function notifySessionChanged() {
+  try {
+    // Custom event for same-tab listeners (Navbar, etc.)
+    window.dispatchEvent(new Event('session-changed'));
+  } catch (_) {
+    // noop
+  }
+}
 
 /**
  * Return currently signed-in (session) user.
@@ -38,8 +48,11 @@ export const createSession = (user) => {
       createdAt: user.createdAt ?? new Date().toISOString(),
       issuedAt: new Date().toISOString(),
     };
-
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+
+    // Notify same-tab listeners
+    notifySessionChanged();
+
     return { ok: true, user: sessionUser };
   } catch (e) {
     console.error('Failed to create session:', e);
@@ -50,6 +63,9 @@ export const createSession = (user) => {
 export const destroySession = () => {
   try {
     localStorage.removeItem(SESSION_KEY);
+
+    // Notify same-tab listeners
+    notifySessionChanged();
   } catch (e) {
     console.error('Failed to destroy session:', e);
   }
@@ -57,8 +73,7 @@ export const destroySession = () => {
 
 export const isAuthenticated = () => !!getCurrentUser();
 
-/* ---------------- Users collection helpers (always in localStorage) ---------------- */
-
+/* ---------------------- Users collection helpers (always in localStorage) ---------------------- */
 const getUsers = () => {
   try {
     const raw = localStorage.getItem(USERS_KEY);
@@ -79,7 +94,9 @@ const saveUsers = (users) => {
  */
 export const upsertUser = (user) => {
   const users = getUsers();
-  const idx = users.findIndex(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
+  const idx = users.findIndex(
+    (u) => (u.email || '').toLowerCase() === (user.email || '').toLowerCase()
+  );
   if (idx > -1) {
     users[idx] = { ...users[idx], ...user };
   } else {
@@ -92,12 +109,17 @@ export const upsertUser = (user) => {
 export const getUserByEmail = (email) => {
   if (!email) return null;
   const users = getUsers();
-  return users.find(u => (u.email || '').toLowerCase() === email.toLowerCase()) || null;
+  return (
+    users.find((u) => (u.email || '').toLowerCase() === email.toLowerCase()) ||
+    null
+  );
 };
 
 export const updateUserByEmail = (email, updates = {}) => {
   const users = getUsers();
-  const idx = users.findIndex(u => (u.email || '').toLowerCase() === (email || '').toLowerCase());
+  const idx = users.findIndex(
+    (u) => (u.email || '').toLowerCase() === (email || '').toLowerCase()
+  );
   if (idx === -1) return { ok: false, error: 'User not found' };
   users[idx] = { ...users[idx], ...updates };
   saveUsers(users);
