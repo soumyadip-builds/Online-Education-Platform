@@ -1,9 +1,10 @@
+
 // src/components/CourseDetails.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import '../styles/course.css';
 import NavbarComponent from './NavbarComponent';
-import Footer from './FooterComponent';
+import CourseCollapsibleSection from './CourseCollapsibleSection';
 
 /** Prefix a path with app base (Vite BASE_URL or CRA PUBLIC_URL). */
 function withBase(path) {
@@ -11,11 +12,11 @@ function withBase(path) {
         (typeof import.meta !== 'undefined' &&
             import.meta.env &&
             import.meta.env.BASE_URL) ||
-        (typeof process !== 'undefined' && process.env && process.env.PUBLIC_URL) ||
         '/';
     const b = base.endsWith('/') ? base : `${base}/`;
     return path?.startsWith('/') ? `${b}${path.slice(1)}` : `${b}${path ?? ''}`;
 }
+
 /** Resolve a doc URL coming from JSON so it works in dev & prod. */
 function resolveDocUrl(raw) {
     if (!raw || typeof raw !== 'string') return undefined;
@@ -29,6 +30,7 @@ function resolveDocUrl(raw) {
     if (!normalized.startsWith('/')) normalized = `/${normalized}`;
     return withBase(normalized);
 }
+
 function Star({ filled }) {
     return (
         <svg
@@ -47,7 +49,6 @@ function Star({ filled }) {
 }
 
 export default function CourseDetails() {
-    // ✅ Ensure id is available before using it in effects
     const { id } = useParams();
 
     // Fetch state
@@ -65,12 +66,13 @@ export default function CourseDetails() {
         const saved = localStorage.getItem(`enrolled:${id}`);
         if (saved === 'true') setEnrolled(true);
     }, [id]);
+
     const handleEnroll = () => {
         setEnrolled(true);
         localStorage.setItem(`enrolled:${id}`, 'true');
     };
 
-    // ✅ Fetch from public/data/
+    // ✅ Fetch from public/data/ (base-safe)
     useEffect(() => {
         let alive = true;
         (async () => {
@@ -90,31 +92,25 @@ export default function CourseDetails() {
                     throw new Error(`HTTP ${aRes.status} fetching assignmentData.json`);
                 if (!qRes.ok)
                     throw new Error(`HTTP ${qRes.status} fetching quizData.json`);
-                // console.log(cRes);
-                // console.log(aRes);
-                // console.log(qRes);
 
+                console.log(cRes);
+                console.log(aRes);
+                console.log(qRes);
                 const [coursesJson, assignmentsJson, quizzesJson] = await Promise.all([
                     cRes.json(),
                     aRes.json(),
                     qRes.json(),
                 ]);
-                console.log(coursesJson);
-                console.log(assignmentsJson);
-                console.log(quizzesJson);
                 
-                console.log(id);
-                
-
                 const foundCourse =
                     (Array.isArray(coursesJson) ? coursesJson : []).find(
                         (c) => c.id === id,
                     ) || null;
-                console.log(foundCourse);
-                
-                const aForCourse = (
-                    Array.isArray(assignmentsJson) ? assignmentsJson : []
-                ).filter((a) => a.courseId === id);
+
+                const aForCourse = (Array.isArray(assignmentsJson) ? assignmentsJson : []).filter(
+                    (a) => a.courseId === id,
+                );
+
                 const qForCourse = (Array.isArray(quizzesJson) ? quizzesJson : []).filter(
                     (q) => q.courseId === id,
                 );
@@ -131,12 +127,155 @@ export default function CourseDetails() {
                 if (alive) setLoading(false);
             }
         })();
+
         return () => {
             alive = false;
         };
     }, [id]);
 
-    // Loading / Error handling (so we don't bail out before fetch completes)
+    /**
+     * ✅ Convert course.sections into normalized modules
+     */
+    const sectionModules = useMemo(() => {
+        const sections = course?.sections || [];
+        return (sections || []).map((s, idx) => {
+            const rawItems =
+                (Array.isArray(s.items) && s.items) ||
+                (Array.isArray(s.lessons) && s.lessons) ||
+                (Array.isArray(s.lectures) && s.lectures) ||
+                [];
+
+            const items = rawItems.map((it, itemIdx) => ({
+                ...it,
+                id: it?.id || `${s.id || `module-${idx + 1}`}-item-${itemIdx + 1}`,
+                title: it?.title || it?.name || `Item ${itemIdx + 1}`,
+                type: it?.type || 'reading',
+                // keep url if present (lock if not enrolled)
+                url: enrolled ? it?.url : undefined,
+                estimatedMinutes: it?.estimatedMinutes ?? it?.durationMinutes ?? 0,
+            }));
+
+            return {
+                ...s,
+                id: s.id || `module-${idx + 1}`,
+                title: s.title || s.name || `Module ${idx + 1}`,
+                description: s.description || '',
+                items,
+            };
+        });
+    }, [course?.sections, enrolled]);
+
+    /**
+     * ✅ Build ONE course content list using DUMMY module names + DUMMY item names,
+     * while preserving actual links/routes under the hood.
+     *
+     * - Assignments & Quizzes MUST use same routes as before:
+     *   `/assignment/:id` and `/quiz/:id`
+     * - We pass `to` for internal navigation, `url` for external.
+     */
+    const contentModules = useMemo(() => {
+        const out = [];
+
+        // 1) Keep existing course section modules first (as-is)
+        out.push(...(sectionModules || []));
+
+        // source arrays from course
+        const videos = course?.videos || [];
+        const docs = course?.docs || [];
+        const links = course?.links || [];
+
+        // 2) DUMMY module: "Practice Pack"
+        // Put assignments + quizzes here (dummy item names), but route correctly.
+        const practiceItems = [];
+
+        (assignments || []).forEach((a, i) => {
+            practiceItems.push({
+                id: a?.id || `assignment-${i + 1}`,
+                // dummy name (NOT "Assignments")
+                title: `Challenge ${i + 1}`,
+                type: 'assignment',
+                // ✅ same route you used previously
+                to: enrolled ? `/assignment/${a.id}` : undefined,
+                // optional extra data if your collapsible supports it
+                dueAt: a?.dueAt,
+            });
+        });
+
+        (quizzes || []).forEach((q, i) => {
+            practiceItems.push({
+                id: q?.id || `quiz-${i + 1}`,
+                // dummy name (NOT "Quizzes")
+                title: `Checkpoint ${i + 1}`,
+                type: 'quiz',
+                // ✅ same route you used previously
+                to: enrolled ? `/quiz/${q.id}` : undefined,
+                dueAt: q?.dueAt,
+            });
+        });
+
+        if (practiceItems.length > 0) {
+            out.push({
+                id: 'module-practice-pack',
+                title: 'Module X: Practice Pack',
+                description: 'Hands-on challenges and checkpoints to test your progress.',
+                items: practiceItems,
+            });
+        }
+
+        // 3) DUMMY module: "Media Vault"
+        // videos go here with dummy item titles; URL preserved.
+        const mediaItems = (videos || []).map((v, i) => ({
+            id: v?.id || `video-${i + 1}`,
+            title: `Clip ${i + 1}`,
+            type: 'video',
+            url: enrolled ? v?.url : undefined,
+            estimatedMinutes: v?.estimatedMinutes ?? v?.durationMinutes ?? 0,
+        }));
+
+        if (mediaItems.length > 0) {
+            out.push({
+                id: 'module-media-vault',
+                title: 'Module Y: Media Vault',
+                description: 'Short clips and visual walkthroughs.',
+                items: mediaItems,
+            });
+        }
+
+        // 4) DUMMY module: "Reference Vault"
+        // docs + links go here with dummy item titles; URLs preserved.
+        const refItems = [];
+
+        (docs || []).forEach((d, i) => {
+            refItems.push({
+                id: d?.id || `doc-${i + 1}`,
+                title: `Reference Note ${i + 1}`,
+                type: 'doc',
+                url: enrolled ? resolveDocUrl(d?.url) : undefined,
+            });
+        });
+
+        (links || []).forEach((l, i) => {
+            refItems.push({
+                id: l?.id || `link-${i + 1}`,
+                title: `Extra Read ${i + 1}`,
+                type: 'link',
+                url: enrolled ? l?.url : undefined,
+            });
+        });
+
+        if (refItems.length > 0) {
+            out.push({
+                id: 'module-reference-vault',
+                title: 'Module Z: Reference Vault',
+                description: 'Handy notes and supporting materials.',
+                items: refItems,
+            });
+        }
+
+        return out;
+    }, [course, sectionModules, assignments, quizzes, enrolled]);
+
+    // Loading / Error handling
     if (loading) {
         return (
             <div className="course-details">
@@ -157,26 +296,21 @@ export default function CourseDetails() {
         learners,
         lastUpdated,
         languages = {},
-        isBestseller,
         thumbnail,
         description,
         whatYouWillLearn = [],
         includes = {},
-        sections = [],
         videos = [],
-        docs = [],
-        links = [],
     } = course;
 
     const stars = Math.round(Number(rating || 0));
     const formattedLearners = new Intl.NumberFormat().format(learners || 0);
-    const formattedRatings = ratingsCount
-        ? new Intl.NumberFormat().format(ratingsCount)
-        : null;
+    const formattedRatings = ratingsCount ? new Intl.NumberFormat().format(ratingsCount) : null;
 
     return (
         <div>
             {/* <NavbarComponent /> */}
+
             <div className="course-details">
                 {/* HERO */}
                 <section className="course-details__hero">
@@ -204,20 +338,17 @@ export default function CourseDetails() {
 
                             {author && (
                                 <span className="chip">
-                                    Created by{' '}
-                                    <strong style={{ marginLeft: 6 }}>{author}</strong>
+                                    Created by <strong style={{ marginLeft: 6 }}>{author}</strong>
                                 </span>
                             )}
 
                             {lastUpdated && (
                                 <span className="chip">
-                                    Last updated{' '}
-                                    {new Date(lastUpdated).toLocaleDateString()}
+                                    Last updated {new Date(lastUpdated).toLocaleDateString()}
                                 </span>
                             )}
 
-                            {(languages.audio ||
-                                (languages.captions || []).length > 0) && (
+                            {(languages.audio || (languages.captions || []).length > 0) && (
                                 <span className="chip">
                                     {languages.audio ? `Audio: ${languages.audio}` : null}
                                     {(languages.captions || []).length > 0
@@ -227,9 +358,7 @@ export default function CourseDetails() {
                             )}
                         </div>
 
-                        {description && (
-                            <p className="course-details__desc">{description}</p>
-                        )}
+                        {description && <p className="course-details__desc">{description}</p>}
 
                         {!enrolled ? (
                             <>
@@ -250,12 +379,11 @@ export default function CourseDetails() {
                         )}
                     </div>
 
-                    {/* Right-side resources panel */}
+                    {/* Right-side resources panel (keep featured video + includes) */}
                     <div className="resources">
-                        {/* VIDEOS */}
+                        {/* Featured video (first only) */}
                         {videos?.length > 0 && (
                             <section className="course-details__section">
-                                {/* <h3 className="section-title">Videos ({videos.length})</h3> */}
                                 <div className="video-grid">
                                     {videos.map((v, i) =>
                                         i === 0 ? (
@@ -273,9 +401,7 @@ export default function CourseDetails() {
                                                     )}
                                                     {!enrolled && (
                                                         <div className="lock-overlay">
-                                                            <div className="lock-text">
-                                                                Enroll to Play
-                                                            </div>
+                                                            <div className="lock-text">Enroll to Play</div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -285,12 +411,13 @@ export default function CourseDetails() {
                                                     </h4>
                                                     <a
                                                         href={v.url}
-                                                        className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
+                                                        className={`video-link ${
+                                                            !enrolled ? 'video-link--disabled' : ''
+                                                        }`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         onClick={(e) => {
-                                                            if (!enrolled)
-                                                                e.preventDefault();
+                                                            if (!enrolled) e.preventDefault();
                                                         }}
                                                     >
                                                         ▶ Watch
@@ -298,12 +425,13 @@ export default function CourseDetails() {
                                                 </div>
                                             </article>
                                         ) : (
-                                            <div></div>
+                                            <div key={i} />
                                         ),
                                     )}
                                 </div>
                             </section>
                         )}
+
                         {/* THIS COURSE INCLUDES */}
                         <section className="course-details__section">
                             <h3 className="section-title">This course includes</h3>
@@ -311,8 +439,7 @@ export default function CourseDetails() {
                                 {'hoursOnDemandVideo' in includes && (
                                     <li>
                                         <span className="icon">🎬</span>
-                                        {includes.hoursOnDemandVideo} hours on‑demand
-                                        video
+                                        {includes.hoursOnDemandVideo} hours on‑demand video
                                     </li>
                                 )}
                                 {'articles' in includes && (
@@ -324,8 +451,7 @@ export default function CourseDetails() {
                                 {'downloadableResources' in includes && (
                                     <li>
                                         <span className="icon">📥</span>
-                                        {includes.downloadableResources} downloadable
-                                        resource(s)
+                                        {includes.downloadableResources} downloadable resource(s)
                                     </li>
                                 )}
                                 {includes.accessOnMobile && (
@@ -335,8 +461,7 @@ export default function CourseDetails() {
                                 )}
                                 {includes.certificate && (
                                     <li>
-                                        <span className="icon">🎓</span>Certificate of
-                                        completion
+                                        <span className="icon">🎓</span>Certificate of completion
                                     </li>
                                 )}
                             </ul>
@@ -359,193 +484,19 @@ export default function CourseDetails() {
                     </section>
                 )}
 
-                {/* COURSE CONTENT / SECTIONS (compact summary) */}
-                {sections.length > 0 && (
+                {/* ✅ ONLY THIS CONTENT (blue section removed completely) */}
+                {contentModules.length > 0 && (
                     <section className="course-details__section">
                         <h3 className="section-title">Course content</h3>
-                        <ul className="sections-list">
-                            {sections.map((s, i) => (
-                                <li key={i}>
-                                    <span className="section-dot">•</span>
-                                    <span className="section-title-line">{s.title}</span>
-                                    {typeof s.lectures === 'number' && (
-                                        <span className="muted">
-                                            {' '}
-                                            · {s.lectures} lectures
-                                        </span>
-                                    )}
-                                    {s.length && (
-                                        <span className="muted"> · {s.length}</span>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
+                        <CourseCollapsibleSection
+                            modules={contentModules}
+                            role="learner"
+                            defaultCollapsed={true}
+                        />
                     </section>
                 )}
-
-                <div
-                    id="all_course_content"
-                    className="bg-info-subtle p-2 rounded-4 my-3"
-                >
-                    {/* VIDEOS */}
-                    {videos?.length > 0 && (
-                        <section className="course-details__section">
-                            <h3 className="section-title fw-bolder">
-                                Videos ({videos.length})
-                            </h3>
-                            <div className="video-grid">
-                                {videos.map((v, i) => (
-                                    <article className="video-card" key={i}>
-                                        <div className="video-info">
-                                            <h4 className="video-title">
-                                                {v.title || `Video ${i + 1}`}
-                                            </h4>
-                                            <a
-                                                href={v.url}
-                                                className={`video-link ${!enrolled ? 'video-link--disabled' : ''}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={(e) => {
-                                                    if (!enrolled) e.preventDefault();
-                                                }}
-                                            >
-                                                ▶ Watch
-                                            </a>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* DOCUMENTATION */}
-                    {docs?.length > 0 && (
-                        <section className="course-details__section">
-                            <h3 className="section-title fw-bolder">
-                                Documentation ({docs.length})
-                            </h3>
-                            <ul className="resource-list">
-                                {docs.map((d, i) => {
-                                    const url = resolveDocUrl(d.url);
-                                    return (
-                                        <li key={i}>
-                                            <a
-                                                className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-                                                href={url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={(e) => {
-                                                    if (!enrolled) e.preventDefault();
-                                                }}
-                                            >
-                                                📄 {d.title || d.url}
-                                            </a>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </section>
-                    )}
-
-                    {/* RESOURCES */}
-                    {links?.length > 0 && (
-                        <section className="course-details__section">
-                            <h3 className="section-title fw-bolder">
-                                Resources ({links.length})
-                            </h3>
-                            <ul className="resource-list">
-                                {links.map((l, i) => (
-                                    <li key={i}>
-                                        <a
-                                            className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-                                            href={l.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => {
-                                                if (!enrolled) e.preventDefault();
-                                            }}
-                                        >
-                                            🔗 {l.label || l.url}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-                    )}
-
-                    {/* NEW: Assignments list for this course */}
-                    {assignments.length > 0 && (
-                        <section className="course-details__section">
-                            <h3 className="section-title fw-bold">
-                                Assignments ({assignments.length})
-                            </h3>
-                            <ul className="resource-list">
-                                {assignments.map((a) => (
-                                    <li key={a.id} className="course-item">
-                                        <Link
-                                            className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-                                            to={`/assignment/${a.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => {
-                                                if (!enrolled) {
-                                                    e.preventDefault();
-                                                    alert(
-                                                        'Please enroll to access assignments.',
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            📘 {a.title}
-                                        </Link>
-                                        <span className="course-meta-right">
-                                            {a.dueAt
-                                                ? `Due: ${new Date(a.dueAt).toLocaleString()}`
-                                                : ''}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-                    )}
-
-                    {/* NEW: Quizzes list for this course */}
-                    {quizzes.length > 0 && (
-                        <section className="course-details__section">
-                            <h3 className="section-title fw-bolder">
-                                Quizzes ({quizzes.length})
-                            </h3>
-                            <ul className="resource-list">
-                                {quizzes.map((q) => (
-                                    <li key={q.id} className="course-item">
-                                        <Link
-                                            className={`resource-link ${!enrolled ? 'resource-link--disabled' : ''}`}
-                                            to={`/quiz/${q.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => {
-                                                if (!enrolled) {
-                                                    e.preventDefault();
-                                                    alert(
-                                                        'Please enroll to attempt quizzes.',
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            📝 {q.title}
-                                        </Link>
-                                        <span className="course-meta-right">
-                                            {q.dueAt
-                                                ? `Due: ${new Date(q.dueAt).toLocaleString()}`
-                                                : ''}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-                    )}
-                </div>
             </div>
         </div>
     );
 }
+
