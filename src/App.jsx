@@ -121,6 +121,17 @@ function AppShell({ children }) {
   );
 }
 
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import CoursePage from './pages/CoursePage';
+import CourseDetails from './components/CourseDetails';
+import AssignmentPage from './pages/AssignmentPage';
+import QuizPage from './pages/QuizPage';
+import AuthPage from './pages/AuthPage';
+import Home from './pages/Home'; // your home page component
+import NavbarComponent from './components/NavbarComponent';
+import Footer from './components/FooterComponent';
+import MentorHome from './pages/InstructorHomePage';
+import CourseCreator from './components/CourseCreator';
 export default function App() {
   const StudentHome = Home; // replace with StudentHomePage if you add one later
 

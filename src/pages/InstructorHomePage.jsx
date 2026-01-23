@@ -5,8 +5,21 @@ import "../styles/instructorHome.css";
 import CourseCard from "../components/CourseCard";
 import NavbarComponent from "../components/NavbarComponent";
 import Footer from "../components/FooterComponent";
+import React, { useEffect, useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import '../styles/instructorHome.css';
+import CourseCard from '../components/CourseCard';
+import NavbarComponent from '../components/NavbarComponent';
+import Footer from '../components/FooterComponent';
+import { useNavigate } from 'react-router-dom';
+
+
 
 export default function InstructorHomePage({ authorName }) {
+
+  const navigate = useNavigate();
+
   // Slides using your uploaded hero images in /public/images/carousel
   const slides = [
     {
@@ -280,13 +293,13 @@ export default function InstructorHomePage({ authorName }) {
           <div className="container">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h3 className="mb-0">Your Courses</h3>
+             
               <button
                 className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#addCourseModal"
-              >
+                onClick={() => navigate('/course-creator')}>
                 + Add Course
               </button>
+
             </div>
 
             {coursesLoading && (
