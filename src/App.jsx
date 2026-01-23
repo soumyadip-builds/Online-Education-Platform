@@ -7,8 +7,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import React from "react";
-
+import React, { useMemo } from "react";
 import CoursePage from "./pages/CoursePage";
 import CourseDetails from "./components/CourseDetails";
 import AssignmentPage from "./pages/AssignmentPage";
@@ -21,10 +20,9 @@ import ForumPage from "./pages/ForumPage";
 import EditProfile from "./components/EditProfile";
 import MentorHome from "./pages/InstructorHomePage"; // Instructor Home
 import { getCurrentUser, isAuthenticated } from "./utils/session";
-import { useMemo } from "react";
 import CourseCreator from "./components/CourseCreator";
 
-// --- Helpers ---------------------------------------------------------------
+// --- Helpers ----------------------------------------------------------------
 function roleHomePath(user) {
   const roles = Array.isArray(user?.roles)
     ? user.roles
@@ -48,18 +46,15 @@ function RequireAuth({ children }) {
 function RequireRole({ role, children }) {
   const location = useLocation();
   const user = getCurrentUser();
-
   if (!user) {
     return <Navigate to="/auth" replace state={{ from: location }} />;
   }
-
   const roles = Array.isArray(user.roles)
     ? user.roles
     : user.role
       ? [user.role]
       : [];
   const allowed = roles.includes(role);
-  console.log(role);
   if (!allowed) {
     return <Navigate to="/not-authorized" replace />;
   }
@@ -75,7 +70,6 @@ function AuthOrRedirect() {
 // Optional: simple Not Authorized page
 function NotAuthorized() {
   const navigate = useNavigate();
-
   // Derive role once from session (null-safe)
   const role = useMemo(() => {
     if (!isAuthenticated()) return null;
@@ -89,7 +83,6 @@ function NotAuthorized() {
 
   const handleGoHome = (e) => {
     e.preventDefault();
-
     if (role === "learner") {
       navigate("/student-home", { replace: true });
     } else if (role === "instructor") {
@@ -115,7 +108,7 @@ function NotAuthorized() {
 function AppShell({ children }) {
   return (
     <>
-      {/* <NavbarComponent /> */}
+      <NavbarComponent />
       {children}
       <Footer />
     </>
@@ -124,7 +117,6 @@ function AppShell({ children }) {
 
 export default function App() {
   const StudentHome = Home; // replace with StudentHomePage if you add one later
-
   return (
     <BrowserRouter>
       <AppShell>
@@ -135,19 +127,12 @@ export default function App() {
           <Route path="/forum" element={<ForumPage />} />
           <Route path="/course/:courseId" element={<CoursePage />} />
           <Route path="/course/:courseId/details" element={<CourseDetails />} />
-          {/* <Route path="/coursepage" element={<CoursePage />} />
-          <Route path="/courses/:id" element={<CourseDetails />} /> */}
           <Route path="/quiz/:quizId" element={<QuizPage />} />
           <Route
             path="/assignment/:assignmentId"
             element={<AssignmentPage />}
           />
           <Route path="/course-creator" element={<CourseCreator />} />
-          <Route
-            path="/assignment/:assignmentId"
-            element={<AssignmentPage />}
-          />
-          <Route path="/quiz/:quizId" element={<QuizPage />} />
           <Route path="/edit-profile" element={<EditProfile />} />
 
           {/* Role-guarded routes */}

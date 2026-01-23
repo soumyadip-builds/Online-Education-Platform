@@ -156,7 +156,7 @@ export default function InstructorHomePage({ authorName }) {
 
 	return (
 		<div>
-			<NavbarComponent />
+			{/* <NavbarComponent /> */}
 			<div className="instructor-home">
 				{/* ===== HERO CAROUSEL (unchanged) ===== */}
 				<div className="position-relative">
@@ -458,7 +458,7 @@ export default function InstructorHomePage({ authorName }) {
 					</div>
 				</div>
 			</div>
-			<Footer />
+			{/* <Footer /> */}
 		</div>
 	);
 }

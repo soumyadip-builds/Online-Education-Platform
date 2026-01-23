@@ -185,9 +185,9 @@ export default function Home() {
 
 	return (
 		<main className="home">
-			<div className="nav-spacer">
+			{/* <div className="nav-spacer">
 				<NavbarComponent />
-			</div>
+			</div> */}
 
 			{/* HERO SECTION */}
 			<section className="hero" aria-roledescription="carousel">
@@ -478,9 +478,9 @@ export default function Home() {
 			</section>
 
 			{/* Footer */}
-			<div className="footer-spacer">
+			{/* <div className="footer-spacer">
 				<Footer />
-			</div>
+			</div> */}
 		</main>
 	);
 }
