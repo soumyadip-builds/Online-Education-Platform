@@ -1,18 +1,18 @@
 :root {
-  --space-indigo: #22223bff;
-  --dusty-grape: #4a4e69ff;
-  --lilac-ash: #9a8c98ff;
-  --almond-silk: #c9ada7ff;
-  --parchment: #f2e9e4ff;
+    --space-indigo: #22223bff;
+    --dusty-grape: #4a4e69ff;
+    --lilac-ash: #9a8c98ff;
+    --almond-silk: #c9ada7ff;
+    --parchment: #f2e9e4ff;
 }
 
 /* Navbar Base */
 .ed-navbar {
-  background: white;
-  padding: 10px 20px;
-  transition: background 0.5s ease;
-  border: 1px black;
-  border-radius: 5px;
+    background: white;
+    padding: 10px 20px;
+    transition: background 0.5s ease;
+    border: 1px black;
+    border-radius: 5px;
 }
 /* 
 .ed-navbar:hover {
@@ -21,11 +21,11 @@
 
 /* Logo + Title */
 .navbar-logo {
-  width: 40px;
-  height: 40px;
-  margin-left: 10px;
-  transition: transform 0.3s ease;
-  margin-left: 10px;
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+    margin-left: 10px;
 }
 
 /* .navbar-logo:hover {
@@ -33,28 +33,30 @@
 } */
 
 .navbar-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--space-indigo);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--space-indigo);
 }
 
 /* Dropdowns */
 .explore-dropdown .dropdown-menu,
 .mylearning-dropdown .dropdown-menu,
 .profile-dropdown .dropdown-menu {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 /* Override Bootstrap active state */
 .dropdown-item.active,
 .dropdown-item:active {
-  background-color: #000000 !important; /* parchment background */
-  color: white !important; /* dusty grape (blue tone) text */
+    background-color: #000000 !important; /* parchment background */
+    color: white !important; /* dusty grape (blue tone) text */
 }
 
 .dropdown-item {
-  color: var(--space-indigo);
-  transition: background 0.3s ease, transform 0.2s ease;
+    color: var(--space-indigo);
+    transition:
+        background 0.3s ease,
+        transform 0.2s ease;
 }
 
 /* .dropdown-item:hover {
@@ -64,58 +66,92 @@
 
 /* Search Box */
 .navbar-search {
-  flex-grow: 1;
-  max-width: 400px;
+    flex-grow: 1;
+    max-width: 400px;
 }
 .search-input {
-  border-radius: 20px;
-  padding: 8px 15px;
-  border: none;
-  outline: none;
-  transition: box-shadow 0.3s ease;
+    border-radius: 20px;
+    padding: 8px 15px;
+    border: none;
+    outline: none;
+    transition: box-shadow 0.3s ease;
 }
 
 .search-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 .search-input:focus {
-  box-shadow: 0 0 10px var(--almond-silk);
+    box-shadow: 0 0 10px var(--almond-silk);
 }
 
 .search-btn {
-  margin-left: 10px;
-  border-radius: 20px;
-  background: var(--lilac-ash);
-  color: var(--space-indigo);
-  transition: transform 0.3s ease, background 0.3s ease;
+    margin-left: 10px;
+    border-radius: 20px;
+    background: var(--lilac-ash);
+    color: var(--space-indigo);
+    transition:
+        transform 0.3s ease,
+        background 0.3s ease;
 }
 .search-btn:hover {
-  background: var(--almond-silk);
-  transform: scale(1.1);
+    background: var(--almond-silk);
+    transform: scale(1.1);
 }
 /* Profile Avatar */
 .profile-avatar {
-  width: 40px;
-  height: 40px;
-  border: 2px solid var(--almond-silk);
-  transition: transform 0.3s ease, border-color 0.3s ease;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--almond-silk);
+    transition:
+        transform 0.3s ease,
+        border-color 0.3s ease;
 }
 .profile-avatar:hover {
-  transform: scale(1.1);
-  border-color: var(--parchment);
+    transform: scale(1.1);
+    border-color: var(--parchment);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nav-btn {
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-weight: 500;
+    border: none;
+    background: linear-gradient(135deg, #7c5cff, #00d4ff);
+    color: #000000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transition:
+        background 0.35s ease,
+        transform 0.25s ease,
+        box-shadow 0.35s ease;
+    margin: 10px;
+}
+
+/* Hover Animation */
+.nav-btn:hover {
+    background: linear-gradient(-135deg, #7c5cff, #00d4ff);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 16px rgba(154, 140, 152, 0.25);
+    /* color: var(--space-indigo); */
+}
+
+/* Active Press Animation */
+.nav-btn:active {
+    transform: scale(0.97);
 }
