@@ -268,6 +268,7 @@ const NavbarComponent = () => {
                                 onClick={() =>
                                     navigate("/coursepage", {
                                         state: { scope: "created" },
+                                        state: { scope: "authored" },
                                     })
                                 }
                                 aria-label="Go to My Courses"
@@ -371,15 +372,12 @@ const NavbarComponent = () => {
                                 id="profile-dropdown"
                             >
                                 <NavDropdown.Item
-                                    onClick={() => navigate("/settings")}
+                                    onClick={() =>
+                                        navigate("/performance-dashboard")
+                                    }
                                 >
-                                    ⚙️ Settings
-                                </NavDropdown.Item>
-                                <NavDropdown.Item
-                                    onClick={() => navigate("/help")}
-                                >
-                                    ❓ Help
-                                </NavDropdown.Item>
+                                    📊 Performance Metrics
+                                </NavDropdown.Item> 
                                 <NavDropdown.Divider />
                                 <NavDropdown.Item onClick={editProfile}>
                                     ✏️ Edit Profile
