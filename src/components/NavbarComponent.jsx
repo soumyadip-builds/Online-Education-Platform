@@ -237,16 +237,44 @@ const NavbarComponent = () => {
                             onClick={() => navigate("/coursepage")}
                             aria-label="Go to Explore"
                         >
-                            Explore
+                            Explore Courses
                         </Button>
                         {/* My Learning button: pick the main destination for the learner */}
-                        <Button
+                        {/* <Button
                             className="nav-btn"
                             onClick={() => navigate("/my-learning")}
                             aria-label="Go to My Learning"
                         >
                             My Learning
-                        </Button>
+                        </Button> */}
+
+                        {auth.isAuthed && auth.user?.role === "learner" && (
+                            <Button
+                                className="nav-btn"
+                                onClick={() =>
+                                    navigate("/coursepage", {
+                                        state: { scope: "enrolled" },
+                                    })
+                                }
+                                aria-label="Go to My Learning"
+                            >
+                                My Learning
+                            </Button>
+                        )}
+
+                        {auth.isAuthed && auth.user?.role === "instructor" && (
+                            <Button
+                                className="nav-btn"
+                                onClick={() =>
+                                    navigate("/coursepage", {
+                                        state: { scope: "created" },
+                                    })
+                                }
+                                aria-label="Go to My Courses"
+                            >
+                                My Courses
+                            </Button>
+                        )}
                     </Nav>
 
                     {/* ------------------ Search Box (UPDATED) ------------------ */}
