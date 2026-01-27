@@ -1,14 +1,21 @@
 
 {
   "users": [
-    { "userId": "u1", "name": "Alice Kumar", "role": "Student" },
-    { "userId": "u2", "name": "Dr. Rao", "role": "Instructor" },
-    { "userId": "u3", "name": "Vijay", "role": "Student" }
+    { "userId": "u1", "name": "Alice Kumar", "email": "alice@example.com", "role": "learner", "enrolledCourseIds": ["c1"] },
+    { "userId": "u2", "name": "Dr. Rao",      "email": "rao@univ.edu",    "role": "instructor" },
+    { "userId": "u3", "name": "Vijay",        "email": "vijay@example.com","role": "learner", "enrolledCourseIds": ["c2"] },
+
+  
+    { "userId": "u4", "name": "365 Careers",  "email": "365careers@gmail.com", "role": "instructor" }
   ],
+
   "courses": [
-    { "courseId": "c1", "name": "CS101 - Intro to CS" },
-    { "courseId": "c2", "name": "MATH201 - Calculus II" }
+    { "courseId": "c1", "name": "CS101 - Intro to CS", "author": "Dr. Rao" },
+    { "courseId": "c2", "name": "MATH201 - Calculus II", "author": "Dr. Rao" }
+
+    
   ],
+
   "forumPosts": [
     {
       "postId": "p1",
@@ -26,6 +33,7 @@
       ]
     }
   ],
+
   "notifications": [
     {
       "notificationId": "n1",
@@ -36,5 +44,7 @@
       "read": false
     }
   ],
-  "currentUserId": "u1"
+
+
+  "currentUserId": "u4"
 }

@@ -6,21 +6,21 @@ import {
   Navigate,
   useLocation,
   useNavigate,
-} from "react-router-dom";
-import React, { useMemo } from "react";
-import CoursePage from "./pages/CoursePage";
-import CourseDetails from "./components/CourseDetails";
-import AssignmentPage from "./pages/AssignmentPage";
-import QuizPage from "./pages/QuizPage";
-import AuthPage from "./pages/AuthPage";
-import Home from "./pages/Home"; // used as Student Home
-import NavbarComponent from "./components/NavbarComponent";
-import Footer from "./components/FooterComponent";
-import ForumPage from "./pages/ForumPage";
-import EditProfile from "./components/EditProfile";
-import MentorHome from "./pages/InstructorHomePage"; // Instructor Home
-import { getCurrentUser, isAuthenticated } from "./utils/session";
-import CourseCreator from "./components/CourseCreator";
+} from 'react-router-dom';
+import React, { useMemo } from 'react';
+import CoursePage from './pages/CoursePage';
+import CourseDetails from './components/CourseDetails';
+import AssignmentPage from './pages/AssignmentPage';
+import QuizPage from './pages/QuizPage';
+import AuthPage from './pages/AuthPage';
+import Home from './pages/Home'; // used as Student Home
+import NavbarComponent from './components/NavbarComponent';
+import Footer from './components/FooterComponent';
+import ForumPage from './pages/ForumPage';
+import EditProfile from './components/EditProfile';
+import MentorHome from './pages/InstructorHomePage'; // Instructor Home
+import { getCurrentUser, isAuthenticated } from './utils/session';
+import CourseCreator from './components/CourseCreator';
 
 // --- Helpers ----------------------------------------------------------------
 function roleHomePath(user) {
@@ -29,9 +29,9 @@ function roleHomePath(user) {
     : user?.role
       ? [user.role]
       : [];
-  if (roles.includes("instructor")) return "/mentor-home";
-  if (roles.includes("learner")) return "/student-home";
-  return "/not-authorized";
+  if (roles.includes('instructor')) return '/mentor-home';
+  if (roles.includes('learner')) return '/student-home';
+  return '/not-authorized';
 }
 
 function RequireAuth({ children }) {
@@ -75,21 +75,21 @@ function NotAuthorized() {
     if (!isAuthenticated()) return null;
     const user = getCurrentUser();
     // Normalize role to handle common label variants
-    const r = (user?.role || "").toLowerCase();
-    if (["learner", "student"].includes(r)) return "learner";
-    if (["instructor", "mentor", "teacher"].includes(r)) return "instructor";
+    const r = (user?.role || '').toLowerCase();
+    if (['learner', 'student'].includes(r)) return 'learner';
+    if (['instructor', 'mentor', 'teacher'].includes(r)) return 'instructor';
     return null;
   }, []);
 
   const handleGoHome = (e) => {
     e.preventDefault();
-    if (role === "learner") {
-      navigate("/student-home", { replace: true });
-    } else if (role === "instructor") {
-      navigate("/mentor-home", { replace: true });
+    if (role === 'learner') {
+      navigate('/student-home', { replace: true });
+    } else if (role === 'instructor') {
+      navigate('/mentor-home', { replace: true });
     } else {
       // Fallback if role is unknown or user not authed
-      navigate("/", { replace: true });
+      navigate('/', { replace: true });
     }
   };
 
@@ -116,7 +116,7 @@ function AppShell({ children }) {
 }
 
 export default function App() {
-  const StudentHome = Home; // replace with StudentHomePage if you add one later
+  const StudentHome = Home;
   return (
     <BrowserRouter>
       <AppShell>
@@ -152,7 +152,6 @@ export default function App() {
               </RequireRole>
             }
           />
-
           <Route path="/not-authorized" element={<NotAuthorized />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -160,57 +159,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-// import { BrowserRouter, Routes, Route } from 'react-router-dom';
-// import CoursePage from './pages/CoursePage';
-// import CourseDetails from './components/CourseDetails';
-// import AssignmentPage from './pages/AssignmentPage';
-// import QuizPage from './pages/QuizPage';
-// import AuthPage from './pages/AuthPage';
-// import Home from './pages/Home'; // your home page component
-// import NavbarComponent from './components/NavbarComponent';
-// import Footer from './components/FooterComponent';
-// import MentorHome from './pages/InstructorHomePage';
-// import CourseCreator from './components/CourseCreator';
-// export default function App() {
-//   return (
-//     <BrowserRouter>
-//       <Routes>
-//         <Route
-//           path="/auth"
-//           element={
-//             <div>
-//               <NavbarComponent />
-//               <AuthPage />
-//               <Footer />
-//             </div>
-//           }
-//         />
-//         <Route path="/home" element={<Home />} />
-//         <Route
-//           path="*"
-//           element={
-//             <div>
-//               <NavbarComponent />
-//               <AuthPage />
-//               <Footer />
-//             </div>
-//           }
-//         />
-        
-//         <Route
-//           path="/mentorhome"
-//           element={<MentorHome authorName={'Code Academy'} />}
-//         />
-//         {/* <Home />  */}
-//         {/* <Footer /> */}
-//         <Route path="/coursepage" element={<CoursePage />} />
-//         <Route path="/courses/:id" element={<CourseDetails />} />
-//         <Route path="/quiz/:quizId" element={<QuizPage />} />
-//         <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
-//         <Route path="/course-creator" element={<CourseCreator />} />
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }
-

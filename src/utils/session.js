@@ -1,5 +1,5 @@
-// src/utils/session.js
 
+// src/utils/session.js
 // Keys
 const SESSION_KEY = 'edstream_current_user';
 const USERS_KEY = 'edstream_users';
@@ -36,6 +36,7 @@ export const createSession = (user) => {
   try {
     // Minimal session payload (no password)
     const sessionUser = {
+      userId: user.userId,        // <-- include the assigned sequential ID
       role: user.role,
       name: user.name,
       email: user.email,
@@ -49,10 +50,8 @@ export const createSession = (user) => {
       issuedAt: new Date().toISOString(),
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-
     // Notify same-tab listeners
     notifySessionChanged();
-
     return { ok: true, user: sessionUser };
   } catch (e) {
     console.error('Failed to create session:', e);
@@ -63,7 +62,6 @@ export const createSession = (user) => {
 export const destroySession = () => {
   try {
     localStorage.removeItem(SESSION_KEY);
-
     // Notify same-tab listeners
     notifySessionChanged();
   } catch (e) {
@@ -73,7 +71,7 @@ export const destroySession = () => {
 
 export const isAuthenticated = () => !!getCurrentUser();
 
-/* ---------------------- Users collection helpers (always in localStorage) ---------------------- */
+/* -------------------- Users collection helpers (always in localStorage) -------------------- */
 const getUsers = () => {
   try {
     const raw = localStorage.getItem(USERS_KEY);

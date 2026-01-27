@@ -1,0 +1,39 @@
+
+[
+  {
+    "id": "q1",
+    "courseId": "c101",
+    "courseName": "Intro to React",
+    "askedByName": "Aisha Khan",
+    "askedByEmail": "aisha@example.com",
+    "message": "How does useEffect differ from useLayoutEffect?",
+    "replies": []
+  },
+  {
+    "id": "q2",
+    "courseId": "c102",
+    "courseName": "Data Structures",
+    "askedByName": "Ravi Kumar",
+    "askedByEmail": "ravi@example.com",
+    "message": "What is the time complexity of heap sort in worst case?",
+    "replies": []
+  },
+  {
+    "id": "q3",
+    "courseId": "c101",
+    "courseName": "Intro to React",
+    "askedByName": "Meera Iyer",
+    "askedByEmail": "meera@example.com",
+    "message": "Why does React need keys when rendering lists?",
+    "replies": []
+  },
+  {
+    "id": "q4",
+    "courseId": "c103",
+    "courseName": "DBMS",
+    "askedByName": "Imran Ali",
+    "askedByEmail": "imran@example.com",
+    "message": "Difference between primary key and unique key?",
+    "replies": []
+  }
+]
