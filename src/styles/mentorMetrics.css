@@ -1,0 +1,362 @@
+.mm-page{
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --border: #e9e9ef;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #6C4BF4;
+  --primary-600: #5b3df0;
+  --primary-100: #efeafe;
+  --accent: #22D3EE;
+  --shadow: 0 8px 24px rgba(20, 20, 43, 0.06);
+  --radius: 14px;
+
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 24px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.mm-card{
+  width: 100%;
+  max-width: 1100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  padding: 18px;
+}
+
+.mm-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.mm-headerActions{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+}
+
+.mm-title{
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.mm-subtitle{
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.mm-muted{ color: var(--muted); }
+.mm-small{ font-size: 12px; }
+
+.mm-link{
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: 800;
+}
+.mm-link:hover{ text-decoration: underline; }
+
+.mm-alert{
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  margin: 10px 0;
+}
+.mm-alert--err{
+  color: #9b1c1c;
+  background: #fff1f1;
+  border-color: #ffd2d2;
+}
+
+.mm-empty{
+  border: 1px dashed var(--border);
+  background: #fbfbfe;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.mm-courseList{
+  display: grid;
+  gap: 12px;
+}
+
+.mm-course{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.mm-courseHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(90deg, rgba(108,75,244,0.08), rgba(34,211,238,0.08));
+  border-bottom: 1px solid var(--border);
+}
+
+.mm-courseTitle{
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.mm-courseMeta{
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.mm-openCourse{
+  text-decoration: none;
+  font-weight: 900;
+  color: white;
+  background: var(--primary);
+  padding: 10px 12px;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(108,75,244,0.20);
+}
+.mm-openCourse:hover{ background: var(--primary-600); }
+
+.mm-studentsWrap{
+  padding: 14px;
+}
+
+.mm-studentList{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mm-student{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: 10px;
+}
+
+.mm-studentName{
+  font-weight: 900;
+  color: var(--text);
+}
+
+.mm-studentMeta{
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 650;
+  font-size: 12.5px;
+}
+
+.mm-btn{
+  text-decoration: none;
+  font-weight: 900;
+  color: white;
+  background: var(--primary);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+.mm-btn:hover{ background: var(--primary-600); }
+
+/* Progress card */
+.mm-progressCard{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+  margin-bottom: 14px;
+}
+
+.mm-progressTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mm-progressLabel{
+  font-weight: 900;
+  color: var(--text);
+}
+
+.mm-progressNum{
+  font-weight: 1000;
+  color: var(--primary-600);
+  font-size: 18px;
+}
+
+.mm-progressBar{
+  height: 10px;
+  background: #f2f2f8;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.mm-progressFill{
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  width: 0%;
+  transition: width 250ms ease;
+}
+
+/* Modules */
+.mm-modules{
+  display:grid;
+  gap: 12px;
+}
+
+.mm-module{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.mm-moduleHead{
+  padding: 12px 12px;
+  background: #fbfbfe;
+  border-bottom: 1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: 10px;
+}
+
+.mm-moduleTitle{
+  font-weight: 1000;
+  color: var(--text);
+}
+
+.mm-moduleMeta{
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.mm-block{
+  padding: 12px;
+}
+
+.mm-blockTitle{
+  font-weight: 1000;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.mm-items{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:grid;
+  gap:10px;
+}
+
+.mm-item{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: 10px;
+}
+
+.mm-item.done{
+  background: #f9f8ff;
+  border-color: rgba(108,75,244,0.18);
+}
+
+.mm-itemTitle{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.mm-itemSub{
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.mm-tag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 1000;
+  font-size: 12px;
+  border: 1px solid;
+}
+.mm-tag--assignment{
+  color: #6d28d9;
+  background: rgba(108,75,244,0.10);
+  border-color: rgba(108,75,244,0.25);
+}
+.mm-tag--quiz{
+  color: #0ea5e9;
+  background: rgba(34,211,238,0.12);
+  border-color: rgba(34,211,238,0.25);
+}
+
+.mm-itemRight{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+}
+
+.mm-status{
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.mm-status.ok{
+  color: #065f46;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+.mm-status.muted{
+  color: var(--muted);
+  background: #f2f2f8;
+  border-color: var(--border);
+}
+
+@media (max-width: 860px){
+  .mm-header{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mm-item{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mm-itemRight{
+    width: 100%;
+    justify-content: space-between;
+  }
+}
