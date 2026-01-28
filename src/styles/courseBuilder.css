@@ -1,11 +1,11 @@
 
 /* =========================================================
-   Course Builder stylesheet (No preview)
+   Course Builder stylesheet
    ========================================================= */
 
 /* -------- Modules container -------- */
 .cb-modules {
-  max-height: 60vh;          /* Scrollable modules list */
+  max-height: 60vh;         
   overflow: auto;
   padding-right: 10px;
 }

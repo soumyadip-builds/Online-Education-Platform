@@ -1,14 +1,20 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import '../styles/assignmentCard.css';
 import QuizEditor from './QuizEditor';
 
-// ---------- LocalStorage helper (fallback when no backend) ----------
+// ---------- LocalStorage helper ----------
 const LS_KEY = 'cb_assignments_v1';
+
 function lsLoad() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch {
+    return [];
+  }
 }
-function lsSave(list) { localStorage.setItem(LS_KEY, JSON.stringify(list)); }
+function lsSave(list) {
+  localStorage.setItem(LS_KEY, JSON.stringify(list));
+}
 function lsCreate(payload) {
   const list = lsLoad();
   const id = 'a_' + Math.random().toString(36).slice(2, 10);
@@ -38,12 +44,20 @@ const INITIAL_FORM = () => ({
   attachment: null,
 });
 
-const AssignmentCard = ({ assignmentService, onCreated }) => {
+const AssignmentCard = ({ onCreated }) => {
   // ----- Form state -----
   const [form, setForm] = useState(INITIAL_FORM);
   const [quizData, setQuizData] = useState(INITIAL_QUIZ);
 
-  const { workType, title, description, maxScore, passingScore, estimatedMinutes, attachment } = form;
+  const {
+    workType,
+    title,
+    description,
+    maxScore,
+    passingScore,
+    estimatedMinutes,
+    attachment,
+  } = form;
 
   // ----- UI/Request state -----
   const [submitting, setSubmitting] = useState(false);
@@ -54,7 +68,10 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
   const totalQuizPoints = useMemo(
     () =>
       workType === 'quiz'
-        ? (quizData.questions || []).reduce((sum, q) => sum + (Number(q.points) || 0), 0)
+        ? (quizData.questions || []).reduce(
+            (sum, q) => sum + (Number(q.points) || 0),
+            0
+          )
         : 0,
     [workType, quizData.questions]
   );
@@ -80,7 +97,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
     setSuccessMsg('');
   }, []);
 
-  // ----- Validation (self-paced: no due date/status) -----
+  // ----- Validation -----
   const validate = () => {
     const errors = [];
 
@@ -142,13 +159,13 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
       return;
     }
 
-    // Self-paced payload (no dueAt, no status)
+    // Self-paced structure
     const base = {
       type: workType, // 'assignment' | 'quiz'
       title: title.trim(),
       maxScore: Number(maxScore),
       passingScore: Number(passingScore),
-      estimatedMinutes: Number(estimatedMinutes), // <-- Course Creator uses this
+      estimatedMinutes: Number(estimatedMinutes), // For course builder aggregation
     };
 
     const payload =
@@ -156,7 +173,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
         ? { ...base, quiz: { ...quizData } }
         : { ...base, description: description.trim() };
 
-    // Optional attachment name (local-only)
+    // Optional attachment name
     const finalPayload =
       workType === 'assignment' && attachment
         ? { ...payload, attachmentName: attachment.name }
@@ -164,29 +181,20 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
 
     setSubmitting(true);
     try {
-      // If a backend service was passed, use it; otherwise fallback to LocalStorage
-      let created;
-      if (assignmentService && typeof assignmentService.create === 'function') {
-        created = await assignmentService.create(finalPayload);
-      } else {
-        // LocalStorage fallback
-        created = lsCreate(finalPayload);
-        // Simulate slight async feel (optional)
-        await new Promise((r) => setTimeout(r, 150));
-      }
+      //LocalStorage
+      const created = lsCreate(finalPayload);
 
-      // Ensure we return a lightweight object to the course builder
+      // Return a lightweight object to the parent
       const lightweight = {
-        id: created?.id ?? undefined,
-        type: created?.type ?? base.type,
-        title: created?.title ?? base.title,
-        estimatedMinutes:
-          Number(created?.estimatedMinutes) || Number(base.estimatedMinutes),
+        id: created.id,
+        type: created.type,
+        title: created.title,
+        estimatedMinutes: Number(created.estimatedMinutes),
       };
 
       setSuccessMsg(`${workType === 'quiz' ? 'Quiz' : 'Assignment'} saved.`);
       onCreated?.(lightweight);
-      console.log('[AssignmentCard] Created (LS fallback if no service):', created);
+      console.log('[AssignmentCard] Created (LocalStorage):', created);
 
       resetForm();
     } catch (err) {
@@ -210,7 +218,6 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="assignment-card__grid">
-
             {/* Work Type -> Segmented control (one line) */}
             <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row">
               <span className="assignment-card__label">Work Type *</span>
@@ -240,7 +247,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
                 </label>
               </div>
             </div>
-            
+
             {/* Title */}
             <div className="assignment-card__group">
               <label htmlFor="title" className="assignment-card__label">
@@ -264,7 +271,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
             {/* Max score */}
             <div className="assignment-card__group">
               <label htmlFor="maxScore" className="assignment-card__label">
-                Max Score{''}
+                Max Score{' '}
                 {workType === 'quiz' && (
                   <span className="assignment-card__subtle">(auto)</span>
                 )}
@@ -278,7 +285,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
                 onChange={setNum('maxScore')}
                 className="assignment-card-input"
                 required
-                default="100"
+                defaultValue="100"
                 readOnly={workType === 'quiz'}
                 aria-readonly={workType === 'quiz'}
                 title={
@@ -299,7 +306,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
                 type="number"
                 min="1"
                 step="1"
-                default="40"
+                defaultValue="40"
                 value={passingScore}
                 onChange={setNum('passingScore')}
                 className="assignment-card-input"
@@ -327,7 +334,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
             {/* Assignments-only fields */}
             {workType === 'assignment' && (
               <>
-                {/* Description (full width) */}
+                {/* Description*/}
                 <div className="assignment-card__group assignment-card__group--full">
                   <label htmlFor="description" className="assignment-card__label">
                     Description *
@@ -343,7 +350,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
                   />
                 </div>
 
-                {/* Attachment (full width) */}
+                {/* Attachment*/}
                 <div className="assignment-card__group assignment-card__group--full">
                   <label htmlFor="attachment" className="assignment-card__label">
                     Attachment (optional)

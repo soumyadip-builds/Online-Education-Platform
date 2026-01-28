@@ -1,5 +1,5 @@
 
-// src/components/CourseCollapsibleSection.jsx
+
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/courseBuilder.css";
@@ -14,7 +14,7 @@ function formatDuration(total = 0) {
   return `${m}m`;
 }
 
-/** Simple inline icons to keep this component standalone */
+/**inline icons */
 const I = {
   chevronRight: () => <span aria-hidden>▶</span>,
   chevronDown: () => <span aria-hidden>▼</span>,
@@ -27,9 +27,9 @@ export default function CourseCollapsibleSection({
   /** Array of modules with items */
   modules = [],
 
-  /** Role-based control (if 'instructor' → show edit/delete). */
+  /** Role-based control */
   role = "learner",
-  showActions, // optional hard override (boolean)
+  showActions, // optional hard override
 
   /** Behavior / callbacks */
   defaultCollapsed = false,
@@ -50,7 +50,7 @@ export default function CourseCollapsibleSection({
     Object.fromEntries((modules || []).map((m) => [m.id, defaultCollapsed]))
   );
 
-  // ✅ keep collapsed map in sync when modules prop changes
+  // keeping collapsed map in sync when modules prop changes
   useEffect(() => {
     setCollapsed((prev) => {
       const next = { ...prev };
@@ -84,7 +84,7 @@ export default function CourseCollapsibleSection({
     });
   };
 
-  // ✅ Turn resources into documents:
+  // Turn resources into documents:
   // - "link" type now behaves like "doc" for label and CSS type class
   const normalizedType = (type) => (type === "link" ? "doc" : type);
 
@@ -171,7 +171,7 @@ export default function CourseCollapsibleSection({
                         ? formatDuration(it.estimatedMinutes)
                         : null;
 
-                    // ✅ Clickability rules:
+                    // Clickability rules:
                     // - if it.to -> internal route via <Link>
                     // - else if it.url -> external via <a>
                     // - else -> locked/static
@@ -199,7 +199,7 @@ export default function CourseCollapsibleSection({
                         className={`ccs__item ${isLocked ? "is-locked" : ""}`}
                         key={it.id}
                       >
-                        {/* ✅ INTERNAL route (Assignments / Quizzes) */}
+                        {/* INTERNAL route (Assignments / Quizzes) */}
                         {it?.to ? (
                           <Link
                             className="ccs__itemLink"
@@ -210,7 +210,7 @@ export default function CourseCollapsibleSection({
                             {ItemInner}
                           </Link>
                         ) : it?.url ? (
-                          /* ✅ EXTERNAL URL (Videos / Docs / Resources) */
+                          /* EXTERNAL URL (Videos / Docs / Resources) */
                           <a
                             className="ccs__itemLink"
                             href={it.url}
@@ -220,7 +220,7 @@ export default function CourseCollapsibleSection({
                             {ItemInner}
                           </a>
                         ) : (
-                          /* 🔒 LOCKED / NON-CLICKABLE */
+                          /* LOCKED / NON-CLICKABLE */
                           <span className="ccs__itemLink ccs__itemLink--disabled">
                             {ItemInner}
                           </span>

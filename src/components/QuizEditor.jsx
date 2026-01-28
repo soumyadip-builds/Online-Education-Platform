@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import "../styles/assignmentCard.css";
 
 export default function QuizEditor({ value, onChange }) {
-  // Default quiz structure (removed timeLimitMinutes, shuffleOptions, showAnswersAfterSubmit)
+  // Default quiz structure
   const quiz = value || {
     shuffleQuestions: true,
     questions: [],
@@ -92,7 +92,6 @@ export default function QuizEditor({ value, onChange }) {
       <div className="quiz-editor__header">
         <h2 className="quiz-editor__title">Quiz Settings</h2>
 
-        {/* Moved remaining checkbox here (between heading and total points box) */}
         <label className="quiz-editor__toggle">
           <input
             type="checkbox"
@@ -109,9 +108,8 @@ export default function QuizEditor({ value, onChange }) {
         </div>
       </div>
 
-      {/* Settings (non-scrollable) */}
+      {/* Settings*/}
       <div className="quiz-editor__settings">
-        {/* Removed time limit + removed other checkboxes block */}
       </div>
 
       {/* QUESTIONS (scrollable) */}
