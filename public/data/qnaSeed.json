@@ -1,39 +1,365 @@
-
 [
   {
-    "id": "q1",
-    "courseId": "c101",
-    "courseName": "Intro to React",
+    "id": "q-react-basics-1",
+    "courseId": "react-basics",
+    "courseName": "React Basics",
     "askedByName": "Aisha Khan",
     "askedByEmail": "aisha@example.com",
     "message": "How does useEffect differ from useLayoutEffect?",
     "replies": []
   },
   {
-    "id": "q2",
-    "courseId": "c102",
-    "courseName": "Data Structures",
-    "askedByName": "Ravi Kumar",
-    "askedByEmail": "ravi@example.com",
-    "message": "What is the time complexity of heap sort in worst case?",
-    "replies": []
-  },
-  {
-    "id": "q3",
-    "courseId": "c101",
-    "courseName": "Intro to React",
-    "askedByName": "Meera Iyer",
-    "askedByEmail": "meera@example.com",
-    "message": "Why does React need keys when rendering lists?",
-    "replies": []
-  },
-  {
-    "id": "q4",
-    "courseId": "c103",
-    "courseName": "DBMS",
+    "id": "q-react-basics-2",
+    "courseId": "react-basics",
+    "courseName": "React Basics",
     "askedByName": "Imran Ali",
     "askedByEmail": "imran@example.com",
-    "message": "Difference between primary key and unique key?",
+    "message": "Why are keys required when rendering lists in React?",
+    "replies": []
+  },
+  {
+    "id": "q-react-basics-3",
+    "courseId": "react-basics",
+    "courseName": "React Basics",
+    "askedByName": "Neha Patel",
+    "askedByEmail": "neha@example.com",
+    "message": "What’s the best way to manage form state without external libraries?",
+    "replies": []
+  },
+
+  {
+    "id": "q-typescript-essentials-1",
+    "courseId": "typescript-essentials",
+    "courseName": "TypeScript Essentials",
+    "askedByName": "Meera Iyer",
+    "askedByEmail": "meera@example.com",
+    "message": "When should I use interfaces vs type aliases in TypeScript?",
+    "replies": []
+  },
+  {
+    "id": "q-typescript-essentials-2",
+    "courseId": "typescript-essentials",
+    "courseName": "TypeScript Essentials",
+    "askedByName": "Ravi Kumar",
+    "askedByEmail": "ravi@example.com",
+    "message": "How do generics improve type safety with utility functions?",
+    "replies": []
+  },
+  {
+    "id": "q-typescript-essentials-3",
+    "courseId": "typescript-essentials",
+    "courseName": "TypeScript Essentials",
+    "askedByName": "Joel Mathew",
+    "askedByEmail": "joel@example.com",
+    "message": "What are the pros/cons of using any vs unknown?",
+    "replies": []
+  },
+
+  {
+    "id": "q-redux-toolkit-1",
+    "courseId": "redux-toolkit",
+    "courseName": "Redux Toolkit & Modern State Management",
+    "askedByName": "Sara Thomas",
+    "askedByEmail": "sara@example.com",
+    "message": "What’s the recommended folder structure for RTK slices?",
+    "replies": []
+  },
+  {
+    "id": "q-redux-toolkit-2",
+    "courseId": "redux-toolkit",
+    "courseName": "Redux Toolkit & Modern State Management",
+    "askedByName": "Vikram S",
+    "askedByEmail": "vikram@example.com",
+    "message": "When should I use RTK Query vs traditional thunks?",
+    "replies": []
+  },
+  {
+    "id": "q-redux-toolkit-3",
+    "courseId": "redux-toolkit",
+    "courseName": "Redux Toolkit & Modern State Management",
+    "askedByName": "Priya Sen",
+    "askedByEmail": "priya@example.com",
+    "message": "How do I normalize nested data for Redux without overcomplicating?",
+    "replies": []
+  },
+
+  {
+    "id": "q-express-auth-1",
+    "courseId": "express-auth",
+    "courseName": "Express Authentication & Authorization",
+    "askedByName": "Neha Patel",
+    "askedByEmail": "neha@example.com",
+    "message": "Should I choose JWT or session-based auth for a small app?",
+    "replies": []
+  },
+  {
+    "id": "q-express-auth-2",
+    "courseId": "express-auth",
+    "courseName": "Express Authentication & Authorization",
+    "askedByName": "Aditya Roy",
+    "askedByEmail": "aditya@example.com",
+    "message": "How do I securely store refresh tokens in a Node/Express app?",
+    "replies": []
+  },
+  {
+    "id": "q-express-auth-3",
+    "courseId": "express-auth",
+    "courseName": "Express Authentication & Authorization",
+    "askedByName": "Karthik M",
+    "askedByEmail": "karthik@example.com",
+    "message": "Best practices to protect routes with role-based access control (RBAC)?",
+    "replies": []
+  },
+
+  {
+    "id": "q-mongodb-basics-1",
+    "courseId": "mongodb-basics",
+    "courseName": "MongoDB Basics",
+    "askedByName": "Karthik M",
+    "askedByEmail": "karthik@example.com",
+    "message": "When should I embed vs reference documents in MongoDB?",
+    "replies": []
+  },
+  {
+    "id": "q-mongodb-basics-2",
+    "courseId": "mongodb-basics",
+    "courseName": "MongoDB Basics",
+    "askedByName": "Priya Sen",
+    "askedByEmail": "priya@example.com",
+    "message": "What are common index patterns to speed up queries?",
+    "replies": []
+  },
+  {
+    "id": "q-mongodb-basics-3",
+    "courseId": "mongodb-basics",
+    "courseName": "MongoDB Basics",
+    "askedByName": "Vishal Gupta",
+    "askedByEmail": "vishal@example.com",
+    "message": "How does the aggregation pipeline differ from SQL GROUP BY?",
+    "replies": []
+  },
+
+  {
+    "id": "q-docker-basics-1",
+    "courseId": "docker-basics",
+    "courseName": "Docker Basics",
+    "askedByName": "Vishal Gupta",
+    "askedByEmail": "vishal@example.com",
+    "message": "How do I reduce image size when building a Node app?",
+    "replies": []
+  },
+  {
+    "id": "q-docker-basics-2",
+    "courseId": "docker-basics",
+    "courseName": "Docker Basics",
+    "askedByName": "Anita Shah",
+    "askedByEmail": "anita@example.com",
+    "message": "What’s the difference between a bind mount and a volume?",
+    "replies": []
+  },
+  {
+    "id": "q-docker-basics-3",
+    "courseId": "docker-basics",
+    "courseName": "Docker Basics",
+    "askedByName": "Harish K",
+    "askedByEmail": "harish@example.com",
+    "message": "When should I use multi-stage builds in Dockerfiles?",
+    "replies": []
+  },
+
+  {
+    "id": "q-kubernetes-intro-1",
+    "courseId": "kubernetes-intro",
+    "courseName": "Kubernetes Intro",
+    "askedByName": "Rahul Jain",
+    "askedByEmail": "rahul@example.com",
+    "message": "When should I create a Deployment vs a StatefulSet?",
+    "replies": []
+  },
+  {
+    "id": "q-kubernetes-intro-2",
+    "courseId": "kubernetes-intro",
+    "courseName": "Kubernetes Intro",
+    "askedByName": "Divya Nair",
+    "askedByEmail": "divya@example.com",
+    "message": "How does a ClusterIP service differ from NodePort and LoadBalancer?",
+    "replies": []
+  },
+  {
+    "id": "q-kubernetes-intro-3",
+    "courseId": "kubernetes-intro",
+    "courseName": "Kubernetes Intro",
+    "askedByName": "Maya S",
+    "askedByEmail": "maya@example.com",
+    "message": "What are common pitfalls when writing Kubernetes YAML manifests?",
+    "replies": []
+  },
+
+  {
+    "id": "q-git-github-workflow-1",
+    "courseId": "git-github-workflow",
+    "courseName": "Git & GitHub Workflow",
+    "askedByName": "Ravi Kumar",
+    "askedByEmail": "ravi@example.com",
+    "message": "What branching strategy is best for a small team—Git Flow or trunk-based?",
+    "replies": []
+  },
+  {
+    "id": "q-git-github-workflow-2",
+    "courseId": "git-github-workflow",
+    "courseName": "Git & GitHub Workflow",
+    "askedByName": "Sneha P",
+    "askedByEmail": "sneha@example.com",
+    "message": "Any tips for writing good pull request descriptions and reviews?",
+    "replies": []
+  },
+  {
+    "id": "q-git-github-workflow-3",
+    "courseId": "git-github-workflow",
+    "courseName": "Git & GitHub Workflow",
+    "askedByName": "Anil T",
+    "askedByEmail": "anil@example.com",
+    "message": "How do I manage hotfixes alongside a regular release cadence?",
+    "replies": []
+  },
+
+  {
+    "id": "q-jest-testing-1",
+    "courseId": "jest-testing",
+    "courseName": "Testing React & Node with Jest",
+    "askedByName": "Harish K",
+    "askedByEmail": "harish@example.com",
+    "message": "How do I mock fetch/axios cleanly in Jest tests?",
+    "replies": []
+  },
+  {
+    "id": "q-jest-testing-2",
+    "courseId": "jest-testing",
+    "courseName": "Testing React & Node with Jest",
+    "askedByName": "Maya S",
+    "askedByEmail": "maya@example.com",
+    "message": "What’s the difference between unit and integration tests in this stack?",
+    "replies": []
+  },
+  {
+    "id": "q-jest-testing-3",
+    "courseId": "jest-testing",
+    "courseName": "Testing React & Node with Jest",
+    "askedByName": "Omkar Joshi",
+    "askedByEmail": "omkar@example.com",
+    "message": "How can I improve test performance and avoid flakiness?",
+    "replies": []
+  },
+
+  {
+    "id": "q-prisma-orm-1",
+    "courseId": "prisma-orm",
+    "courseName": "Prisma ORM with Node.js",
+    "askedByName": "Joel Mathew",
+    "askedByEmail": "joel@example.com",
+    "message": "How do I model one-to-many relations and enforce referential actions?",
+    "replies": []
+  },
+  {
+    "id": "q-prisma-orm-2",
+    "courseId": "prisma-orm",
+    "courseName": "Prisma ORM with Node.js",
+    "askedByName": "Pooja S",
+    "askedByEmail": "pooja@example.com",
+    "message": "What’s the recommended migration workflow in CI/CD?",
+    "replies": []
+  },
+  {
+    "id": "q-prisma-orm-3",
+    "courseId": "prisma-orm",
+    "courseName": "Prisma ORM with Node.js",
+    "askedByName": "Arun V",
+    "askedByEmail": "arun@example.com",
+    "message": "How do I seed relational data for local development?",
+    "replies": []
+  },
+
+  {
+    "id": "q-graphql-basics-1",
+    "courseId": "graphql-basics",
+    "courseName": "GraphQL Basics",
+    "askedByName": "Arun V",
+    "askedByEmail": "arun@example.com",
+    "message": "How should I design pagination—offset vs cursor—in GraphQL?",
+    "replies": []
+  },
+  {
+    "id": "q-graphql-basics-2",
+    "courseId": "graphql-basics",
+    "courseName": "GraphQL Basics",
+    "askedByName": "Fatima Noor",
+    "askedByEmail": "fatima@example.com",
+    "message": "How to handle errors and partial data in GraphQL responses?",
+    "replies": []
+  },
+  {
+    "id": "q-graphql-basics-3",
+    "courseId": "graphql-basics",
+    "courseName": "GraphQL Basics",
+    "askedByName": "Lina M",
+    "askedByEmail": "lina@example.com",
+    "message": "What are best practices for schema versioning and deprecation?",
+    "replies": []
+  },
+
+  {
+    "id": "q-react-native-intro-1",
+    "courseId": "react-native-intro",
+    "courseName": "React Native Intro",
+    "askedByName": "Omkar Joshi",
+    "askedByEmail": "omkar@example.com",
+    "message": "What’s the best way to manage navigation state across tabs and stacks?",
+    "replies": []
+  },
+  {
+    "id": "q-react-native-intro-2",
+    "courseId": "react-native-intro",
+    "courseName": "React Native Intro",
+    "askedByName": "Ritika K",
+    "askedByEmail": "ritika@example.com",
+    "message": "How can I optimize bundle size and performance for older devices?",
+    "replies": []
+  },
+  {
+    "id": "q-react-native-intro-3",
+    "courseId": "react-native-intro",
+    "courseName": "React Native Intro",
+    "askedByName": "Divya Nair",
+    "askedByEmail": "divya@example.com",
+    "message": "How do I handle device permissions (camera, storage) gracefully?",
+    "replies": []
+  },
+
+  {
+    "id": "q-python-automation-1",
+    "courseId": "python-automation",
+    "courseName": "Python Automation Basics",
+    "askedByName": "Sameer A",
+    "askedByEmail": "sameer@example.com",
+    "message": "How can I schedule a Python script to run daily on Windows?",
+    "replies": []
+  },
+  {
+    "id": "q-python-automation-2",
+    "courseId": "python-automation",
+    "courseName": "Python Automation Basics",
+    "askedByName": "Lina M",
+    "askedByEmail": "lina@example.com",
+    "message": "What’s a safe way to store API keys for automation scripts?",
+    "replies": []
+  },
+  {
+    "id": "q-python-automation-3",
+    "courseId": "python-automation",
+    "courseName": "Python Automation Basics",
+    "askedByName": "Vijay",
+    "askedByEmail": "vijay@example.com",
+    "message": "Is it better to use cron or a Python scheduler library for recurring jobs?",
     "replies": []
   }
 ]

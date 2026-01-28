@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ForumPost from '../components/ForumPost';
 import {
@@ -9,9 +8,8 @@ import {
   listNotifications,
   markNotificationRead,
   subscribe,
-  getAllData,
 } from '../services/communicationService';
-import { getCurrentUser as getSessionUser, getUserByEmail } from '../utils/session';
+import { getCurrentUser as getSessionUser, getUserById } from '../utils/session';
 import { publicUrl } from '../utils/publicUrl';
 import "../styles/forum-post.css";
 
@@ -25,17 +23,14 @@ export default function ForumPage() {
   // fetched from /public/data
   const [courseDetails, setCourseDetails] = useState([]);
   const [qnaSeed, setQnaSeed] = useState([]);
-
   const [courseOptions, setCourseOptions] = useState([]);
   const [courseId, setCourseId] = useState('');
   const [posts, setPosts] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [notifications, setNotifications] = useState([]);
-
   const [loadingData, setLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
   const [postError, setPostError] = useState('');
-
   const toastContainerRef = useRef(null);
 
   const unreadCount = useMemo(
@@ -44,7 +39,7 @@ export default function ForumPage() {
   );
 
   const usersById = useMemo(
-    () => Object.fromEntries((serviceUsers || []).map(u => [u.userId, u])),
+    () => Object.fromEntries((serviceUsers ?? []).map(u => [u.userId, u])),
     [serviceUsers]
   );
 
@@ -57,9 +52,12 @@ export default function ForumPage() {
     wrapper.setAttribute('aria-atomic', 'true');
     wrapper.innerHTML = `
       <div class="d-flex">
-        <div class="toast-body"><strong>${n.type}:</strong> ${n.message}</div>
+        <div class="toast-body">
+          <strong>${n.type}</strong>: ${n.message}
+        </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>`;
+      </div>
+    `;
     toastContainerRef.current.appendChild(wrapper);
     // eslint-disable-next-line no-undef
     const toast = new bootstrap.Toast(wrapper, { delay: 4000 });
@@ -67,11 +65,11 @@ export default function ForumPage() {
     toast._element.addEventListener('hidden.bs.toast', () => wrapper.remove());
   }
 
-  // ------- fetch helpers -------
+  // ---- helpers ----
   async function fetchJsonSafe(url) {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status} while fetching ${url}`);
-    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    const ct = (res.headers.get('content-type') ?? '').toLowerCase();
     if (!ct.includes('application/json')) {
       const text = await res.text();
       const preview = text.slice(0, 60).replace(/\s+/g, ' ');
@@ -80,50 +78,63 @@ export default function ForumPage() {
     return res.json();
   }
 
-  // ------- SEED: push QnA items into forum if missing -------
+  // ---- SEED: push QnA items into forum if missing (robust + attribution) ----
   async function seedForumFromQnA(qna) {
     try {
       if (!Array.isArray(qna) || qna.length === 0) return;
-
-      // Optional one-time guard to avoid repeated checks
       if (localStorage.getItem(SEED_FLAG_KEY) === 'true') return;
 
-      const emailToId = Object.fromEntries(
-        (await getUsers()).map(u => [(u.email || '').toLowerCase(), u.userId])
-      );
-
-      // Cache existing posts by courseId to reduce listPosts calls
+      // Build maps to resolve course by ID or Title
+      const titleById = Object.fromEntries((courseDetails ?? []).map(c => [c.id, (c.title ?? '').trim()]));
+      const idByTitle = Object.fromEntries((courseDetails ?? []).map(c => [(c.title ?? '').trim().toLowerCase(), c.id]));
       const perCourseExisting = new Map();
 
+      // for email → forum userId mapping
+      const forumUsers = await getUsers();
+
       for (const q of qna) {
-        const cId = q.courseId;
+        // Resolve courseId by explicit id or by title
+        let cId = q.courseId;
+        if (!cId || !titleById[cId]) {
+          const guess = idByTitle[(q.courseName ?? '').trim().toLowerCase()];
+          if (guess) cId = guess;
+        }
+        if (!cId || !titleById[cId]) {
+          console.warn('[Forum seed] Skipped QnA item — cannot resolve course:', q);
+          continue;
+        }
+
         if (!perCourseExisting.has(cId)) {
           const existing = await listPosts(cId);
           perCourseExisting.set(
             cId,
-            new Set((existing || []).map(p => `${cId}::${(p.message || '').trim()}`))
+            new Set((existing ?? []).map(p => `${cId}::${(p.message ?? '').trim()}`))
           );
         }
-        const key = `${cId}::${(q.message || '').trim()}`;
-        const existingSet = perCourseExisting.get(cId);
 
+        const key = `${cId}::${(q.message ?? '').trim()}`;
+        const existingSet = perCourseExisting.get(cId);
         if (!existingSet.has(key)) {
-          const uid = (q.askedByEmail && emailToId[q.askedByEmail.toLowerCase()]) || null;
-          await addPost({ courseId: cId, userId: uid, message: q.message });
+          const askedBy = forumUsers.find(
+            u => (u.email ?? '').toLowerCase() === (q.askedByEmail ?? '').toLowerCase()
+          );
+          await addPost({
+            courseId: cId,
+            userId: askedBy?.userId ?? null,   // attribute if we can; else anonymous learner
+            message: q.message
+          });
           existingSet.add(key);
         }
       }
 
       localStorage.setItem(SEED_FLAG_KEY, 'true');
-      // Ask listeners to refresh
       window.dispatchEvent(new StorageEvent('storage', { key: 'forumData.v1' }));
     } catch (e) {
-      // Non-fatal: just log to console to avoid blocking the page
-      console.warn('[Forum seed] Skipped:', e?.message || e);
+      console.warn('[Forum seed] Skipped:', e?.message ?? e);
     }
   }
 
-  // ------- initial public data fetch -------
+  // ---- initial data ----
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -134,19 +145,16 @@ export default function ForumPage() {
           fetchJsonSafe(publicUrl('data/courseDetails.json')),
           fetchJsonSafe(publicUrl('data/qnaSeed.json')),
         ]);
-
         if (!alive) return;
-
         const courses = (Array.isArray(coursesJson) ? coursesJson : []).map((c, idx) => ({
           id: c.id ?? `c_${idx}`,
           title: c.title ?? 'Untitled Course',
           author: c.author ?? '',
         }));
-
         setCourseDetails(courses);
         setQnaSeed(Array.isArray(qnaJson) ? qnaJson : []);
       } catch (e) {
-        if (alive) setDataError(e.message || 'Failed to load forum data');
+        if (alive) setDataError(e.message ?? 'Failed to load forum data');
       } finally {
         if (alive) setLoadingData(false);
       }
@@ -154,45 +162,48 @@ export default function ForumPage() {
     return () => { alive = false; };
   }, []);
 
-  // ------- session → service user mapping -------
+  // ---- session → service user mapping (BY userId) ----
   useEffect(() => {
     (async () => {
-      const sessionUser = getSessionUser(); // { role, name, email, ... }
+      const sessionUser = getSessionUser(); // { userId, role, name, email, ... }
       setCurrentSessionUser(sessionUser);
-
       const svcUsers = await getUsers();
       setServiceUsers(svcUsers);
 
-      const svcUser = svcUsers.find(
-        (u) => (u.email || '').toLowerCase() === (sessionUser?.email || '').toLowerCase()
-      );
-      setCurrentServiceUser(svcUser || null);
+      const svcUser = svcUsers.find(u => u.userId === sessionUser?.userId);
+      setCurrentServiceUser(svcUser ?? null);
     })();
   }, []);
 
-  // ------- compute courseOptions by role (using courseDetails) -------
+  // ---- compute courseOptions by role (using courseDetails) ----
   useEffect(() => {
-    if (!currentSessionUser || courseDetails.length === 0) return;
+    (async () => {
+      if (!currentSessionUser || courseDetails.length === 0) return;
 
-    if ((currentSessionUser.role || '').toLowerCase() === 'instructor'
-      || (currentSessionUser.role || '').toLowerCase() === 'mentor') {
-      const authored = courseDetails.filter(c => c.author === currentSessionUser.name);
-      setCourseOptions(authored);
-      setCourseId(prev => prev || authored[0]?.id || '');
-    } else if ((currentSessionUser.role || '').toLowerCase() === 'learner'
-      || (currentSessionUser.role || '').toLowerCase() === 'student') {
-      const full = getUserByEmail(currentSessionUser.email);
-      const ids = full?.enrolledCourseIds || [];
-      const enrolled = courseDetails.filter(c => ids.includes(c.id));
-      setCourseOptions(enrolled);
-      setCourseId(prev => prev || enrolled[0]?.id || '');
-    } else {
-      setCourseOptions([]);
-      setCourseId('');
-    }
+      const role = (currentSessionUser.role ?? '').toLowerCase();
+
+      if (role === 'instructor' || role === 'mentor') {
+        // Map author name → forum userId using forum users (no schema change)
+        const forumUsers = await getUsers();
+        const byName = Object.fromEntries((forumUsers ?? []).map(u => [u.name, u.userId]));
+        const authored = courseDetails.filter(c => byName[c.author] === currentSessionUser.userId);
+        setCourseOptions(authored);
+        setCourseId(prev => prev || authored[0]?.id || '');
+      } else if (role === 'learner' || role === 'student') {
+        // Enrolled courses by userId
+        const full = getUserById(currentSessionUser.userId);
+        const ids = full?.enrolledCourseIds ?? [];
+        const enrolled = courseDetails.filter(c => ids.includes(c.id));
+        setCourseOptions(enrolled);
+        setCourseId(prev => prev || enrolled[0]?.id || '');
+      } else {
+        setCourseOptions([]);
+        setCourseId('');
+      }
+    })();
   }, [currentSessionUser, courseDetails]);
 
-  // ------- subscribe for updates (notifications + posts) -------
+  // ---- subscribe for updates ----
   useEffect(() => {
     const unsubscribe = subscribe(async () => {
       if (currentServiceUser?.userId) {
@@ -207,7 +218,7 @@ export default function ForumPage() {
     return unsubscribe;
   }, [currentServiceUser?.userId, courseId]);
 
-  // ------- notifications for current user -------
+  // ---- notifications for current user ----
   useEffect(() => {
     (async () => {
       if (!currentServiceUser?.userId) return;
@@ -218,13 +229,11 @@ export default function ForumPage() {
     })();
   }, [currentServiceUser?.userId]);
 
-  // ------- SEED FORUM FROM QnA (once) THEN load posts for current course -------
+  // ---- seed from QnA once, then load posts for current course ----
   useEffect(() => {
     (async () => {
       if (qnaSeed.length === 0) return;
-      // Seed everything first (deduped + one-time flag)
       await seedForumFromQnA(qnaSeed);
-      // Then load posts for the selected course (if any is selected later)
       if (courseId) {
         const p = await listPosts(courseId);
         setPosts(p);
@@ -233,7 +242,7 @@ export default function ForumPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qnaSeed]);
 
-  // ------- load posts on course change -------
+  // ---- load posts on course change ----
   useEffect(() => {
     (async () => {
       if (!courseId) return;
@@ -242,15 +251,14 @@ export default function ForumPage() {
     })();
   }, [courseId]);
 
-  // ------- actions -------
+  // ---- actions ----
   const canPost = Boolean(newMessage.trim() && courseId && currentServiceUser?.userId);
 
   const onSendPost = async (e) => {
     e.preventDefault();
     setPostError('');
-
     if (!currentServiceUser?.userId) {
-      setPostError('No forum user found for the signed-in email. Check /data/forum.json → users[].email.');
+      setPostError('No forum user found for the signed-in account. Check /data/forum.json → users[].');
       return;
     }
     if (!courseId) {
@@ -261,7 +269,6 @@ export default function ForumPage() {
       setPostError('Message cannot be empty.');
       return;
     }
-
     try {
       await addPost({ courseId, userId: currentServiceUser.userId, message: newMessage.trim() });
       setNewMessage('');
@@ -270,7 +277,7 @@ export default function ForumPage() {
       const notifs = await listNotifications(currentServiceUser.userId);
       setNotifications(notifs);
     } catch (err) {
-      setPostError(err?.message || 'Failed to post. Please try again.');
+      setPostError(err?.message ?? 'Failed to post. Please try again.');
     }
   };
 
@@ -290,50 +297,35 @@ export default function ForumPage() {
     setNotifications(refreshed);
   };
 
-  // ------- UI -------
+  // ---- UI ----
   if (loadingData) {
-    return (
-      <div className="container py-5">
-        <div className="alert alert-light border">Loading forum data…</div>
-      </div>
-    );
+    return (<div className="container py-5">Loading forum data…</div>);
   }
-
   if (dataError) {
-    return (
-      <div className="container py-5">
-        <div className="alert alert-danger">Error: {dataError}</div>
-      </div>
-    );
+    return (<div className="container py-5 text-danger">Error: {dataError}</div>);
   }
 
   return (
     <div className="container py-4">
       {/* Toast container */}
-      <div ref={toastContainerRef} className="toast-container position-fixed bottom-0 end-0 p-3" />
+      <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1080 }}>
+        <div ref={toastContainerRef} />
+      </div>
 
       {/* Top bar */}
-      <div className="d-flex align-items-center justify-content-between mb-3">
-        <h4 className="m-0">Course Forum</h4>
-
-        {/* current user (auto from session.js) */}
-        <div className="text-end small">
-          <div><strong>User:</strong> {currentSessionUser?.name} ({currentSessionUser?.role})</div>
-          <div className="text-muted">{currentSessionUser?.email}</div>
+      <div className="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-3">
+        <h5 className="mb-0">Course Forum</h5>
+        <div className="d-flex flex-column">
+          <div className="fw-semibold">
+            User: {currentSessionUser?.name} ({currentSessionUser?.role})
+          </div>
+          <div className="small text-muted">{currentSessionUser?.email}</div>
         </div>
 
-        {/* Notifications dropdown (ForumPage only) */}
-        <div className="dropdown ms-3">
-          <button
-            className="btn btn-outline-secondary dropdown-toggle position-relative"
-            data-bs-toggle="dropdown"
-          >
-            Notifications
-            {unreadCount > 0 && (
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                {unreadCount}
-              </span>
-            )}
+        {/* Notifications dropdown */}
+        <div className="dropdown">
+          <button className="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+            Notifications {unreadCount > 0 && <span className="badge bg-danger ms-2">{unreadCount}</span>}
           </button>
           <ul className="dropdown-menu dropdown-menu-end">
             {notifications.length === 0 && (
@@ -341,13 +333,19 @@ export default function ForumPage() {
             )}
             {notifications.map((n) => (
               <li key={n.notificationId} className="dropdown-item">
-                <span className="badge bg-primary me-1">{n.type}</span>
-                {n.message} {!n.read && <span className="badge bg-warning ms-1">new</span>}
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span className="fw-semibold">{n.type}</span> {n.message} {!n.read && <span className="badge bg-primary ms-2">new</span>}
+                  </div>
+                  <div className="small text-muted">{new Date(n.timestamp).toLocaleString()}</div>
+                </div>
               </li>
             ))}
             {notifications.length > 0 && <li><hr className="dropdown-divider" /></li>}
             {notifications.length > 0 && (
-              <li><button className="dropdown-item" onClick={markAllRead}>Mark all as read</button></li>
+              <li>
+                <button className="dropdown-item" onClick={markAllRead}>Mark all as read</button>
+              </li>
             )}
           </ul>
         </div>
@@ -355,13 +353,11 @@ export default function ForumPage() {
 
       {/* Filters */}
       <div className="row g-2 align-items-center mb-3">
-        <div className="col-auto"><label className="col-form-label">Course</label></div>
         <div className="col-auto">
-          <select
-            className="form-select"
-            value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
-          >
+          <label className="form-label mb-0 me-2">Course</label>
+        </div>
+        <div className="col-auto">
+          <select className="form-select" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
             {courseOptions.map((c) => (
               <option key={c.id} value={c.id}>{c.title}</option>
             ))}
@@ -370,36 +366,34 @@ export default function ForumPage() {
       </div>
 
       {/* New Post */}
-      <form onSubmit={onSendPost} className="mb-3">
-        <label className="form-label">New Message</label>
-        <textarea
-          className="form-control"
-          rows={3}
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Ask a question or start a discussion..."
-        />
-        {postError && <div className="text-danger small mt-2">{postError}</div>}
-        {!currentServiceUser?.userId && (
-          <div className="text-warning small mt-2">
-            Tip: Add a user with your session email to <code>/data/forum.json</code> → <code>users[]</code>.
-          </div>
-        )}
-        {!courseId && (
-          <div className="text-warning small mt-2">
-            No course available/selected. Instructors see authored; learners see enrolled.
-          </div>
-        )}
-        <div className="mt-2">
-          <button type="submit" className="btn btn-primary" disabled={!canPost}>
-            Post
-          </button>
+      <div className="card mb-3">
+        <div className="card-body">
+          <form className="d-flex gap-2" onSubmit={onSendPost}>
+            <input
+              className="form-control"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Ask a question or start a discussion..."
+            />
+            <button className="btn btn-primary" type="submit" disabled={!canPost}>Post</button>
+          </form>
+          {postError && <div className="text-danger small mt-2">{postError}</div>}
+          {!currentServiceUser?.userId && (
+            <div className="text-muted small mt-2">
+              Tip: Add a user with your session identity to <code>/data/forum.json → users[]</code>.
+            </div>
+          )}
+          {!courseId && (
+            <div className="text-muted small mt-2">
+              No course available/selected. Instructors see authored; learners see enrolled.
+            </div>
+          )}
         </div>
-      </form>
+      </div>
 
       {/* Posts */}
       {posts.length === 0 ? (
-        <div className="text-muted">No messages yet. Be the first to post!</div>
+        <div className="alert alert-light border">No messages yet. Be the first to post!</div>
       ) : (
         posts.map((p) => (
           <ForumPost key={p.postId} post={p} usersById={usersById} onReply={onReply} />
