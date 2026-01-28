@@ -205,34 +205,6 @@ const Footer = () => {
                             </ul>
                         </div>
 
-                        {/* <div className="col-6 col-md-3 col-lg-2">
-                            <h6 className="fw-semibold text-uppercase mb-3 letter-1">
-                                Resources
-                            </h6>
-                            <ul className="list-unstyled m-0 footer-links">
-                                <li>
-                                    <a className="link-smooth" href="/help">
-                                        Help Center
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="link-smooth" href="/guides">
-                                        Guides
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="link-smooth" href="/status">
-                                        Status
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="link-smooth" href="/privacy">
-                                        Privacy
-                                    </a>
-                                </li>
-                            </ul>
-                        </div> */}
-
                         {/* Contact + Newsletter */}
                         <div className="col-12 col-md-12 col-lg-4">
                             <h6 className="fw-semibold text-uppercase mb-3 letter-1">
