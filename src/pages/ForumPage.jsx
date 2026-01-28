@@ -1,302 +1,490 @@
-
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ForumPost from '../components/ForumPost';
-import ForumReply from '../components/ForumReply';
-import ForumPostSkeleton from '../components/ForumPostSkeleton';
-import '../styles/forum-post.css';
+import {
+  getUsers,
+  listPosts,
+  addPost,
+  addReply,
+  listNotifications,
+  markNotificationRead,
+  subscribe,
+} from '../services/communicationService';
+import { getCurrentUser as getSessionUser, getUserById } from '../utils/session';
+import { publicUrl } from '../utils/publicUrl';
+import "../styles/forum-post.css";
 
-/**
- * ForumPage.jsx
- * - Minimal forum list page with search, sort, pagination
- * - Uses Bootstrap 5 + small custom CSS
- * - NO third-party libraries
- * - All custom CSS is scoped under `.ed-forum` to avoid leaking styles
- *
- * Replace the seed/fake logic with your real services when ready:
- *   // import { getForumPosts, likePost, addReply } from '../services/communicationService';
- */
-
-const PAGE_SIZE = 5;
-
-const seedPosts = () => ([
-  {
-    id: 'p_101',
-    author: { name: 'Priya Sharma', role: 'Student' },
-    title: 'Tips for the Week 3 Quiz preparation?',
-    content:
-      'Any suggestions on focusing topics? I found the DP section tricky. Also, do we have partial credit for near-correct answers?',
-    tags: ['quiz', 'week-3', 'dp'],
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2h ago
-    stats: { likes: 12, comments: 4, views: 198 },
-    isLiked: false,
-  },
-  {
-    id: 'p_102',
-    author: { name: 'Arun Kumar', role: 'TA' },
-    title: 'Assignment 2 rubric posted',
-    content:
-      'The detailed rubric for Assignment 2 has been published. Please check the course page > Assignments section. Clarifications welcome here.',
-    tags: ['assignment', 'rubric'],
-    createdAt: new Date(Date.now() - 28 * 60 * 60 * 1000).toISOString(), // 28h ago
-    stats: { likes: 7, comments: 2, views: 241 },
-    isLiked: false,
-  },
-  {
-    id: 'p_103',
-    author: { name: 'Meera Iyer', role: 'Student' },
-    title: 'Best way to visualize greedy vs DP?',
-    content:
-      'I confuse greedy with DP when substructures look similar. How do you decide quickly which paradigm fits? Any heuristics?',
-    tags: ['algorithms', 'greedy', 'dp'],
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    stats: { likes: 15, comments: 6, views: 503 },
-    isLiked: true,
-  },
-  {
-    id: 'p_104',
-    author: { name: 'Course Bot', role: 'Assistant' },
-    title: 'Weekly study group links',
-    content:
-      'Join the peer groups for live problem-solving. Slots available Tue/Thu evenings. Links are pinned in the course announcements.',
-    tags: ['study-group', 'announcement'],
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5h ago
-    stats: { likes: 4, comments: 1, views: 120 },
-    isLiked: false,
-  },
-  {
-    id: 'p_105',
-    author: { name: 'Rohit Gupta', role: 'Student' },
-    title: 'Sharing a DP cheatsheet I made',
-    content:
-      'Compiled transitions and typical base cases for common DP categories. Hope it helps! Feedback welcome to improve it.',
-    tags: ['dp', 'cheatsheet', 'resources'],
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6h ago
-    stats: { likes: 21, comments: 8, views: 640 },
-    isLiked: false,
-  },
-]);
+const SEED_FLAG_KEY = 'forum.seeded.v1';
 
 export default function ForumPage() {
-  const [loading, setLoading] = useState(true);
+  const [serviceUsers, setServiceUsers] = useState([]);
+  const [currentSessionUser, setCurrentSessionUser] = useState(null);
+  // currentServiceUser is now derived via useMemo for stability (see below)
+  const [courseDetails, setCourseDetails] = useState([]);
+  const [qnaSeed, setQnaSeed] = useState([]);
+  const [courseOptions, setCourseOptions] = useState([]);
+  const [courseId, setCourseId] = useState('');
   const [posts, setPosts] = useState([]);
-  const [replyingPostId, setReplyingPostId] = useState(null);
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'likes' | 'comments'
-  const [page, setPage] = useState(1);
+  const [newMessage, setNewMessage] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [dataError, setDataError] = useState(null);
+  const [postError, setPostError] = useState('');
+  const toastContainerRef = useRef(null);
 
-  // Simulate initial load — replace with your service call
-  useEffect(() => {
-    let isMounted = true;
-    const t = setTimeout(() => {
-      if (isMounted) {
-        setPosts(seedPosts());
-        setLoading(false);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
+
+  const usersById = useMemo(
+    () => Object.fromEntries((serviceUsers ?? []).map((u) => [u.userId, u])),
+    [serviceUsers]
+  );
+
+  function showToast(n) {
+    if (!toastContainerRef.current) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'toast align-items-center text-bg-dark border-0';
+    wrapper.setAttribute('role', 'alert');
+    wrapper.setAttribute('aria-live', 'assertive');
+    wrapper.setAttribute('aria-atomic', 'true');
+    wrapper.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          <strong>${n.type}:</strong> ${n.message}
+          <div class="small opacity-75">${new Date(n.timestamp).toLocaleString()}</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    toastContainerRef.current.appendChild(wrapper);
+    // eslint-disable-next-line no-undef
+    const toast = new bootstrap.Toast(wrapper, { delay: 4000 });
+    toast.show();
+    toast._element.addEventListener('hidden.bs.toast', () => wrapper.remove());
+  }
+
+  // ---- helpers ----
+  async function fetchJsonSafe(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} while fetching ${url}`);
+    const ct = (res.headers.get('content-type') ?? '').toLowerCase();
+    if (!ct.includes('application/json')) {
+      const text = await res.text();
+      const preview = text.slice(0, 60).replace(/\s+/g, ' ');
+      throw new Error(`Expected JSON but got "${preview}..." from ${url}`);
+    }
+    return res.json();
+  }
+
+  // ---- SEED: push QnA items into forum if missing (robust + attribution) ----
+  async function seedForumFromQnA(qna) {
+    try {
+      if (!Array.isArray(qna) || qna.length === 0) return;
+      if (localStorage.getItem(SEED_FLAG_KEY) === 'true') return;
+
+      // Build maps to resolve course by ID or Title
+      const titleById = Object.fromEntries((courseDetails ?? []).map((c) => [c.id, (c.title ?? '').trim()]));
+      const idByTitle = Object.fromEntries((courseDetails ?? []).map((c) => [ (c.title ?? '').trim().toLowerCase(), c.id ]));
+
+      const perCourseExisting = new Map();
+
+      // for email → forum userId mapping
+      const forumUsers = await getUsers();
+
+      for (const q of qna) {
+        // Resolve courseId by explicit id or by title
+        let cId = q.courseId;
+        if (!cId || !titleById[cId]) {
+          const guess = idByTitle[(q.courseName ?? '').trim().toLowerCase()];
+          if (guess) cId = guess;
+        }
+        if (!cId || !titleById[cId]) {
+          console.warn('[Forum seed] Skipped QnA item — cannot resolve course:', q);
+          continue;
+        }
+
+        if (!perCourseExisting.has(cId)) {
+          const existing = await listPosts(cId);
+          perCourseExisting.set(
+            cId,
+            new Set((existing ?? []).map((p) => `${cId}::${(p.message ?? '').trim()}`))
+          );
+        }
+
+        const key = `${cId}::${(q.message ?? '').trim()}`;
+        const existingSet = perCourseExisting.get(cId);
+
+        if (!existingSet.has(key)) {
+          const askedBy = forumUsers.find(
+            (u) => (u.email ?? '').toLowerCase() === (q.askedByEmail ?? '').toLowerCase()
+          );
+          await addPost({
+            courseId: cId,
+            userId: askedBy?.userId ?? null, // attribute if we can; else anonymous learner
+            message: q.message,
+          });
+          existingSet.add(key);
+        }
       }
-    }, 700);
+
+      localStorage.setItem(SEED_FLAG_KEY, 'true');
+      window.dispatchEvent(new StorageEvent('storage', { key: 'forumData.v1' }));
+    } catch (e) {
+      console.warn('[Forum seed] Skipped:', e?.message ?? e);
+    }
+  }
+
+  // ---- initial data ----
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoadingData(true);
+      setDataError(null);
+      try {
+        const [coursesJson, qnaJson] = await Promise.all([
+          fetchJsonSafe(publicUrl('data/courseDetails.json')),
+          fetchJsonSafe(publicUrl('data/qnaSeed.json')),
+        ]);
+        if (!alive) return;
+
+        const courses = (Array.isArray(coursesJson) ? coursesJson : []).map((c, idx) => ({
+          id: c.id ?? `c_${idx}`,
+          title: c.title ?? 'Untitled Course',
+          author: c.author ?? '',
+        }));
+        setCourseDetails(courses);
+        setQnaSeed(Array.isArray(qnaJson) ? qnaJson : []);
+      } catch (e) {
+        if (alive) setDataError(e.message ?? 'Failed to load forum data');
+      } finally {
+        if (alive) setLoadingData(false);
+      }
+    })();
     return () => {
-      isMounted = false;
-      clearTimeout(t);
+      alive = false;
     };
   }, []);
 
-  // Derived list: search + sort
-  const filteredSorted = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    let list = posts.filter(p => {
-      if (!q) return true;
-      const hay = `${p.title} ${p.content} ${p.tags?.join(' ')}`.toLowerCase();
-      return hay.includes(q);
+  // ---- session + users bootstrap ----
+  useEffect(() => {
+    (async () => {
+      const sessionUser = getSessionUser(); // { userId, role, name, email, ... }
+      setCurrentSessionUser(sessionUser);
+      const svcUsers = await getUsers();
+      setServiceUsers(svcUsers);
+    })();
+  }, []);
+
+  // ---- DERIVED: service user for the current session (stable via useMemo) ----
+  const currentServiceUser = useMemo(() => {
+    if (!currentSessionUser || !serviceUsers?.length) return null;
+    return serviceUsers.find((u) => u.userId === currentSessionUser.userId) ?? null;
+  }, [serviceUsers, currentSessionUser]);
+
+  // ---- compute courseOptions by role (using courseDetails) ----
+  useEffect(() => {
+    (async () => {
+      if (!currentSessionUser || courseDetails.length === 0) return;
+
+      const role = (currentSessionUser.role ?? '').toLowerCase();
+
+      if (role === 'instructor' || role === 'mentor') {
+        // Filter by instructor name === course author (case-insensitive)
+        const instructorName = (currentSessionUser?.name ?? '').trim().toLowerCase();
+        const authored = courseDetails.filter(
+          (c) => (c.author ?? '').trim().toLowerCase() === instructorName
+        );
+
+        setCourseOptions(authored);
+
+        // Keep current selection if still valid; otherwise pick the first authored course or clear
+        setCourseId((prev) =>
+          authored.some((c) => c.id === prev) ? prev : authored[0]?.id ?? ''
+        );
+
+        if (authored.length === 0) setPosts([]);
+      } else if (role === 'learner' || role === 'student') {
+        // Enrolled courses by userId
+        const full = getUserById(currentSessionUser.userId);
+        const ids = full?.coursesEnrolled ?? [];
+        const enrolled = courseDetails.filter((c) => ids.includes(c.id));
+        setCourseOptions(enrolled);
+        setCourseId((prev) =>
+          enrolled.some((c) => c.id === prev) ? prev : enrolled[0]?.id ?? ''
+        );
+        if (enrolled.length === 0) setPosts([]);
+      } else {
+        setCourseOptions([]);
+        setCourseId('');
+        setPosts([]);
+      }
+    })();
+  }, [currentSessionUser, courseDetails]);
+
+  // ---- subscribe for updates ----
+  useEffect(() => {
+    const unsubscribe = subscribe(async () => {
+      if (currentServiceUser?.userId) {
+        const notifs = await listNotifications(currentServiceUser.userId);
+        setNotifications(notifs);
+      }
+      if (courseId) {
+        const p = await listPosts(courseId);
+        setPosts(p);
+      }
     });
+    return unsubscribe;
+  }, [currentServiceUser?.userId, courseId]);
 
-    switch (sortBy) {
-      case 'likes':
-        list = list.sort((a, b) => (b.stats?.likes || 0) - (a.stats?.likes || 0));
-        break;
-      case 'comments':
-        list = list.sort((a, b) => (b.stats?.comments || 0) - (a.stats?.comments || 0));
-        break;
-      default: // newest
-        list = list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  // ---- notifications for current user ----
+  useEffect(() => {
+    (async () => {
+      if (!currentServiceUser?.userId) return;
+      const notifs = await listNotifications(currentServiceUser.userId);
+      setNotifications(notifs);
+      const unread = notifs.filter((n) => !n.read);
+      if (unread.length > 0) showToast(unread[0]);
+    })();
+  }, [currentServiceUser?.userId]);
+
+  // ---- seed from QnA once, then load posts for current course ----
+  useEffect(() => {
+    (async () => {
+      if (qnaSeed.length === 0) return;
+      await seedForumFromQnA(qnaSeed);
+      if (courseId) {
+        const p = await listPosts(courseId);
+        setPosts(p);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qnaSeed]);
+
+  // ---- load posts on course change ----
+  useEffect(() => {
+    (async () => {
+      if (!courseId) return;
+      const p = await listPosts(courseId);
+      setPosts(p);
+    })();
+  }, [courseId]);
+
+  // ---- actions ----
+  const canPost = Boolean(newMessage.trim() && courseId && (currentServiceUser?.userId || currentSessionUser?.userId));
+
+  const getActiveForumUserId = () => {
+    // Prefer stable derived service user; fallback to lookup; finally to session userId (if accepted by backend)
+    return (
+      currentServiceUser?.userId ??
+      (currentSessionUser?.userId
+        ? serviceUsers.find((u) => u.userId === currentSessionUser.userId)?.userId
+        : null) ??
+      currentSessionUser?.userId ??
+      null
+    );
+  };
+
+  const onSendPost = async (e) => {
+    e.preventDefault();
+    setPostError('');
+
+    const userId = getActiveForumUserId();
+
+    if (!userId) {
+      setPostError('No forum user found for the signed-in account. Check /data/forum.json → users[].');
+      return;
     }
-    return list;
-  }, [posts, search, sortBy]);
+    if (!courseId) {
+      setPostError('Please select a course.');
+      return;
+    }
+    if (!newMessage.trim()) {
+      setPostError('Message cannot be empty.');
+      return;
+    }
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredSorted.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const currentItems = filteredSorted.slice(start, start + PAGE_SIZE);
+    try {
+      await addPost({ courseId, userId, message: newMessage.trim() });
+      setNewMessage('');
+      const updated = await listPosts(courseId);
+      setPosts(updated);
+      const notifs = await listNotifications(userId);
+      setNotifications(notifs);
+    } catch (err) {
+      setPostError(err?.message ?? 'Failed to post. Please try again.');
+    }
+  };
 
-  // Handlers
-  const handleLike = (id) => {
-    setPosts(prev =>
-      prev.map(p => {
-        if (p.id !== id) return p;
-        const isLiked = !p.isLiked;
-        const delta = isLiked ? 1 : -1;
-        return {
-          ...p,
-          isLiked,
-          stats: { ...p.stats, likes: Math.max(0, (p.stats?.likes || 0) + delta) },
-        };
-      }),
+  const onReply = async (postId, message) => {
+    setPostError('');
+    const userId = getActiveForumUserId();
+
+    if (!userId) {
+      setPostError('No forum user found for the signed-in account. Check /data/forum.json → users[].');
+      return;
+    }
+    if (!message?.trim()) {
+      setPostError('Reply cannot be empty.');
+      return;
+    }
+
+    try {
+      await addReply({ postId, userId, message: message.trim() });
+      const updated = await listPosts(courseId);
+      setPosts(updated);
+    } catch (err) {
+      setPostError(err?.message ?? 'Failed to post reply. Please try again.');
+    }
+  };
+
+  const markAllRead = async () => {
+    const userId = getActiveForumUserId();
+    if (!userId) return;
+    for (const n of notifications.filter((n) => !n.read)) {
+      await markNotificationRead(n.notificationId);
+    }
+    const refreshed = await listNotifications(userId);
+    setNotifications(refreshed);
+  };
+
+  // ---- UI ----
+  if (loadingData) {
+    return (
+      <div className="container py-4">
+        <div>Loading forum data…</div>
+      </div>
     );
-    // TODO: call likePost(id) in your service layer
-  };
+  }
 
-  const handleComment = (id) => {
-    setReplyingPostId(prev => (prev === id ? null : id));
-  };
-
-  const handleShare = (id) => {
-    // Optional: custom share handler; fallback handled in ForumPost
-    console.log('share', id);
-  };
-
-  const handleReplySubmit = async (postId, text) => {
-    // TODO: await addReply(postId, text)
-    // For UI: increment comments and close composer
-    setPosts(prev =>
-      prev.map(p =>
-        p.id === postId
-          ? { ...p, stats: { ...p.stats, comments: (p.stats?.comments || 0) + 1 } }
-          : p,
-      ),
+  if (dataError) {
+    return (
+      <div className="container py-4">
+        <div className="alert alert-danger">Error: {dataError}</div>
+      </div>
     );
-    setReplyingPostId(null);
-  };
-
-  const clearSearch = () => setSearch('');
+  }
 
   return (
-    <section className="ed-forum">
-      {/* Page header */}
-      <div className="card border-0 shadow-sm forum-page__header mb-3">
-        <div className="forum-post__accent" aria-hidden="true" />
-        <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div>
-            <h1 className="h5 mb-1">Forum</h1>
-            <div className="text-muted small">Discuss assignments, quizzes, and learning tips</div>
+    <div className="container py-4">
+      {/* Toast container */}
+      <div
+        className="toast-container position-fixed bottom-0 end-0 p-3"
+        ref={toastContainerRef}
+        style={{ zIndex: 1060 }}
+      />
+
+      {/* Top bar */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h6 className="mb-1">Course Forum</h6>
+          <div className="text-muted small">
+            User: {currentSessionUser?.name} ({currentSessionUser?.role})<br />
+            <span className="opacity-75">{currentSessionUser?.email}</span>
           </div>
+        </div>
+
+        {/* Notifications dropdown */}
+        <div className="dropdown">
           <button
+            className="btn btn-outline-secondary dropdown-toggle"
             type="button"
-            className="btn btn-sm forum-post__btn-primary"
-            onClick={() => alert('New Post composer can go here')}
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
           >
-            <i className="bi bi-plus-lg me-1" />
-            New Post
+            Notifications {unreadCount > 0 && <span className="badge bg-danger ms-1">{unreadCount}</span>}
+          </button>
+          <ul className="dropdown-menu dropdown-menu-end">
+            {notifications.length === 0 && (
+              <li className="dropdown-item text-muted">- No notifications</li>
+            )}
+            {notifications.map((n) => (
+              <li key={n.notificationId} className="dropdown-item">
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <strong>{n.type}</strong> {n.message} {!n.read && <span className="badge bg-primary ms-1">new</span>}
+                  </div>
+                  <div className="text-muted small">{new Date(n.timestamp).toLocaleString()}</div>
+                </div>
+              </li>
+            ))}
+            {notifications.length > 0 && <li><hr className="dropdown-divider" /></li>}
+            {notifications.length > 0 && (
+              <li>
+                <button className="dropdown-item" onClick={markAllRead}>
+                  Mark all as read
+                </button>
+              </li>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="row g-2 align-items-center mb-3">
+        <div className="col-auto">
+          <label htmlFor="courseSelect" className="form-label mb-0">Course</label>
+        </div>
+        <div className="col">
+          <select
+            id="courseSelect"
+            className="form-select"
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
+          >
+            <option value="" disabled>
+              {courseOptions.length > 0 ? 'Select a course...' : 'No courses available'}
+            </option>
+            {courseOptions.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* New Post */}
+      <form className="mb-3" onSubmit={onSendPost}>
+        <div className="input-group">
+          <input
+            type="text"
+            className="form-control"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Ask a question or start a discussion..."
+            disabled={!courseId}
+          />
+          <button className="btn btn-primary" type="submit" disabled={!canPost}>
+            Post
           </button>
         </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="card border-0 shadow-sm forum-page__toolbar mb-3">
-        <div className="card-body">
-          <div className="row g-2 align-items-center">
-            <div className="col-12 col-md-8">
-              <div className="input-group">
-                <span className="input-group-text bg-white border-end-0">
-                  <i className="bi bi-search" />
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0"
-                  placeholder="Search posts, tags, keywords…"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                />
-                {search && (
-                  <button className="btn btn-outline-secondary" type="button" onClick={clearSearch}>
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="col-6 col-md-2">
-              <select
-                className="form-select"
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="newest">Newest</option>
-                <option value="likes">Most Liked</option>
-                <option value="comments">Most Commented</option>
-              </select>
-            </div>
-            <div className="col-6 col-md-2 text-md-end">
-              <span className="text-muted small">
-                {filteredSorted.length} post{filteredSorted.length !== 1 ? 's' : ''}
-              </span>
-            </div>
+        {postError && <div className="text-danger small mt-2">{postError}</div>}
+        {!currentServiceUser?.userId && (
+          <div className="text-muted small mt-1">
+            Tip: Add a user with your session identity to <code>/data/forum.json → users[]</code>.
           </div>
-        </div>
-      </div>
-
-      {/* List */}
-      {loading ? (
-        <>
-          <ForumPostSkeleton lines={3} className="mb-3" />
-          <ForumPostSkeleton lines={3} className="mb-3" />
-          <ForumPostSkeleton lines={3} className="mb-3" />
-        </>
-      ) : currentItems.length === 0 ? (
-        <div className="card border-0 shadow-sm">
-          <div className="card-body text-center text-muted py-5">
-            <i className="bi bi-chat-left-text fs-3 d-block mb-2" />
-            No posts found. Try a different search or create a new post.
+        )}
+        {!courseId && (
+          <div className="text-muted small mt-1">
+            No course available/selected. Instructors see authored; learners see enrolled.
           </div>
-        </div>
+        )}
+      </form>
+
+      {/* Posts */}
+      {(!posts || posts.length === 0) ? (
+        <div className="text-muted">No messages yet. Be the first to post!</div>
       ) : (
-        currentItems.map((p) => (
-          <div key={p.id} className="mb-3">
-            <ForumPost
-              {...p}
-              onLike={handleLike}
-              onComment={handleComment}
-              onShare={handleShare}
-            />
-            {replyingPostId === p.id && (
-              <ForumReply
-                className="mt-2"
-                onSubmit={(text) => handleReplySubmit(p.id, text)}
-                onCancel={() => setReplyingPostId(null)}
-              />
-            )}
-          </div>
+        posts.map((p) => (
+          <ForumPost
+            key={p.postId}
+            post={p}
+            usersById={usersById}
+            onReply={onReply}
+          />
         ))
       )}
-
-      {/* Pagination */}
-      {!loading && totalPages > 1 && (
-        <nav className="d-flex justify-content-between align-items-center mt-3" aria-label="Forum pagination">
-          <button
-            className="btn btn-outline-secondary btn-sm forum-post__btn"
-            disabled={currentPage <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            <i className="bi bi-arrow-left-short me-1" />
-            Prev
-          </button>
-          <div className="text-muted small">
-            Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
-          </div>
-          <button
-            className="btn btn-outline-secondary btn-sm forum-post__btn"
-            disabled={currentPage >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          >
-            Next
-            <i className="bi bi-arrow-right-short ms-1" />
-          </button>
-        </nav>
-      )}
-    </section>
+    </div>
   );
 }
-

@@ -199,7 +199,7 @@ export default function CourseCreation({
       setMsg({ type: "success", text: "Course saved successfully." });
       showToast(status === "published" ? "Course published" : "Course saved");
 
-      // Bubble up
+      // Bubble up, if needed (e.g., navigate away)
       onCreated?.(created);
     } catch (err) {
       console.error(err);

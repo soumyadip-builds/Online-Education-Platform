@@ -271,7 +271,7 @@ const AssignmentCard = ({ onCreated }) => {
             {/* Max score */}
             <div className="assignment-card__group">
               <label htmlFor="maxScore" className="assignment-card__label">
-                Max Score{' '}
+                Max Score{''}
                 {workType === 'quiz' && (
                   <span className="assignment-card__subtle">(auto)</span>
                 )}
@@ -285,7 +285,7 @@ const AssignmentCard = ({ onCreated }) => {
                 onChange={setNum('maxScore')}
                 className="assignment-card-input"
                 required
-                defaultValue="100"
+                default="100"
                 readOnly={workType === 'quiz'}
                 aria-readonly={workType === 'quiz'}
                 title={
@@ -306,7 +306,7 @@ const AssignmentCard = ({ onCreated }) => {
                 type="number"
                 min="1"
                 step="1"
-                defaultValue="40"
+                default="40"
                 value={passingScore}
                 onChange={setNum('passingScore')}
                 className="assignment-card-input"

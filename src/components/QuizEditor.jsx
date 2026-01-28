@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import "../styles/assignmentCard.css";
 
 export default function QuizEditor({ value, onChange }) {
-  // Default quiz structure
+  // Default quiz structure (removed timeLimitMinutes, shuffleOptions, showAnswersAfterSubmit)
   const quiz = value || {
     shuffleQuestions: true,
     questions: [],
@@ -156,6 +156,7 @@ export default function QuizEditor({ value, onChange }) {
                   onChange={(e) => patchQ(q.id, { title: e.target.value })}
                   className="assignment-card-input"
                   placeholder="Enter the question text"
+                  placeholder="Enter the question text"
                 />
               </div>
 
@@ -217,6 +218,9 @@ export default function QuizEditor({ value, onChange }) {
                     onChange={(e) =>
                       patchOpt(q.id, o.id, { text: e.target.value })
                     }
+                    onChange={(e) =>
+                      patchOpt(q.id, o.id, { text: e.target.value })
+                    }
                     className="assignment-card-input quiz-option__text"
                     placeholder="Option text"
                   />
@@ -236,9 +240,15 @@ export default function QuizEditor({ value, onChange }) {
               <label className="assignment-card__label">
                 Explanation (optional)
               </label>
+              <label className="assignment-card__label">
+                Explanation (optional)
+              </label>
               <textarea
                 rows="2"
                 value={q.explanation}
+                onChange={(e) =>
+                  patchQ(q.id, { explanation: e.target.value })
+                }
                 onChange={(e) =>
                   patchQ(q.id, { explanation: e.target.value })
                 }

@@ -23,7 +23,7 @@ export default function CourseModulesBuilder({
   /** Module ops */
   const addModule = () => setModules((prev) => [...prev, emptyModule()]);
 
-  //keep at least one module always
+  // ✅ Fix: keep at least one module always
   const rmModule = (mid) =>
     setModules((prev) => {
       const next = prev.filter((m) => m.id !== mid);
@@ -126,7 +126,7 @@ export default function CourseModulesBuilder({
         </button>
       </div>
 
-    
+      {/* ✅ IMPORTANT: Only ONE cb-modules wrapper (prevents double scrollbar) */}
       <div className="cb-modules">
         {modules.map((m, mIdx) => {
           const moduleMinutes = m.items.reduce(
@@ -233,7 +233,7 @@ export default function CourseModulesBuilder({
                     {m.editingDesc ? ICONS.save : ICONS.edit}
                   </button>
 
-                  {/* disable delete when only 1 module */}
+                  {/* ✅ Fix: disable delete when only 1 module */}
                   <button
                     type="button"
                     className="icon-btn danger"
