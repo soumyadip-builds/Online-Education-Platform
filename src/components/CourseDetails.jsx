@@ -5,8 +5,7 @@ import "../styles/course.css";
 import NavbarComponent from "./NavbarComponent";
 import CourseCollapsibleSection from "./CourseCollapsibleSection";
 
-// Use session helpers to identify the logged-in user and read their full record
-import { getCurrentUser, getUserByEmail } from "../utils/session"; // <-- added getUserByEmail
+import { getCurrentUser, getUserByEmail } from "../utils/session";
 import { enrollInCourse } from "../utils/userStorage";
 
 /** Prefix a path with app base (Vite BASE_URL or CRA PUBLIC_URL). */
@@ -63,17 +62,29 @@ export default function CourseDetails() {
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
 
-  // Enrollment (now computed per-user; no localStorage flags)
+  // Enrollment
   const [enrolled, setEnrolled] = useState(false);
 
-  // Centralized way to recompute whether the current user is enrolled in this course
-  const refreshEnrollment = useCallback(() => {
-    const me = getCurrentUser(); // minimal session payload (name, email, role, ids, etc.)
+  // Capture role for gating
+  const [role, setRole] = useState(null);
+  const isLearner = role === "learner";
+  const isInstructor = role === "instructor";
+
+  // Derived flag: instructors have content unlocked even if not enrolled
+  const hasAccess = isLearner ? enrolled : true;
+
+  // Compute enrollment and role from the current session user
+  const refreshEnrollmentAndRole = useCallback(() => {
+    const me = getCurrentUser();
+    const r = me?.role ?? null;
+    setRole(r);
+
     if (!me?.email) {
       setEnrolled(false);
       return;
     }
-    const fullUser = getUserByEmail(me.email); // read user record from edstream_users
+    // read full user record to check coursesEnrolled
+    const fullUser = getUserByEmail(me.email);
     const isEnrolled =
       !!fullUser &&
       Array.isArray(fullUser.coursesEnrolled) &&
@@ -81,12 +92,12 @@ export default function CourseDetails() {
     setEnrolled(isEnrolled);
   }, [id]);
 
-  // Recompute on mount/route change and whenever session/users change
+  // Recompute on mount/route change and when session/users change
   useEffect(() => {
-    refreshEnrollment();
+    refreshEnrollmentAndRole();
 
-    const onSessionChanged = () => refreshEnrollment();
-    const onUsersChanged = () => refreshEnrollment();
+    const onSessionChanged = () => refreshEnrollmentAndRole();
+    const onUsersChanged = () => refreshEnrollmentAndRole();
 
     window.addEventListener("session-changed", onSessionChanged);
     window.addEventListener("users-changed", onUsersChanged);
@@ -94,30 +105,29 @@ export default function CourseDetails() {
       window.removeEventListener("session-changed", onSessionChanged);
       window.removeEventListener("users-changed", onUsersChanged);
     };
-  }, [refreshEnrollment]);
+  }, [refreshEnrollmentAndRole]);
 
-  // Enroll handler updates the user record; UI updates immediately and also via events
+  // Enroll handler (only learners can enroll)
   const handleEnroll = () => {
-    const me = getCurrentUser(); // expects an object with email and role
+    const me = getCurrentUser();
     if (!me?.email) {
       alert("Please log in to enroll.");
       return;
     }
     if (me.role !== "learner") {
+      // For instructors, we won’t show the button anyway, but guard just in case
       alert("Only learners can enroll in courses.");
       return;
     }
-    const { ok, error } = enrollInCourse(me.email, id); // will avoid duplicates
+    const { ok, error } = enrollInCourse(me.email, id);
     if (!ok) {
       alert(error ?? "Failed to enroll. Please try again.");
       return;
     }
-    // Update UI immediately; events will also sync other tabs/components
     setEnrolled(true);
-    // NOTE: We intentionally DO NOT set any localStorage "enrolled:<id>" flag anymore.
   };
 
-  // Fetch from public/data/ (base-safe)
+  // Fetch from public/data/
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -169,7 +179,7 @@ export default function CourseDetails() {
     };
   }, [id]);
 
-  /** ✅ Convert course.sections into normalized modules */
+  /** Convert course.sections into normalized modules */
   const sectionModules = useMemo(() => {
     const sections = course?.sections ?? [];
     return (sections ?? []).map((s, idx) => {
@@ -185,8 +195,8 @@ export default function CourseDetails() {
           `${s.id ?? `module-${idx + 1}`}-item-${itemIdx + 1}`,
         title: it?.title ?? it?.name ?? `Item ${itemIdx + 1}`,
         type: it?.type ?? "reading",
-        // keep url if present (lock if not enrolled)
-        url: enrolled ? it?.url : undefined,
+        // ✅ For instructors: keep URLs enabled even if not "enrolled"
+        url: hasAccess ? it?.url : undefined,
         estimatedMinutes: it?.estimatedMinutes ?? it?.durationMinutes ?? 0,
       }));
       return {
@@ -197,33 +207,27 @@ export default function CourseDetails() {
         items,
       };
     });
-  }, [course?.sections, enrolled]);
+  }, [course?.sections, hasAccess]);
 
   /**
-   * ✅ Build ONE course content list using DUMMY module names + DUMMY item names,
-   * while preserving actual links/routes under the hood.
-   *
-   * - Assignments & Quizzes MUST use same routes as before: `/assignment/:id` and `/quiz/:id`
-   * - We pass `to` for internal navigation, `url` for external.
+   * Build unified content modules, unlocking for instructors regardless of enrolled.
    */
   const contentModules = useMemo(() => {
     const out = [];
-    // 1) Keep existing course section modules first (as-is)
     out.push(...(sectionModules ?? []));
 
-    // source arrays from course
     const videos = course?.videos ?? [];
     const docs = course?.docs ?? [];
     const links = course?.links ?? [];
 
-    // 2) DUMMY module: "Practice Pack" (assignments + quizzes)
+    // Practice Pack (assignments + quizzes)
     const practiceItems = [];
     (assignments ?? []).forEach((a, i) => {
       practiceItems.push({
         id: a?.id ?? `assignment-${i + 1}`,
         title: `Challenge ${i + 1}`,
         type: "assignment",
-        to: enrolled ? `/assignment/${a.id}` : undefined,
+        to: hasAccess ? `/assignment/${a.id}` : undefined,
         dueAt: a?.dueAt,
       });
     });
@@ -232,7 +236,7 @@ export default function CourseDetails() {
         id: q?.id ?? `quiz-${i + 1}`,
         title: `Checkpoint ${i + 1}`,
         type: "quiz",
-        to: enrolled ? `/quiz/${q.id}` : undefined,
+        to: hasAccess ? `/quiz/${q.id}` : undefined,
         dueAt: q?.dueAt,
       });
     });
@@ -245,12 +249,12 @@ export default function CourseDetails() {
       });
     }
 
-    // 3) DUMMY module: "Media Vault" (videos)
+    // Media Vault (videos)
     const mediaItems = (videos ?? []).map((v, i) => ({
       id: v?.id ?? `video-${i + 1}`,
       title: `Clip ${i + 1}`,
       type: "video",
-      url: enrolled ? v?.url : undefined,
+      url: hasAccess ? v?.url : undefined,
       estimatedMinutes: v?.estimatedMinutes ?? v?.durationMinutes ?? 0,
     }));
     if (mediaItems.length > 0) {
@@ -262,14 +266,14 @@ export default function CourseDetails() {
       });
     }
 
-    // 4) DUMMY module: "Reference Vault" (docs + links)
+    // Reference Vault (docs + links)
     const refItems = [];
     (docs ?? []).forEach((d, i) => {
       refItems.push({
         id: d?.id ?? `doc-${i + 1}`,
         title: `Reference Note ${i + 1}`,
         type: "doc",
-        url: enrolled ? resolveDocUrl(d?.url) : undefined,
+        url: hasAccess ? resolveDocUrl(d?.url) : undefined,
       });
     });
     (links ?? []).forEach((l, i) => {
@@ -277,7 +281,7 @@ export default function CourseDetails() {
         id: l?.id ?? `link-${i + 1}`,
         title: `Extra Read ${i + 1}`,
         type: "link",
-        url: enrolled ? l?.url : undefined,
+        url: hasAccess ? l?.url : undefined,
       });
     });
     if (refItems.length > 0) {
@@ -290,9 +294,9 @@ export default function CourseDetails() {
     }
 
     return out;
-  }, [course, sectionModules, assignments, quizzes, enrolled]);
+  }, [course, sectionModules, assignments, quizzes, hasAccess]);
 
-  // Loading / Error handling
+  // Loading / Error UI
   if (loading) {
     return (
       <div className="course-details">
@@ -308,7 +312,6 @@ export default function CourseDetails() {
     );
   }
 
-  // Destructure only after course exists
   const {
     title,
     author,
@@ -390,7 +393,8 @@ export default function CourseDetails() {
               </p>
             )}
 
-            {!enrolled ? (
+            {/* ✅ Show button only for learners who are not enrolled */}
+            {isLearner && !enrolled ? (
               <>
                 <button
                   className="mybtn mybtn-primary mybtn-xl"
@@ -402,14 +406,14 @@ export default function CourseDetails() {
                   Content is locked until you enroll
                 </div>
               </>
-            ) : (
+            ) : isLearner && enrolled ? (
               <div className="enrollment-status">
                 ✅ You’re enrolled. All content is unlocked.
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* Right-side resources panel (keep featured video + includes) */}
+          {/* Right-side resources panel (featured video + includes) */}
           <div className="resources">
             {/* Featured video (first only) */}
             {videos?.length > 0 && (
@@ -432,7 +436,8 @@ export default function CourseDetails() {
                               Video {i + 1}
                             </div>
                           )}
-                          {!enrolled && (
+                          {/* ✅ Show lock only for learners who are not enrolled */}
+                          {isLearner && !enrolled && (
                             <div className="lock-overlay">
                               <div className="lock-text">Enroll to Play</div>
                             </div>
@@ -444,11 +449,11 @@ export default function CourseDetails() {
                           </h4>
                           <a
                             href={v.url}
-                            className={`video-link ${!enrolled ? "video-link--disabled" : ""}`}
+                            className={`video-link ${!hasAccess ? "video-link--disabled" : ""}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => {
-                              if (!enrolled) e.preventDefault();
+                              if (!hasAccess) e.preventDefault();
                             }}
                           >
                             ▶ Watch
@@ -518,7 +523,7 @@ export default function CourseDetails() {
           </section>
         )}
 
-        {/* ✅ ONLY THIS CONTENT */}
+        {/* Course content (unlocked for instructors; gated for learners) */}
         {contentModules.length > 0 && (
           <section className="course-details__section">
             <h3 className="section-title">Course content</h3>
