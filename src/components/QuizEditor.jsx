@@ -3,12 +3,9 @@ import React, { useMemo } from "react";
 import "../styles/assignmentCard.css";
 
 export default function QuizEditor({ value, onChange }) {
-  // Default quiz structure
+  // Default quiz structure (removed timeLimitMinutes, shuffleOptions, showAnswersAfterSubmit)
   const quiz = value || {
-    timeLimitMinutes: 30,
     shuffleQuestions: true,
-    shuffleOptions: true,
-    showAnswersAfterSubmit: true,
     questions: [],
   };
 
@@ -94,6 +91,18 @@ export default function QuizEditor({ value, onChange }) {
       {/* Header */}
       <div className="quiz-editor__header">
         <h2 className="quiz-editor__title">Quiz Settings</h2>
+
+        {/* Moved remaining checkbox here (between heading and total points box) */}
+        <label className="quiz-editor__toggle">
+          <input
+            type="checkbox"
+            checked={!!quiz.shuffleQuestions}
+            onChange={(e) => update({ shuffleQuestions: e.target.checked })}
+            className="quiz-editor__checkbox"
+          />
+          Shuffle questions
+        </label>
+
         <div className="quiz-editor__totals">
           <span className="quiz-editor__total-label">Total Points:</span>
           <span className="quiz-editor__total-value">{totalPoints}</span>
@@ -102,43 +111,7 @@ export default function QuizEditor({ value, onChange }) {
 
       {/* Settings (non-scrollable) */}
       <div className="quiz-editor__settings">
-        <div className="quiz-editor__grid">
-          <div className="quiz-editor__group">
-            <label className="assignment-card__label">Time Limit (mins) *</label>
-            <input
-              type="number"
-              min="1"
-              value={quiz.timeLimitMinutes}
-              onChange={(e) =>
-                update({
-                  timeLimitMinutes: Math.max(1, Number(e.target.value || 0)),
-                })
-              }
-              className="assignment-card-input"
-            />
-          </div>
-
-          <div className="quiz-editor__group">
-            <span className="assignment-card__label">Options</span>
-            <div className="quiz-editor__toggles">
-              {[
-                ["shuffleQuestions", "Shuffle questions"],
-                ["shuffleOptions", "Shuffle options"],
-                ["showAnswersAfterSubmit", "Show answers"],
-              ].map(([key, label]) => (
-                <label className="quiz-editor__toggle" key={key}>
-                  <input
-                    type="checkbox"
-                    checked={!!quiz[key]}
-                    onChange={(e) => update({ [key]: e.target.checked })}
-                    className="quiz-editor__checkbox"
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Removed time limit + removed other checkboxes block */}
       </div>
 
       {/* QUESTIONS (scrollable) */}
@@ -165,8 +138,6 @@ export default function QuizEditor({ value, onChange }) {
             <div className="quiz-question__top">
               <span className="quiz-question__index">Q{i + 1}</span>
 
-              {/* Drag handle removed */}
-
               <button
                 type="button"
                 className="quiz-question__remove"
@@ -186,6 +157,7 @@ export default function QuizEditor({ value, onChange }) {
                   value={q.title}
                   onChange={(e) => patchQ(q.id, { title: e.target.value })}
                   className="assignment-card-input"
+                  placeholder="Enter the question text"
                 />
               </div>
 
@@ -244,7 +216,9 @@ export default function QuizEditor({ value, onChange }) {
                   <input
                     type="text"
                     value={o.text}
-                    onChange={(e) => patchOpt(q.id, o.id, { text: e.target.value })}
+                    onChange={(e) =>
+                      patchOpt(q.id, o.id, { text: e.target.value })
+                    }
                     className="assignment-card-input quiz-option__text"
                     placeholder="Option text"
                   />
@@ -261,11 +235,15 @@ export default function QuizEditor({ value, onChange }) {
 
             {/* Explanation (optional) */}
             <div className="quiz-editor__group">
-              <label className="assignment-card__label">Explanation (optional)</label>
+              <label className="assignment-card__label">
+                Explanation (optional)
+              </label>
               <textarea
                 rows="2"
                 value={q.explanation}
-                onChange={(e) => patchQ(q.id, { explanation: e.target.value })}
+                onChange={(e) =>
+                  patchQ(q.id, { explanation: e.target.value })
+                }
                 className="assignment-card-textarea"
               />
             </div>
