@@ -198,43 +198,12 @@ export default function MentorDashboard() {
 
                     <div className="mm-courseRight">
                       <Link className="mm-openCourse" to={`/courses/${c.id}`}>
-  Open Course
-</Link>
+                          Open Course
+                      </Link>
                     </div>
                   </div>
 
-                  {/* Students / Enrollments */}
-                  <div className="mm-studentsWrap">
-                    <div className="mm-courseMeta">
-                      {enrollments.length} student{enrollments.length === 1 ? "" : "s"} enrolled
-                    </div>
-
-                    {enrollments.length === 0 ? (
-                      <div className="mm-muted mm-small">No enrollments yet.</div>
-                    ) : (
-                      <ul className="mm-studentList">
-                        {enrollments.map((s) => (
-                          <li key={s.studentId} className="mm-student">
-                            <div className="mm-studentLeft">
-                              <div className="mm-studentName">{s.studentName || s.studentId}</div>
-                              <div className="mm-studentMeta">
-                                Enrolled: {s.enrolledAt ? new Date(s.enrolledAt).toLocaleString() : "—"}
-                              </div>
-                            </div>
-
-                            <div className="mm-studentRight">
-                              <Link
-                                className="mm-btn"
-                                to={`/mentor/course/${c.id}/student/${s.studentId}`}
-                              >
-                                View Progress
-                              </Link>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  
                 </section>
               );
             })}
