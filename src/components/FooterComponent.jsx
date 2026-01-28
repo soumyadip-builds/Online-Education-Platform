@@ -171,15 +171,20 @@ const Footer = () => {
                             </h6>
                             <ul className="list-unstyled m-0 footer-links">
                                 <li>
-                                    <a className="link-smooth" onClick={() =>
+                                    {/* <a className="link-smooth" onClick={() =>
                                     navigate("/coursepage", {
-                                        state: { scope: "created" },
-                                        state: { scope: "authored" },
+                                        state: { scope: "enrolled" },
                                     },setTimeout(() => {
         console.log('Scrolling to top after navigation');
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }, 0))
-                                    
+
+                                }>
+                                        Courses
+                                    </a> */}
+                                    <a className="link-smooth" onClick={() =>
+                                    navigate("/coursepage")
+
                                 }>
                                         Courses
                                     </a>
