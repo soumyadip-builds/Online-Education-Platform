@@ -126,6 +126,8 @@ export default function App() {
           <Route path="/auth" element={<AuthOrRedirect />} />
           <Route path="/forum" element={<ForumPage />} />
           <Route path="/coursepage" element={<CoursePage />} />
+          <Route path="/courses?scope=enrolled" element={<CoursePage />}/>
+          <Route path="/courses?scope=created" element={<CoursePage />}/>
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/quiz/:quizId" element={<QuizPage />} />
           <Route

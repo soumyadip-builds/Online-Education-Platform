@@ -5,6 +5,11 @@ import "../styles/course.css";
 import NavbarComponent from "../components/NavbarComponent";
 import Footer from "../components/FooterComponent";
 
+// NEW: pull user + role-aware lists
+import { getCurrentUser } from "../utils/session";
+import { findUser } from "../utils/userStorage";
+import { useLocation } from "react-router-dom";
+
 /**
  * Courses listing page
  * - Fetches /data/courseDetails.json (public/data/)
@@ -16,9 +21,26 @@ export default function CoursePage() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadErr, setLoadErr] = useState("");
-
     const [query, setQuery] = useState("");
     const [showBest, setShowBest] = useState(false);
+
+    // NEW: read scope from query or navigation state
+    const location = useLocation();
+    const scopeFromState = location.state?.scope;
+    const scopeFromQuery = new URLSearchParams(location.search).get("scope");
+    const scope = scopeFromState || scopeFromQuery || null; // 'enrolled' | 'created' | null
+
+    // NEW: keep a copy of the current, fully-populated user from storage
+    const [user, setUser] = useState(null);
+    useEffect(() => {
+        const pull = () => {
+            const cu = getCurrentUser();
+            setUser(cu?.email ? findUser(cu.email) : null);
+        };
+        pull();
+        window.addEventListener("session-changed", pull);
+        return () => window.removeEventListener("session-changed", pull);
+    }, []);
 
     useEffect(() => {
         let alive = true;
@@ -26,7 +48,6 @@ export default function CoursePage() {
             try {
                 setLoading(true);
                 setLoadErr("");
-
                 // Fetch from public/data
                 const res = await fetch("/data/courseDetails.json");
                 if (!res.ok) {
@@ -44,7 +65,6 @@ export default function CoursePage() {
                 const data = await res.json();
                 if (!Array.isArray(data))
                     throw new Error("courseDetails.json must be an array");
-
                 if (alive) setCourses(data);
             } catch (e) {
                 if (alive) setLoadErr(e.message || "Failed to load courses");
@@ -57,25 +77,79 @@ export default function CoursePage() {
         };
     }, []);
 
+    // NEW: build a Set of IDs to keep, based on scope + role
+    const scopedIdSet = useMemo(() => {
+        if (!user || !scope) return null;
+        if (scope === "enrolled" && user.role === "learner") {
+            return new Set(user.coursesEnrolled || []);
+        }
+        if (scope === "created" && user.role === "instructor") {
+            return new Set(user.coursesCreated || []);
+        }
+        return null;
+    }, [user, scope]);
+
+    // NEW (authored): normalized author name for current instructor
+    const authoredName = useMemo(() => {
+        if (!user || user.role !== "instructor") return null;
+        const n = (user.name || "").trim().toLowerCase();
+        return n || null;
+    }, [user]);
+
+    // Combine: text + bestseller + scope filters
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-
         return (Array.isArray(courses) ? courses : [])
             .filter((c) => {
                 const title = (c.title ?? "").toLowerCase();
                 const author = (c.author ?? "").toLowerCase();
                 const matchesText = q ? `${title} ${author}`.includes(q) : true;
                 const matchesBest = showBest ? c.isBestseller === true : true;
-                return matchesText && matchesBest;
+
+                // Scope by IDs (enrolled/created)
+                const matchesIdScope = scopedIdSet
+                    ? scopedIdSet.has(c.id)
+                    : true;
+
+                // NEW (authored): author exact match with current instructor's name
+                const matchesAuthored =
+                    scope === "authored" && authoredName
+                        ? author.trim() === authoredName
+                        : true;
+
+                return (
+                    matchesText &&
+                    matchesBest &&
+                    matchesIdScope &&
+                    matchesAuthored
+                );
             })
             .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
-    }, [courses, query, showBest]);
+    }, [courses, query, showBest, scopedIdSet, scope, authoredName]);
+
+    const heading =
+        scope === "enrolled"
+            ? "My Learning"
+            : scope === "created"
+              ? "My Courses"
+              : scope === "authored" // NEW
+                ? "Courses Authored by You"
+                : "Courses";
+
+    const emptyMsg =
+        scope === "enrolled"
+            ? "You haven't enrolled in any courses yet."
+            : scope === "created"
+              ? "You haven't created any courses yet."
+              : scope === "authored" // NEW
+                ? "No courses authored by you were found."
+                : "No courses found.";
 
     return (
         <div>
             {/* <NavbarComponent /> */}
             <section className="course-page">
-                <h3>Courses</h3>
+                <h3>{heading}</h3>
                 {/* Controls row */}
                 <div className="course-page__controls">
                     <input
