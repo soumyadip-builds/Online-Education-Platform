@@ -93,7 +93,7 @@ export default function CourseDetails() {
 
         // Local UI flags you were using earlier (kept for content gating)
         setEnrolled(true);
-        localStorage.setItem(`enrolled:${id}`, "true");
+        // localStorage.setItem(`enrolled:${id}`, "true");
 
         // OPTIONAL: if you cache the session user separately, you can refresh it here.
         // window.dispatchEvent(new Event('session-changed')); // userStorage already emits this

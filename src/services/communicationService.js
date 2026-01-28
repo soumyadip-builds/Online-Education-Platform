@@ -108,6 +108,8 @@ export async function addReply({ postId, userId, message }) {
     timestamp: new Date().toISOString()
   });
   saveData(data);
+  console.log("Inside addReply");
+  
 }
 
 export async function listNotifications(userId) {

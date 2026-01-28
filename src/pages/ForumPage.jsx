@@ -18,9 +18,7 @@ const SEED_FLAG_KEY = 'forum.seeded.v1';
 export default function ForumPage() {
   const [serviceUsers, setServiceUsers] = useState([]);
   const [currentSessionUser, setCurrentSessionUser] = useState(null);
-  const [currentServiceUser, setCurrentServiceUser] = useState(null);
-
-  // fetched from /public/data
+  // currentServiceUser is now derived via useMemo for stability (see below)
   const [courseDetails, setCourseDetails] = useState([]);
   const [qnaSeed, setQnaSeed] = useState([]);
   const [courseOptions, setCourseOptions] = useState([]);
@@ -39,7 +37,7 @@ export default function ForumPage() {
   );
 
   const usersById = useMemo(
-    () => Object.fromEntries((serviceUsers ?? []).map(u => [u.userId, u])),
+    () => Object.fromEntries((serviceUsers ?? []).map((u) => [u.userId, u])),
     [serviceUsers]
   );
 
@@ -53,7 +51,8 @@ export default function ForumPage() {
     wrapper.innerHTML = `
       <div class="d-flex">
         <div class="toast-body">
-          <strong>${n.type}</strong>: ${n.message}
+          <strong>${n.type}:</strong> ${n.message}
+          <div class="small opacity-75">${new Date(n.timestamp).toLocaleString()}</div>
         </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
@@ -85,8 +84,9 @@ export default function ForumPage() {
       if (localStorage.getItem(SEED_FLAG_KEY) === 'true') return;
 
       // Build maps to resolve course by ID or Title
-      const titleById = Object.fromEntries((courseDetails ?? []).map(c => [c.id, (c.title ?? '').trim()]));
-      const idByTitle = Object.fromEntries((courseDetails ?? []).map(c => [(c.title ?? '').trim().toLowerCase(), c.id]));
+      const titleById = Object.fromEntries((courseDetails ?? []).map((c) => [c.id, (c.title ?? '').trim()]));
+      const idByTitle = Object.fromEntries((courseDetails ?? []).map((c) => [ (c.title ?? '').trim().toLowerCase(), c.id ]));
+
       const perCourseExisting = new Map();
 
       // for email → forum userId mapping
@@ -108,20 +108,21 @@ export default function ForumPage() {
           const existing = await listPosts(cId);
           perCourseExisting.set(
             cId,
-            new Set((existing ?? []).map(p => `${cId}::${(p.message ?? '').trim()}`))
+            new Set((existing ?? []).map((p) => `${cId}::${(p.message ?? '').trim()}`))
           );
         }
 
         const key = `${cId}::${(q.message ?? '').trim()}`;
         const existingSet = perCourseExisting.get(cId);
+
         if (!existingSet.has(key)) {
           const askedBy = forumUsers.find(
-            u => (u.email ?? '').toLowerCase() === (q.askedByEmail ?? '').toLowerCase()
+            (u) => (u.email ?? '').toLowerCase() === (q.askedByEmail ?? '').toLowerCase()
           );
           await addPost({
             courseId: cId,
-            userId: askedBy?.userId ?? null,   // attribute if we can; else anonymous learner
-            message: q.message
+            userId: askedBy?.userId ?? null, // attribute if we can; else anonymous learner
+            message: q.message,
           });
           existingSet.add(key);
         }
@@ -146,6 +147,7 @@ export default function ForumPage() {
           fetchJsonSafe(publicUrl('data/qnaSeed.json')),
         ]);
         if (!alive) return;
+
         const courses = (Array.isArray(coursesJson) ? coursesJson : []).map((c, idx) => ({
           id: c.id ?? `c_${idx}`,
           title: c.title ?? 'Untitled Course',
@@ -159,21 +161,26 @@ export default function ForumPage() {
         if (alive) setLoadingData(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // ---- session → service user mapping (BY userId) ----
+  // ---- session + users bootstrap ----
   useEffect(() => {
     (async () => {
       const sessionUser = getSessionUser(); // { userId, role, name, email, ... }
       setCurrentSessionUser(sessionUser);
       const svcUsers = await getUsers();
       setServiceUsers(svcUsers);
-
-      const svcUser = svcUsers.find(u => u.userId === sessionUser?.userId);
-      setCurrentServiceUser(svcUser ?? null);
     })();
   }, []);
+
+  // ---- DERIVED: service user for the current session (stable via useMemo) ----
+  const currentServiceUser = useMemo(() => {
+    if (!currentSessionUser || !serviceUsers?.length) return null;
+    return serviceUsers.find((u) => u.userId === currentSessionUser.userId) ?? null;
+  }, [serviceUsers, currentSessionUser]);
 
   // ---- compute courseOptions by role (using courseDetails) ----
   useEffect(() => {
@@ -183,22 +190,34 @@ export default function ForumPage() {
       const role = (currentSessionUser.role ?? '').toLowerCase();
 
       if (role === 'instructor' || role === 'mentor') {
-        // Map author name → forum userId using forum users (no schema change)
-        const forumUsers = await getUsers();
-        const byName = Object.fromEntries((forumUsers ?? []).map(u => [u.name, u.userId]));
-        const authored = courseDetails.filter(c => byName[c.author] === currentSessionUser.userId);
+        // Filter by instructor name === course author (case-insensitive)
+        const instructorName = (currentSessionUser?.name ?? '').trim().toLowerCase();
+        const authored = courseDetails.filter(
+          (c) => (c.author ?? '').trim().toLowerCase() === instructorName
+        );
+
         setCourseOptions(authored);
-        setCourseId(prev => prev || authored[0]?.id || '');
+
+        // Keep current selection if still valid; otherwise pick the first authored course or clear
+        setCourseId((prev) =>
+          authored.some((c) => c.id === prev) ? prev : authored[0]?.id ?? ''
+        );
+
+        if (authored.length === 0) setPosts([]);
       } else if (role === 'learner' || role === 'student') {
         // Enrolled courses by userId
         const full = getUserById(currentSessionUser.userId);
-        const ids = full?.enrolledCourseIds ?? [];
-        const enrolled = courseDetails.filter(c => ids.includes(c.id));
+        const ids = full?.coursesEnrolled ?? [];
+        const enrolled = courseDetails.filter((c) => ids.includes(c.id));
         setCourseOptions(enrolled);
-        setCourseId(prev => prev || enrolled[0]?.id || '');
+        setCourseId((prev) =>
+          enrolled.some((c) => c.id === prev) ? prev : enrolled[0]?.id ?? ''
+        );
+        if (enrolled.length === 0) setPosts([]);
       } else {
         setCourseOptions([]);
         setCourseId('');
+        setPosts([]);
       }
     })();
   }, [currentSessionUser, courseDetails]);
@@ -224,7 +243,7 @@ export default function ForumPage() {
       if (!currentServiceUser?.userId) return;
       const notifs = await listNotifications(currentServiceUser.userId);
       setNotifications(notifs);
-      const unread = notifs.filter(n => !n.read);
+      const unread = notifs.filter((n) => !n.read);
       if (unread.length > 0) showToast(unread[0]);
     })();
   }, [currentServiceUser?.userId]);
@@ -252,12 +271,27 @@ export default function ForumPage() {
   }, [courseId]);
 
   // ---- actions ----
-  const canPost = Boolean(newMessage.trim() && courseId && currentServiceUser?.userId);
+  const canPost = Boolean(newMessage.trim() && courseId && (currentServiceUser?.userId || currentSessionUser?.userId));
+
+  const getActiveForumUserId = () => {
+    // Prefer stable derived service user; fallback to lookup; finally to session userId (if accepted by backend)
+    return (
+      currentServiceUser?.userId ??
+      (currentSessionUser?.userId
+        ? serviceUsers.find((u) => u.userId === currentSessionUser.userId)?.userId
+        : null) ??
+      currentSessionUser?.userId ??
+      null
+    );
+  };
 
   const onSendPost = async (e) => {
     e.preventDefault();
     setPostError('');
-    if (!currentServiceUser?.userId) {
+
+    const userId = getActiveForumUserId();
+
+    if (!userId) {
       setPostError('No forum user found for the signed-in account. Check /data/forum.json → users[].');
       return;
     }
@@ -269,12 +303,13 @@ export default function ForumPage() {
       setPostError('Message cannot be empty.');
       return;
     }
+
     try {
-      await addPost({ courseId, userId: currentServiceUser.userId, message: newMessage.trim() });
+      await addPost({ courseId, userId, message: newMessage.trim() });
       setNewMessage('');
       const updated = await listPosts(courseId);
       setPosts(updated);
-      const notifs = await listNotifications(currentServiceUser.userId);
+      const notifs = await listNotifications(userId);
       setNotifications(notifs);
     } catch (err) {
       setPostError(err?.message ?? 'Failed to post. Please try again.');
@@ -282,69 +317,103 @@ export default function ForumPage() {
   };
 
   const onReply = async (postId, message) => {
-    if (!currentServiceUser?.userId) return;
-    await addReply({ postId, userId: currentServiceUser.userId, message });
-    const updated = await listPosts(courseId);
-    setPosts(updated);
+    setPostError('');
+    const userId = getActiveForumUserId();
+
+    if (!userId) {
+      setPostError('No forum user found for the signed-in account. Check /data/forum.json → users[].');
+      return;
+    }
+    if (!message?.trim()) {
+      setPostError('Reply cannot be empty.');
+      return;
+    }
+
+    try {
+      await addReply({ postId, userId, message: message.trim() });
+      const updated = await listPosts(courseId);
+      setPosts(updated);
+    } catch (err) {
+      setPostError(err?.message ?? 'Failed to post reply. Please try again.');
+    }
   };
 
   const markAllRead = async () => {
-    if (!currentServiceUser?.userId) return;
-    for (const n of notifications.filter(n => !n.read)) {
+    const userId = getActiveForumUserId();
+    if (!userId) return;
+    for (const n of notifications.filter((n) => !n.read)) {
       await markNotificationRead(n.notificationId);
     }
-    const refreshed = await listNotifications(currentServiceUser.userId);
+    const refreshed = await listNotifications(userId);
     setNotifications(refreshed);
   };
 
   // ---- UI ----
   if (loadingData) {
-    return (<div className="container py-5">Loading forum data…</div>);
+    return (
+      <div className="container py-4">
+        <div>Loading forum data…</div>
+      </div>
+    );
   }
+
   if (dataError) {
-    return (<div className="container py-5 text-danger">Error: {dataError}</div>);
+    return (
+      <div className="container py-4">
+        <div className="alert alert-danger">Error: {dataError}</div>
+      </div>
+    );
   }
 
   return (
     <div className="container py-4">
       {/* Toast container */}
-      <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1080 }}>
-        <div ref={toastContainerRef} />
-      </div>
+      <div
+        className="toast-container position-fixed bottom-0 end-0 p-3"
+        ref={toastContainerRef}
+        style={{ zIndex: 1060 }}
+      />
 
       {/* Top bar */}
-      <div className="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-3">
-        <h5 className="mb-0">Course Forum</h5>
-        <div className="d-flex flex-column">
-          <div className="fw-semibold">
-            User: {currentSessionUser?.name} ({currentSessionUser?.role})
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h6 className="mb-1">Course Forum</h6>
+          <div className="text-muted small">
+            User: {currentSessionUser?.name} ({currentSessionUser?.role})<br />
+            <span className="opacity-75">{currentSessionUser?.email}</span>
           </div>
-          <div className="small text-muted">{currentSessionUser?.email}</div>
         </div>
 
         {/* Notifications dropdown */}
         <div className="dropdown">
-          <button className="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-            Notifications {unreadCount > 0 && <span className="badge bg-danger ms-2">{unreadCount}</span>}
+          <button
+            className="btn btn-outline-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            Notifications {unreadCount > 0 && <span className="badge bg-danger ms-1">{unreadCount}</span>}
           </button>
           <ul className="dropdown-menu dropdown-menu-end">
             {notifications.length === 0 && (
-              <li className="dropdown-item text-muted">No notifications</li>
+              <li className="dropdown-item text-muted">- No notifications</li>
             )}
             {notifications.map((n) => (
               <li key={n.notificationId} className="dropdown-item">
-                <div className="d-flex justify-content-between align-items-center">
+                <div className="d-flex justify-content-between">
                   <div>
-                    <span className="fw-semibold">{n.type}</span> {n.message} {!n.read && <span className="badge bg-primary ms-2">new</span>}
+                    <strong>{n.type}</strong> {n.message} {!n.read && <span className="badge bg-primary ms-1">new</span>}
                   </div>
-                  <div className="small text-muted">{new Date(n.timestamp).toLocaleString()}</div>
+                  <div className="text-muted small">{new Date(n.timestamp).toLocaleString()}</div>
                 </div>
               </li>
             ))}
             {notifications.length > 0 && <li><hr className="dropdown-divider" /></li>}
             {notifications.length > 0 && (
               <li>
-                <button className="dropdown-item" onClick={markAllRead}>Mark all as read</button>
+                <button className="dropdown-item" onClick={markAllRead}>
+                  Mark all as read
+                </button>
               </li>
             )}
           </ul>
@@ -354,49 +423,66 @@ export default function ForumPage() {
       {/* Filters */}
       <div className="row g-2 align-items-center mb-3">
         <div className="col-auto">
-          <label className="form-label mb-0 me-2">Course</label>
+          <label htmlFor="courseSelect" className="form-label mb-0">Course</label>
         </div>
-        <div className="col-auto">
-          <select className="form-select" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+        <div className="col">
+          <select
+            id="courseSelect"
+            className="form-select"
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
+          >
+            <option value="" disabled>
+              {courseOptions.length > 0 ? 'Select a course...' : 'No courses available'}
+            </option>
             {courseOptions.map((c) => (
-              <option key={c.id} value={c.id}>{c.title}</option>
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
             ))}
           </select>
         </div>
       </div>
 
       {/* New Post */}
-      <div className="card mb-3">
-        <div className="card-body">
-          <form className="d-flex gap-2" onSubmit={onSendPost}>
-            <input
-              className="form-control"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Ask a question or start a discussion..."
-            />
-            <button className="btn btn-primary" type="submit" disabled={!canPost}>Post</button>
-          </form>
-          {postError && <div className="text-danger small mt-2">{postError}</div>}
-          {!currentServiceUser?.userId && (
-            <div className="text-muted small mt-2">
-              Tip: Add a user with your session identity to <code>/data/forum.json → users[]</code>.
-            </div>
-          )}
-          {!courseId && (
-            <div className="text-muted small mt-2">
-              No course available/selected. Instructors see authored; learners see enrolled.
-            </div>
-          )}
+      <form className="mb-3" onSubmit={onSendPost}>
+        <div className="input-group">
+          <input
+            type="text"
+            className="form-control"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Ask a question or start a discussion..."
+            disabled={!courseId}
+          />
+          <button className="btn btn-primary" type="submit" disabled={!canPost}>
+            Post
+          </button>
         </div>
-      </div>
+        {postError && <div className="text-danger small mt-2">{postError}</div>}
+        {!currentServiceUser?.userId && (
+          <div className="text-muted small mt-1">
+            Tip: Add a user with your session identity to <code>/data/forum.json → users[]</code>.
+          </div>
+        )}
+        {!courseId && (
+          <div className="text-muted small mt-1">
+            No course available/selected. Instructors see authored; learners see enrolled.
+          </div>
+        )}
+      </form>
 
       {/* Posts */}
-      {posts.length === 0 ? (
-        <div className="alert alert-light border">No messages yet. Be the first to post!</div>
+      {(!posts || posts.length === 0) ? (
+        <div className="text-muted">No messages yet. Be the first to post!</div>
       ) : (
         posts.map((p) => (
-          <ForumPost key={p.postId} post={p} usersById={usersById} onReply={onReply} />
+          <ForumPost
+            key={p.postId}
+            post={p}
+            usersById={usersById}
+            onReply={onReply}
+          />
         ))
       )}
     </div>
