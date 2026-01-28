@@ -171,11 +171,20 @@ const Footer = () => {
                             </h6>
                             <ul className="list-unstyled m-0 footer-links">
                                 <li>
-                                    <a className="link-smooth" href="/courses">
+                                    <a className="link-smooth" onClick={() =>
+                                    navigate("/coursepage", {
+                                        state: { scope: "created" },
+                                        state: { scope: "authored" },
+                                    },setTimeout(() => {
+        console.log('Scrolling to top after navigation');
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }, 0))
+                                    
+                                }>
                                         Courses
                                     </a>
                                 </li>
-                                <li>
+                                {/* <li>
                                     <a
                                         className="link-smooth"
                                         href="/assignments"
@@ -187,7 +196,7 @@ const Footer = () => {
                                     <a className="link-smooth" href="/quizzes">
                                         Quizzes
                                     </a>
-                                </li>
+                                </li> */}
                                 <li>
                                     <a className="link-smooth" href="/forum">
                                         Forum
@@ -196,7 +205,7 @@ const Footer = () => {
                             </ul>
                         </div>
 
-                        <div className="col-6 col-md-3 col-lg-2">
+                        {/* <div className="col-6 col-md-3 col-lg-2">
                             <h6 className="fw-semibold text-uppercase mb-3 letter-1">
                                 Resources
                             </h6>
@@ -222,7 +231,7 @@ const Footer = () => {
                                     </a>
                                 </li>
                             </ul>
-                        </div>
+                        </div> */}
 
                         {/* Contact + Newsletter */}
                         <div className="col-12 col-md-12 col-lg-4">
