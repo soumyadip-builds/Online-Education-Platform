@@ -154,6 +154,21 @@ const NavbarComponent = () => {
         // Add a slight timeout so click on suggestion still registers
         setTimeout(() => setOpen(false), 100);
     };
+
+    // Add below other callbacks (e.g., after goToRoleHome / handleLogout)
+    const handlePerformanceClick = useCallback(() => {
+    // Prefer current auth state; fall back to session if needed
+    const role = auth.user?.role ?? getCurrentUser()?.role;
+
+    if (role === "learner") {
+        navigate("/performance-student");
+    } else if (role === "instructor") {
+        navigate("/performance-mentor");
+    } else {
+        // Optional: fallback (e.g., generic dashboard or home)
+        navigate("/performance-dashboard");
+    }
+    }, [auth.user, navigate]);
     // --------------------------------------------------------------------
 
     return (
@@ -371,13 +386,11 @@ const NavbarComponent = () => {
                                 }
                                 id="profile-dropdown"
                             >
-                                <NavDropdown.Item
-                                    onClick={() =>
-                                        navigate("/performance-dashboard")
-                                    }
+                                <NavDropdown.Item 
+                                    onClick={handlePerformanceClick}
                                 >
                                     📊 Performance Metrics
-                                </NavDropdown.Item> 
+                                </NavDropdown.Item>
                                 <NavDropdown.Divider />
                                 <NavDropdown.Item onClick={editProfile}>
                                     ✏️ Edit Profile
