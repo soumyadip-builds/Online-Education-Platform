@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import "../styles/instructorHome.css";
 import CourseCard from "../components/CourseCard";
-import NavbarComponent from "../components/NavbarComponent";
+// import NavbarComponent from "../components/NavbarComponent";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "../styles/instructorHome.css";
-import Footer from "../components/FooterComponent";
-import { useNavigate } from "react-router-dom";
+// import Footer from "../components/FooterComponent";
+import { useNavigate, Link } from "react-router-dom";
 
 // NEW: read the current user from your session util
 import { getCurrentUser } from "../utils/session";
+import { listPosts, addReply, subscribe, getUsers } from '../services/communicationService';
+import { getCurrentUser as getSessionUser } from '../utils/session';
 
 export default function InstructorHomePage({ authorName }) {
     const navigate = useNavigate();
@@ -118,70 +120,75 @@ export default function InstructorHomePage({ authorName }) {
     const assignmentsDue = Math.max(0, Math.round(courses.length * 1.3));
     const avgQuizScore = 86;
 
-    // Q&A (frontend-only, unchanged)
-    const [qna, setQna] = useState([
-        {
-            id: "q1",
-            q: "Difference between state and props in React?",
-            course: "Full‑Stack Web Development",
-            by: "Aarav",
-            date: "2026-01-16T09:00:00",
-            answers: [
-                {
-                    by: "Instructor",
-                    text: "Props are inputs; state is local data.",
-                },
-            ],
-            draft: "",
-        },
-        {
-            id: "q2",
-            q: "Best way to handle missing values before plotting in pandas?",
-            course: "Data Analysis with Python",
-            by: "Meera",
-            date: "2026-01-18T10:15:00",
-            answers: [],
-            draft: "",
-        },
-        {
-            id: "q3",
-            q: "How to optimize SQL joins for large tables?",
-            course: "Full‑Stack Web Development",
-            by: "Rahul",
-            date: "2026-01-19T09:20:00",
-            answers: [],
-            draft: "",
-        },
-        {
-            id: "q4",
-            q: "What’s the difference between precision and recall?",
-            course: "Data Analysis with Python",
-            by: "Neha",
-            date: "2026-01-19T18:40:00",
-            answers: [],
-            draft: "",
-        },
-    ]);
+  // ----- SESSION ↔ FORUM USER (BY userId) -----
+  const [currentSessionUser, setCurrentSessionUser] = useState(null);
+  const [currentServiceUser, setCurrentServiceUser] = useState(null);
 
-    const setDraft = (id, value) =>
-        setQna((prev) =>
-            prev.map((q) => (q.id === id ? { ...q, draft: value } : q)),
-        );
-    const post = (id) =>
-        setQna((prev) =>
-            prev.map((q) =>
-                q.id === id && q.draft.trim()
-                    ? {
-                          ...q,
-                          answers: [
-                              ...q.answers,
-                              { by: "Instructor", text: q.draft.trim() },
-                          ],
-                          draft: "",
-                      }
-                    : q,
-            ),
-        );
+  useEffect(() => {
+    (async () => {
+      const s = getSessionUser(); setCurrentSessionUser(s);
+      const users = await getUsers();
+      const svc = users.find(u => u.userId === s?.userId); // userId mapping
+      setCurrentServiceUser(svc ?? null);
+    })();
+  }, []);
+
+  // ----- Q&A (MOST RECENT 3 from forum) -----
+  const [qnaItems, setQnaItems] = useState([]);
+  const [qnaLoading, setQnaLoading] = useState(true);
+  const [qnaError, setQnaError] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setQnaLoading(true); setQnaError(null);
+      try {
+        const authored = courses; // already filtered above by authorName if provided
+        const collected = [];
+        for (const c of authored) {
+          const posts = await listPosts(c.id);
+          (posts ?? []).forEach(p => {
+            collected.push({
+              id: p.postId,
+              courseId: c.id,
+              courseName: c.title,
+              askedByName: 'Learner', // optional: resolve via getUsers() if needed
+              message: p.message,
+              createdAt: p.timestamp
+            });
+          });
+        }
+        collected.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (alive) setQnaItems(collected.slice(0, 3));
+      } catch (e) {
+        if (alive) setQnaError(e.message ?? 'Failed to load Q&A');
+      } finally {
+        if (alive) setQnaLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [courses]);
+
+  const handleReply = async (q, text) => {
+    try {
+      if (!currentServiceUser?.userId) {
+        throw new Error('Forum user not mapped for this session account.');
+      }
+      await addReply({ postId: q.id, userId: currentServiceUser.userId, message: text });
+      // Hide the item immediately in the Q&A widget (requested behavior)
+      setQnaItems(prev => prev.filter(x => x.id !== q.id));
+    } catch (e) {
+      alert(e?.message ?? 'Failed to reply. Please try again.');
+    }
+  };
+
+  // (Optional) live refresh:
+  // const [qnaReloadToken, setQnaReloadToken] = useState(0);
+  // useEffect(() => {
+  //   const unsub = subscribe(() => setQnaReloadToken(Date.now()));
+  //   return unsub;
+  // }, []);
+  // Add qnaReloadToken to the Q&A loader deps if enabled.
 
     return (
         <div>
@@ -350,167 +357,68 @@ export default function InstructorHomePage({ authorName }) {
                     </div>
                 </div>
 
-                {/* ===== Recent Q&A / Messages (unchanged) ===== */}
-
-                {/* ===== Recent Q&A / Messages (links removed) ===== */}
-                <div className="container py-5">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h3 className="mb-0">Recent Q&A / Messages</h3>
-                        {/* Removed: View Full Q&A button */}
-                    </div>
-
-                    {(() => {
-                        const recentUnanswered = qna
-                            .filter((x) => (x.answers?.length ?? 0) === 0)
-                            .sort((a, b) => new Date(b.date) - new Date(a.date))
-                            .slice(0, 3);
-
-                        return (
-                            <div className="card border-0 shadow-sm">
-                                <div className="card-body p-0">
-                                    {recentUnanswered.length === 0 ? (
-                                        <div className="p-4 text-center text-muted">
-                                            No pending questions. You’re all
-                                            caught up!
-                                        </div>
-                                    ) : (
-                                        <ul className="list-group list-group-flush">
-                                            {recentUnanswered.map((item) => (
-                                                <li
-                                                    key={item.id}
-                                                    className="list-group-item"
-                                                >
-                                                    <div className="d-flex justify-content-between align-items-start gap-3">
-                                                        {/* Left: Student + course + question */}
-                                                        <div className="flex-grow-1">
-                                                            <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                                                                <span className="badge bg-light text-dark">
-                                                                    {item.by}
-                                                                </span>
-                                                                <span className="text-muted small">
-                                                                    asked in
-                                                                </span>
-                                                                <span className="badge bg-primary-subtle text-primary">
-                                                                    {
-                                                                        item.course
-                                                                    }
-                                                                </span>
-                                                            </div>
-
-                                                            <div className="fw-semibold">
-                                                                {item.q}
-                                                            </div>
-                                                            <div className="text-muted xsmall mt-1">
-                                                                {new Date(
-                                                                    item.date,
-                                                                ).toLocaleString()}
-                                                            </div>
-
-                                                            {/* Mentor Reply Box */}
-                                                            <div className="mt-3">
-                                                                <textarea
-                                                                    className="form-control form-control-sm"
-                                                                    placeholder="Write your reply..."
-                                                                    rows={2}
-                                                                    value={
-                                                                        item.draft
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        setDraft(
-                                                                            item.id,
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        )
-                                                                    }
-                                                                />
-                                                                <button
-                                                                    className="btn btn-primary btn-sm mt-2"
-                                                                    disabled={
-                                                                        !item.draft.trim()
-                                                                    }
-                                                                    onClick={() =>
-                                                                        post(
-                                                                            item.id,
-                                                                        )
-                                                                    }
-                                                                    title="Frontend only"
-                                                                >
-                                                                    Send Reply
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-
-                                {/* Removed: Footer link (Go to Full Q&A →) */}
-                            </div>
-                        );
-                    })()}
-                </div>
-
-                {/* ===== Trusted by (unchanged) ===== */}
-                <div className="py-5">
-                    <div className="container text-center">
-                        <p className="text-uppercase text-muted small mb-3">
-                            Trusted by teams and professionals from
-                        </p>
-                        <div className="bg-light border rounded-4 p-4">
-                            <div className="row g-4 justify-content-center align-items-center">
-                                <div className="col-6 col-md-2">
-                                    <img
-                                        src="/images/Logos/Citi.png"
-                                        alt="Cisco"
-                                        className="img-fluid"
-                                    />
-                                </div>
-                                <div className="col-6 col-md-2">
-                                    <img
-                                        src="/images/Logos/Cisco.png"
-                                        alt="Citi"
-                                        className="img-fluid"
-                                    />
-                                </div>
-                                <div className="col-6 col-md-2">
-                                    <img
-                                        src="/images/Logos/Cognizant.png"
-                                        alt="Cognizant"
-                                        className="img-fluid"
-                                    />
-                                </div>
-                                <div className="col-6 col-md-2">
-                                    <img
-                                        src="/images/Logos/Ericsson.png"
-                                        alt="Ericsson"
-                                        className="img-fluid"
-                                    />
-                                </div>
-                                <div className="col-6 col-md-2">
-                                    <img
-                                        src="/images/Logos/HP.png"
-                                        alt="HP"
-                                        className="img-fluid"
-                                    />
-                                </div>
-                                <div className="col-6 col-md-2">
-                                    <img
-                                        src="/images/Logos/Samsung.png"
-                                        alt="Samsung"
-                                        className="img-fluid"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/* <Footer /> */}
+      {/* Recent Q&A / Messages */}
+      <div className="container py-5">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h3 className="mb-0">Recent Q&amp;A / Messages</h3>
+          <Link to="/forum" className="btn btn-outline-primary btn-sm">Open Forum</Link>
         </div>
-    );
+
+        <div className="card border-0 shadow-sm">
+          <div className="card-body p-0">
+            {qnaLoading ? (
+              <div className="p-4 text-center text-muted">Loading Q&amp;A…</div>
+            ) : qnaError ? (
+              <div className="p-4 text-danger">Error: {qnaError}</div>
+            ) : qnaItems.length === 0 ? (
+              <div className="p-4 text-center text-muted">No recent posts. You’re all caught up!</div>
+            ) : (
+              <ul className="list-group list-group-flush">
+                {qnaItems.map((q) => (
+                  <li key={q.id} className="list-group-item">
+                    <div className="d-flex justify-content-between align-items-start gap-3">
+                      <div className="flex-grow-1">
+                        <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
+                          <span className="badge bg-light text-dark">{q.askedByName}</span>
+                          <span className="text-muted small">in</span>
+                          <span className="badge bg-primary-subtle text-primary">{q.courseName}</span>
+                        </div>
+                        <div className="fw-semibold">{q.message}</div>
+                        <div className="mt-3">
+                          <InlineReply onSubmit={(txt) => handleReply(q, txt)} />
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* <Footer /> */}
+    </div>
+    </div>
+  );
+}
+
+// Small inline reply component
+function InlineReply({ onSubmit }) {
+  const [txt, setTxt] = React.useState('');
+  return (
+    <div className="d-flex gap-2">
+      <input
+        className="form-control form-control-sm"
+        placeholder="Write a reply…"
+        value={txt}
+        onChange={(e) => setTxt(e.target.value)}
+      />
+      <button
+        className="btn btn-sm btn-primary"
+        onClick={() => { if (txt.trim()) { onSubmit(txt.trim()); setTxt(''); } }}
+      >
+        Reply
+      </button>
+    </div>
+  );
 }
