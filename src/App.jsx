@@ -22,7 +22,7 @@ import MentorHome from "./pages/InstructorHomePage"; // Instructor Home
 import { getCurrentUser, isAuthenticated } from "./utils/session";
 import CourseCreator from "./components/CourseCreator";
 import MentorDashboard from "./pages/MentorDashboard";
-import MentorStudentCourseProgress from "./pages/MentorStudentCourseProgress";
+import StudentDashboard from "./pages/StudentMetrics";
 
 // --- Helpers ----------------------------------------------------------------
 function roleHomePath(user) {
@@ -148,7 +148,7 @@ export default function App() {
           />
           <Route path="/performance-student" element={
             <RequireRole role="learner">
-            <MentorStudentCourseProgress />
+            <StudentDashboard />
             </RequireRole>
           } />
 

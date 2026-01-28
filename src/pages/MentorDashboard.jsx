@@ -2,13 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/mentorMetrics.css";
 
-/**
- * MentorDashboard.jsx (updated)
- * - Displays mentor's courses loaded from /data/courseDetails.json
- * - Gracefully handles the provided structure (author, isBestseller, level, duration, tags, thumbnail)
- * - Filters by status if present; defaults to "published" when status is missing
- * - Matches mentor identity by author (name) or mentorId if present in localStorage
- */
+
 
 function safeJSONParse(raw, fallback) {
   try {
@@ -19,21 +13,19 @@ function safeJSONParse(raw, fallback) {
   }
 }
 
-function getMentorIdentity() {
-  // Expecting these to be set elsewhere in your app (optional)
-  // localStorage.setItem("mentor:name", "365 Careers");
-  // localStorage.setItem("mentor:id", "m_001");
-  const mentorName = (localStorage.getItem("mentor:name") || "").trim();
-  const mentorId = (localStorage.getItem("mentor:id") || "").trim();
-  return { mentorName, mentorId };
-}
-
-function readEnrollments(courseId) {
-  return safeJSONParse(localStorage.getItem(`courseEnrollments:${courseId}`), []);
-}
-
 function normalize(str) {
   return (str || "").toString().trim().toLowerCase();
+}
+
+
+function getCurrentInstructor() {
+  const raw = localStorage.getItem("edstream_current_user");
+  const data = safeJSONParse(raw, null);
+
+  if (data && data.role && normalize(data.role) === "instructor" && data.name) {
+    return { name: (data.name || "").trim() };
+  }
+  return { name: "" };
 }
 
 export default function MentorDashboard() {
@@ -41,9 +33,9 @@ export default function MentorDashboard() {
   const [err, setErr] = useState("");
   const [courses, setCourses] = useState([]);
 
-  const { mentorName, mentorId } = getMentorIdentity();
-  const mentorNameNorm = normalize(mentorName);
-  const mentorIdNorm = normalize(mentorId);
+  //  Reading the current instructor (author) name
+  const { name: instructorName } = getCurrentInstructor();
+  const instructorNameNorm = normalize(instructorName);
 
   useEffect(() => {
     let alive = true;
@@ -52,7 +44,7 @@ export default function MentorDashboard() {
         setLoading(true);
         setErr("");
 
-        // Keep your existing path. Ensure the file is located at /public/data/courseDetails.json
+        // Validation
         const res = await fetch("/data/courseDetails.json", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to load courseDetails.json");
         const json = await res.json();
@@ -72,6 +64,7 @@ export default function MentorDashboard() {
     };
   }, []);
 
+  // 🔹 Filtering course
   const publishedMentorCourses = useMemo(() => {
     const all = Array.isArray(courses) ? courses : [];
 
@@ -80,18 +73,12 @@ export default function MentorDashboard() {
       const status = normalize(c.status);
       const isPublished = !status || status === "published";
 
-      // Author/mentor matching (optional). If not set, show all published.
-      const byName =
-        mentorNameNorm &&
-        normalize(c.author) === mentorNameNorm;
+      // Author name validation
+      const authorMatch = instructorNameNorm && normalize(c.author) === instructorNameNorm;
 
-      const byId =
-        mentorIdNorm &&
-        normalize(c.mentorId) === mentorIdNorm;
-
-      return isPublished && (byName || byId || (!mentorNameNorm && !mentorIdNorm));
+      return isPublished && authorMatch;
     });
-  }, [courses, mentorNameNorm, mentorIdNorm]);
+  }, [courses, instructorNameNorm]);
 
   if (loading) {
     return (
@@ -129,46 +116,45 @@ export default function MentorDashboard() {
 
         {publishedMentorCourses.length === 0 ? (
           <div className="mm-empty">
-            <p className="mm-muted">No published courses found for this mentor.</p>
+            <p className="mm-muted">No published courses found for this instructor.</p>
             <p className="mm-muted">
-              Tip: Ensure your course JSON has <b>status: "published"</b> (or omit status to treat as published) and an <b>author</b> or <b>mentorId</b> if you want to filter by identity.
+              Tip: Check <b>edstream_current_user</b> in localStorage (must have <code>{"{ role: \"instructor\", name: \"...\" }"}</code>) and ensure your course JSON has the same <b>author</b> name.
             </p>
           </div>
         ) : (
           <div className="mm-courseList">
             {publishedMentorCourses.map((c) => {
-              const enrollments = readEnrollments(c.id) || [];
 
-              const learners = typeof c.learners === "number" ? c.learners : enrollments.length;
+              const learners = typeof c.learners === "number" ? c.learners : 0;
               const rating = typeof c.rating === "number" ? c.rating : undefined;
 
               return (
                 <section className="mm-course" key={c.id}>
                   <div className="mm-courseHead">
                     <div className="mm-courseLeft">
-                     <div className="mm-courseTitleRow no-thumb">
-  <div className="mm-courseTitleBlock">
-    <div className="mm-courseTitle">{c.title}</div>
+                      <div className="mm-courseTitleRow no-thumb">
+                        <div className="mm-courseTitleBlock">
+                          <div className="mm-courseTitle">{c.title}</div>
 
-    <div className="mm-courseMeta">
-      {c.author ? <span className="mm-pill">{c.author}</span> : null}
-      {c.level ? <span className="mm-pill">{c.level}</span> : null}
-      {c.duration ? <span className="mm-pill">{c.duration}</span> : null}
+                          <div className="mm-courseMeta">
+                            {c.author ? <span className="mm-pill">{c.author}</span> : null}
+                            {c.level ? <span className="mm-pill">{c.level}</span> : null}
+                            {c.duration ? <span className="mm-pill">{c.duration}</span> : null}
 
-      {typeof learners === "number" ? (
-        <span className="mm-pill">{learners.toLocaleString()} learners</span>
-      ) : null}
+                            {typeof learners === "number" ? (
+                              <span className="mm-pill">{learners.toLocaleString()} learners</span>
+                            ) : null}
 
-      {typeof rating === "number" ? (
-        <span className="mm-pill">⭐ {rating.toFixed(1)}</span>
-      ) : null}
+                            {typeof rating === "number" ? (
+                              <span className="mm-pill">⭐ {rating.toFixed(1)}</span>
+                            ) : null}
 
-      {c.isBestseller ? (
-        <span className="mm-badge mm-badge--gold">Bestseller</span>
-      ) : null}
-    </div>
-  </div>
-</div>
+                            {c.isBestseller ? (
+                              <span className="mm-badge mm-badge--gold">Bestseller</span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
 
                       {/* Tags */}
                       {Array.isArray(c.tags) && c.tags.length > 0 ? (
@@ -179,14 +165,14 @@ export default function MentorDashboard() {
                         </div>
                       ) : null}
 
-                      {/* Description (short) */}
+                      {/* Description*/}
                       {c.description ? (
                         <div className="mm-courseDesc">
                           {c.description.length > 160 ? c.description.slice(0, 157) + "…" : c.description}
                         </div>
                       ) : null}
 
-                      {/* What you'll learn (first 2 bullets) */}
+                      {/* What you'll learn*/}
                       {Array.isArray(c.whatYouWillLearn) && c.whatYouWillLearn.length > 0 ? (
                         <ul className="mm-learnList">
                           {c.whatYouWillLearn.slice(0, 2).map((w, idx) => (
@@ -197,13 +183,12 @@ export default function MentorDashboard() {
                     </div>
 
                     <div className="mm-courseRight">
+
                       <Link className="mm-openCourse" to={`/courses/${c.id}`}>
-                          Open Course
+                        Open Course
                       </Link>
                     </div>
                   </div>
-
-                  
                 </section>
               );
             })}
