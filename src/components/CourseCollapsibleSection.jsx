@@ -2,8 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/courseBuilder.css";
-
+import "../styles/courseCollapsibleSection.css";
 /** Utility: minutes → “1h 30m” */
 function formatDuration(total = 0) {
   const mins = Math.max(0, Number(total) || 0);

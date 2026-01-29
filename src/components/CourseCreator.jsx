@@ -5,30 +5,98 @@ import "../styles/courseBuilder.css";
 import CourseModulesBuilder from "./CourseModulesBuilder";
 import { ICONS, emptyModule, formatDuration } from "./courseBuilderShared";
 
-/** Local Storage helpers */
+/** ---------------------------
+ *  Local Storage keys
+ *  --------------------------*/
 const LS_KEY_COURSES = "cb_courses_v1";
+const LS_KEY_USERS = "edstream_users";
+const LS_KEY_CURRENT_USER = "edstream_current_user";
 
-const loadCourses = () => {
+/** ---------------------------
+ *  Local Storage helpers
+ *  --------------------------*/
+const loadJSON = (key, fallback) => {
   try {
-    return JSON.parse(localStorage.getItem(LS_KEY_COURSES) || "[]");
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
   } catch {
-    return [];
+    return fallback;
   }
 };
 
-const saveCourses = (list) =>
-  localStorage.setItem(LS_KEY_COURSES, JSON.stringify(list));
+const saveJSON = (key, value) => {
+  localStorage.setItem(key, JSON.stringify(value));
+};
+
+/** Courses store */
+const loadCourses = () => loadJSON(LS_KEY_COURSES, []);
+const saveCourses = (list) => saveJSON(LS_KEY_COURSES, list);
 
 const lsCreateCourse = (payload) => {
   const id = "c_" + Math.random().toString(36).slice(2, 10);
   const now = new Date().toISOString();
   const created = { id, createdAt: now, updatedAt: now, ...payload };
+
   const list = loadCourses();
   list.push(created);
   saveCourses(list);
+
   return created;
 };
 
+/** Users store */
+const loadUsers = () => loadJSON(LS_KEY_USERS, []);
+const saveUsers = (users) => saveJSON(LS_KEY_USERS, users);
+
+const loadCurrentUser = () => loadJSON(LS_KEY_CURRENT_USER, null);
+const saveCurrentUser = (user) => saveJSON(LS_KEY_CURRENT_USER, user);
+
+/**
+ * - Add course title into current instructor's `coursesCreated`
+ * - Updates BOTH: `edstream_users` and `edstream_current_user`
+ * - Avoid duplicates
+ * - Initializes coursesCreated if missing
+ */
+const addCourseTitleToCoursesCreated = (courseTitle) => {
+  const title = (courseTitle || "").trim();
+  if (!title) return;
+
+  const currentUser = loadCurrentUser();
+  if (!currentUser?.userId) return;
+
+  const users = loadUsers();
+  if (!Array.isArray(users) || users.length === 0) return;
+
+  const idx = users.findIndex((u) => u.userId === currentUser.userId);
+  if (idx === -1) return;
+
+  const user = users[idx];
+  const existing = Array.isArray(user.coursesCreated) ? user.coursesCreated : [];
+
+  // Keep only valid strings, trim, remove empties
+  const normalized = existing
+    .filter((x) => typeof x === "string")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // Avoid duplicates
+  if (normalized.includes(title)) return;
+
+  const updatedCoursesCreated = [...normalized, title];
+
+  // Update user in edstream_users
+  const updatedUser = { ...user, coursesCreated: updatedCoursesCreated };
+  const updatedUsers = [...users];
+  updatedUsers[idx] = updatedUser;
+  saveUsers(updatedUsers);
+
+  // Update edstream_current_user as well (keeps UI consistent)
+  saveCurrentUser({ ...currentUser, coursesCreated: updatedCoursesCreated });
+};
+
+/** ---------------------------
+ *  UI: Toast
+ *  --------------------------*/
 function Toast({ message, type }) {
   return (
     <div
@@ -52,11 +120,7 @@ function Toast({ message, type }) {
   );
 }
 
-export default function CourseCreation({
-
-  assignmentService,
-  onCreated,
-}) {
+export default function CourseCreation({ assignmentService, onCreated }) {
   const [title, setTitle] = useState("New Course");
   const [description, setDescription] = useState("");
   const [editingCourseTitle, setEditingCourseTitle] = useState(false);
@@ -133,7 +197,10 @@ export default function CourseCreation({
           errors.push(
             `Module ${mi + 1}, item ${ii + 1}: duration must be > 0 minutes.`
           );
-        if ((it.type === "video" || it.type === "reading") && !it.url?.trim())
+        if (
+          (it.type === "video" || it.type === "reading") &&
+          !it.url?.trim()
+        )
           errors.push(
             `Module ${mi + 1}, item ${ii + 1}: URL is required for link items.`
           );
@@ -143,7 +210,7 @@ export default function CourseCreation({
     return errors;
   };
 
-  //  LOCAL STORAGE SAVING
+  /** SAVE */
   const handleSave = async () => {
     setMsg({ type: "", text: "" });
 
@@ -153,14 +220,13 @@ export default function CourseCreation({
       return;
     }
 
-    //normalization
     const cleanOutcomes = learningOutcomes
       .map((s) => (s || "").trim())
       .filter(Boolean);
 
     const status = publishMode === "publish" ? "published" : "draft";
 
-    // Building the course object directly from state
+    // Build course object directly from state
     const courseToSave = {
       title: title.trim(),
       description: description.trim(),
@@ -193,13 +259,14 @@ export default function CourseCreation({
 
     setSaving(true);
     try {
-      // Local-Saving
       const created = lsCreateCourse(courseToSave);
+
+      /** ✅ FIX HERE: push course title into current instructor coursesCreated */
+      addCourseTitleToCoursesCreated(created.title);
 
       setMsg({ type: "success", text: "Course saved successfully." });
       showToast(status === "published" ? "Course published" : "Course saved");
 
-      // Bubble up, if needed (e.g., navigate away)
       onCreated?.(created);
     } catch (err) {
       console.error(err);
@@ -281,14 +348,18 @@ export default function CourseCreation({
           {/* Publish/Draft toggle */}
           <div className="cb-toggle">
             <button
-              className={`cb-toggle-btn ${publishMode === "publish" ? "active" : ""}`}
+              className={`cb-toggle-btn ${
+                publishMode === "publish" ? "active" : ""
+              }`}
               onClick={() => setPublishMode("publish")}
               type="button"
             >
               Publish
             </button>
             <button
-              className={`cb-toggle-btn ${publishMode === "draft" ? "active" : ""}`}
+              className={`cb-toggle-btn ${
+                publishMode === "draft" ? "active" : ""
+              }`}
               onClick={() => setPublishMode("draft")}
               type="button"
             >
