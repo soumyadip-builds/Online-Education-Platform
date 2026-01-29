@@ -171,11 +171,25 @@ const Footer = () => {
                             </h6>
                             <ul className="list-unstyled m-0 footer-links">
                                 <li>
-                                    <a className="link-smooth" href="/courses">
+                                    {/* <a className="link-smooth" onClick={() =>
+                                    navigate("/coursepage", {
+                                        state: { scope: "enrolled" },
+                                    },setTimeout(() => {
+        console.log('Scrolling to top after navigation');
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }, 0))
+
+                                }>
+                                        Courses
+                                    </a> */}
+                                    <a className="link-smooth" onClick={() =>
+                                    navigate("/coursepage")
+
+                                }>
                                         Courses
                                     </a>
                                 </li>
-                                <li>
+                                {/* <li>
                                     <a
                                         className="link-smooth"
                                         href="/assignments"
@@ -187,38 +201,10 @@ const Footer = () => {
                                     <a className="link-smooth" href="/quizzes">
                                         Quizzes
                                     </a>
-                                </li>
+                                </li> */}
                                 <li>
                                     <a className="link-smooth" href="/forum">
                                         Forum
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div className="col-6 col-md-3 col-lg-2">
-                            <h6 className="fw-semibold text-uppercase mb-3 letter-1">
-                                Resources
-                            </h6>
-                            <ul className="list-unstyled m-0 footer-links">
-                                <li>
-                                    <a className="link-smooth" href="/help">
-                                        Help Center
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="link-smooth" href="/guides">
-                                        Guides
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="link-smooth" href="/status">
-                                        Status
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="link-smooth" href="/privacy">
-                                        Privacy
                                     </a>
                                 </li>
                             </ul>

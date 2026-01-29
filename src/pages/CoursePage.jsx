@@ -134,6 +134,7 @@ export default function CoursePage() {
               ? "My Courses"
               : scope === "authored" // NEW
                 ? "Courses Authored by You"
+                // ? "Courses"
                 : "Courses";
 
     const emptyMsg =
