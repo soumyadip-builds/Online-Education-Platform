@@ -156,7 +156,7 @@ export default function QuizEditor({ value, onChange }) {
                   onChange={(e) => patchQ(q.id, { title: e.target.value })}
                   className="assignment-card-input"
                   placeholder="Enter the question text"
-                  placeholder="Enter the question text"
+                
                 />
               </div>
 
@@ -218,9 +218,7 @@ export default function QuizEditor({ value, onChange }) {
                     onChange={(e) =>
                       patchOpt(q.id, o.id, { text: e.target.value })
                     }
-                    onChange={(e) =>
-                      patchOpt(q.id, o.id, { text: e.target.value })
-                    }
+                   
                     className="assignment-card-input quiz-option__text"
                     placeholder="Option text"
                   />
@@ -249,9 +247,7 @@ export default function QuizEditor({ value, onChange }) {
                 onChange={(e) =>
                   patchQ(q.id, { explanation: e.target.value })
                 }
-                onChange={(e) =>
-                  patchQ(q.id, { explanation: e.target.value })
-                }
+               
                 className="assignment-card-textarea"
               />
             </div>
