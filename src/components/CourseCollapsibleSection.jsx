@@ -1,5 +1,3 @@
-
-
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/courseCollapsibleSection.css";
