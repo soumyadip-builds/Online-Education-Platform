@@ -23,7 +23,6 @@ import { getCurrentUser, isAuthenticated } from './utils/session';
 import CourseCreator from './components/CourseCreator';
 import MentorDashboard from "./pages/MentorDashboard";
 import StudentDashboard from "./pages/StudentMetrics";
-import MentorDashboard from "./pages/MentorDashboard";
 import MentorStudentCourseProgress from "./pages/MentorStudentCourseProgress";
 
 // --- Helpers ----------------------------------------------------------------
