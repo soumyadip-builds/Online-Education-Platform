@@ -157,17 +157,17 @@ const NavbarComponent = () => {
 
     // Add below other callbacks (e.g., after goToRoleHome / handleLogout)
     const handlePerformanceClick = useCallback(() => {
-    // Prefer current auth state; fall back to session if needed
-    const role = auth.user?.role ?? getCurrentUser()?.role;
+        // Prefer current auth state; fall back to session if needed
+        const role = auth.user?.role ?? getCurrentUser()?.role;
 
-    if (role === "learner") {
-        navigate("/performance-student");
-    } else if (role === "instructor") {
-        navigate("/performance-mentor");
-    } else {
-        // Optional: fallback (e.g., generic dashboard or home)
-        navigate("/performance-dashboard");
-    }
+        if (role === "learner") {
+            navigate("/performance-student");
+        } else if (role === "instructor") {
+            navigate("/performance-mentor");
+        } else {
+            // Optional: fallback (e.g., generic dashboard or home)
+            navigate("/performance-dashboard");
+        }
     }, [auth.user, navigate]);
     // --------------------------------------------------------------------
 
@@ -386,7 +386,7 @@ const NavbarComponent = () => {
                                 }
                                 id="profile-dropdown"
                             >
-                                <NavDropdown.Item 
+                                <NavDropdown.Item
                                     onClick={handlePerformanceClick}
                                 >
                                     📊 Performance Metrics
