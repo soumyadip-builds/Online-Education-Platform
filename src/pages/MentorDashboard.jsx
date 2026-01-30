@@ -2,17 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/mentorMetrics.css";
 
-/**
- * MentorDashboard.jsx
- * - Shows mentor's published courses
- * - Shows enrolled students per course
- * - Button to view each student's progress for that course
- *
- * Assumptions:
- * - courseDetails.json includes:
- *    - author OR mentorId (use whichever you have)
- *    - status: "published"
- */
+
 
 function safeJSONParse(raw, fallback) {
   try {
@@ -23,19 +13,19 @@ function safeJSONParse(raw, fallback) {
   }
 }
 
-function getMentorIdentity() {
-  // ✅ Use what you actually store (change if needed)
-  // Example:
-  // localStorage.setItem("mentor:name", "John Doe");
-  // localStorage.setItem("mentor:id", "m_001");
-
-  const mentorName = localStorage.getItem("mentor:name") || "";
-  const mentorId = localStorage.getItem("mentor:id") || "";
-  return { mentorName, mentorId };
+function normalize(str) {
+  return (str || "").toString().trim().toLowerCase();
 }
 
-function readEnrollments(courseId) {
-  return safeJSONParse(localStorage.getItem(`courseEnrollments:${courseId}`), []);
+
+function getCurrentInstructor() {
+  const raw = localStorage.getItem("edstream_current_user");
+  const data = safeJSONParse(raw, null);
+
+  if (data && data.role && normalize(data.role) === "instructor" && data.name) {
+    return { name: (data.name || "").trim() };
+  }
+  return { name: "" };
 }
 
 export default function MentorDashboard() {
@@ -43,7 +33,9 @@ export default function MentorDashboard() {
   const [err, setErr] = useState("");
   const [courses, setCourses] = useState([]);
 
-  const { mentorName, mentorId } = getMentorIdentity();
+  //  Reading the current instructor (author) name
+  const { name: instructorName } = getCurrentInstructor();
+  const instructorNameNorm = normalize(instructorName);
 
   useEffect(() => {
     let alive = true;
@@ -52,7 +44,8 @@ export default function MentorDashboard() {
         setLoading(true);
         setErr("");
 
-        const res = await fetch("/data/courseDetails.json");
+        // Validation
+        const res = await fetch("/data/courseDetails.json", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to load courseDetails.json");
         const json = await res.json();
 
@@ -60,7 +53,7 @@ export default function MentorDashboard() {
         setCourses(Array.isArray(json) ? json : []);
       } catch (e) {
         if (!alive) return;
-        setErr(e.message || "Failed to load mentor dashboard.");
+        setErr(e?.message || "Failed to load mentor dashboard.");
       } finally {
         if (alive) setLoading(false);
       }
@@ -71,15 +64,21 @@ export default function MentorDashboard() {
     };
   }, []);
 
+  // 🔹 Filtering course
   const publishedMentorCourses = useMemo(() => {
-    const all = courses || [];
+    const all = Array.isArray(courses) ? courses : [];
+
     return all.filter((c) => {
-      const isPublished = (c.status || "").toLowerCase() === "published";
-      const byName = mentorName && c.author === mentorName;
-      const byId = mentorId && c.mentorId === mentorId;
-      return isPublished && (byName || byId || (!mentorName && !mentorId)); // if not set, show all published
+      // Treat as published if c.status is missing or literally 'published'
+      const status = normalize(c.status);
+      const isPublished = !status || status === "published";
+
+      // Author name validation
+      const authorMatch = instructorNameNorm && normalize(c.author) === instructorNameNorm;
+
+      return isPublished && authorMatch;
     });
-  }, [courses, mentorName, mentorId]);
+  }, [courses, instructorNameNorm]);
 
   if (loading) {
     return (
@@ -98,7 +97,7 @@ export default function MentorDashboard() {
         <div className="mm-card">
           <h2 className="mm-title">Mentor Dashboard</h2>
           <div className="mm-alert mm-alert--err">{err}</div>
-          <Link className="mm-link" to="/">← Back</Link>
+          <Link className="mm-link" to="/InstructorHomePage">← Back</Link>
         </div>
       </div>
     );
@@ -110,66 +109,85 @@ export default function MentorDashboard() {
         <div className="mm-header">
           <div>
             <h2 className="mm-title">Mentor Dashboard</h2>
-            <div className="mm-subtitle">
-              Published courses & enrolled students
-            </div>
+            <div className="mm-subtitle">Published courses &amp; enrolled students</div>
           </div>
           <Link className="mm-link" to="/">← Back</Link>
         </div>
 
         {publishedMentorCourses.length === 0 ? (
           <div className="mm-empty">
-            <p className="mm-muted">No published courses found for this mentor.</p>
-            <p className="mm-muted">Tip: Ensure your course JSON has <b>status: "published"</b> and mentor identity.</p>
+            <p className="mm-muted">No published courses found for this instructor.</p>
+            <p className="mm-muted">
+              Tip: Check <b>edstream_current_user</b> in localStorage (must have <code>{"{ role: \"instructor\", name: \"...\" }"}</code>) and ensure your course JSON has the same <b>author</b> name.
+            </p>
           </div>
         ) : (
           <div className="mm-courseList">
             {publishedMentorCourses.map((c) => {
-              const enrollments = readEnrollments(c.id);
+
+              const learners = typeof c.learners === "number" ? c.learners : 0;
+              const rating = typeof c.rating === "number" ? c.rating : undefined;
 
               return (
                 <section className="mm-course" key={c.id}>
                   <div className="mm-courseHead">
                     <div className="mm-courseLeft">
-                      <div className="mm-courseTitle">{c.title}</div>
-                      <div className="mm-courseMeta">
-                        {enrollments.length} student{enrollments.length === 1 ? "" : "s"} enrolled
+                      <div className="mm-courseTitleRow no-thumb">
+                        <div className="mm-courseTitleBlock">
+                          <div className="mm-courseTitle">{c.title}</div>
+
+                          <div className="mm-courseMeta">
+                            {c.author ? <span className="mm-pill">{c.author}</span> : null}
+                            {c.level ? <span className="mm-pill">{c.level}</span> : null}
+                            {c.duration ? <span className="mm-pill">{c.duration}</span> : null}
+
+                            {typeof learners === "number" ? (
+                              <span className="mm-pill">{learners.toLocaleString()} learners</span>
+                            ) : null}
+
+                            {typeof rating === "number" ? (
+                              <span className="mm-pill">⭐ {rating.toFixed(1)}</span>
+                            ) : null}
+
+                            {c.isBestseller ? (
+                              <span className="mm-badge mm-badge--gold">Bestseller</span>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Tags */}
+                      {Array.isArray(c.tags) && c.tags.length > 0 ? (
+                        <div className="mm-tags">
+                          {c.tags.map((t) => (
+                            <span className="mm-tag" key={t}>{t}</span>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {/* Description*/}
+                      {c.description ? (
+                        <div className="mm-courseDesc">
+                          {c.description.length > 160 ? c.description.slice(0, 157) + "…" : c.description}
+                        </div>
+                      ) : null}
+
+                      {/* What you'll learn*/}
+                      {Array.isArray(c.whatYouWillLearn) && c.whatYouWillLearn.length > 0 ? (
+                        <ul className="mm-learnList">
+                          {c.whatYouWillLearn.slice(0, 2).map((w, idx) => (
+                            <li key={idx}>{w}</li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </div>
 
                     <div className="mm-courseRight">
-                      <Link className="mm-openCourse" to={`/course/${c.id}`} target="_blank" rel="noreferrer">
+
+                      <Link className="mm-openCourse" to={`/courses/${c.id}`}>
                         Open Course
                       </Link>
                     </div>
-                  </div>
-
-                  <div className="mm-studentsWrap">
-                    {enrollments.length === 0 ? (
-                      <div className="mm-muted mm-small">No enrollments yet.</div>
-                    ) : (
-                      <ul className="mm-studentList">
-                        {enrollments.map((s) => (
-                          <li key={s.studentId} className="mm-student">
-                            <div className="mm-studentLeft">
-                              <div className="mm-studentName">{s.studentName || s.studentId}</div>
-                              <div className="mm-studentMeta">
-                                Enrolled: {s.enrolledAt ? new Date(s.enrolledAt).toLocaleString() : "—"}
-                              </div>
-                            </div>
-
-                            <div className="mm-studentRight">
-                              <Link
-                                className="mm-btn"
-                                to={`/mentor/course/${c.id}/student/${s.studentId}`}
-                              >
-                                View Progress
-                              </Link>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
                 </section>
               );

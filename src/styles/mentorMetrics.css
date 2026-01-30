@@ -360,3 +360,20 @@
     justify-content: space-between;
   }
 }
+
+.mm-courseTitleRow.no-thumb {
+  display: flex;
+  align-items: flex-start;
+  gap: 0; /* removes leftover spacing from thumbnail grid */
+}
+
+.mm-courseTitleBlock {
+  width: 100%;
+}
+.mm-courseMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;      /* adds spacing */
+  margin-top: 6px;
+  margin-bottom: 6px;
+}

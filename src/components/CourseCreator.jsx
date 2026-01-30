@@ -1,12 +1,9 @@
-
 import React, { useMemo, useState, useRef } from "react";
 import "../styles/assignmentCard.css";
 import "../styles/courseBuilder.css";
 
 import CourseModulesBuilder from "./CourseModulesBuilder";
-import { ICONS, emptyModule,formatDuration } from "./courseBuilderShared";
-
-
+import { ICONS, emptyModule, formatDuration } from "./courseBuilderShared";
 
 /** Local Storage helpers */
 const LS_KEY_COURSES = "cb_courses_v1";
@@ -56,7 +53,7 @@ function Toast({ message, type }) {
 }
 
 export default function CourseCreation({
-  courseService,
+
   assignmentService,
   onCreated,
 }) {
@@ -67,7 +64,7 @@ export default function CourseCreation({
   const courseTitleRef = useRef(null);
   const courseDescRef = useRef(null);
 
-  /** ✅ Fix: default one module created */
+  /** Default one module */
   const [modules, setModules] = useState(() => [emptyModule()]);
 
   // bullet points
@@ -94,12 +91,16 @@ export default function CourseCreation({
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [publishMode, setPublishMode] = useState("draft"); // 'draft' | 'publish'
 
-  /** totals + grouped (still used for payload counts) */
+  /** totals + grouped */
   const totalMinutes = useMemo(
     () =>
       modules.reduce(
         (sum, m) =>
-          sum + m.items.reduce((s, it) => s + (Number(it.estimatedMinutes) || 0), 0),
+          sum +
+          m.items.reduce(
+            (s, it) => s + (Number(it.estimatedMinutes) || 0),
+            0
+          ),
         0
       ),
     [modules]
@@ -129,15 +130,20 @@ export default function CourseCreation({
           errors.push(`Module ${mi + 1}, item ${ii + 1}: title is required.`);
         const mins = Number(it.estimatedMinutes);
         if (!Number.isFinite(mins) || mins <= 0)
-          errors.push(`Module ${mi + 1}, item ${ii + 1}: duration must be > 0 minutes.`);
-        if ((it.type === "video" || it.type === "reading") && !it.url.trim())
-          errors.push(`Module ${mi + 1}, item ${ii + 1}: URL is required for link items.`);
+          errors.push(
+            `Module ${mi + 1}, item ${ii + 1}: duration must be > 0 minutes.`
+          );
+        if ((it.type === "video" || it.type === "reading") && !it.url?.trim())
+          errors.push(
+            `Module ${mi + 1}, item ${ii + 1}: URL is required for link items.`
+          );
       });
     });
 
     return errors;
   };
 
+  //  LOCAL STORAGE SAVING
   const handleSave = async () => {
     setMsg({ type: "", text: "" });
 
@@ -147,59 +153,53 @@ export default function CourseCreation({
       return;
     }
 
+    //normalization
     const cleanOutcomes = learningOutcomes
       .map((s) => (s || "").trim())
       .filter(Boolean);
 
-    const payload = {
+    const status = publishMode === "publish" ? "published" : "draft";
+
+    // Building the course object directly from state
+    const courseToSave = {
       title: title.trim(),
       description: description.trim(),
-
       learningOutcomes: cleanOutcomes,
-
       thumbnail: {
         mode: thumbnailMode,
         link: thumbnailMode === "link" ? thumbnailLink.trim() : "",
       },
-
-      totalEstimatedMinutes: totalMinutes,
-
       modules: modules.map((m) => ({
-        id: m.id,
+        ...m,
         title: m.title.trim(),
-        description: m.description.trim(),
+        description: (m.description || "").trim(),
         items: m.items.map((it) => ({
-          id: it.id,
-          type: it.type,
+          ...it,
           title: it.title.trim(),
           url: it.url?.trim() || "",
           estimatedMinutes: Number(it.estimatedMinutes) || 0,
-          refId: it.refId || null,
+          refId: it.refId ?? null,
         })),
       })),
-
+      totalEstimatedMinutes: totalMinutes,
       counts: {
         videos: grouped.Videos.length,
         documentation: grouped.Documentation.length,
         assignments: grouped.Assignments.length,
         quizzes: grouped.Quizzes.length,
       },
-
-      status: publishMode === "publish" ? "published" : "draft",
+      status,
     };
 
     setSaving(true);
     try {
-      let created;
-      if (courseService && typeof courseService.create === "function") {
-        created = await courseService.create(payload);
-      } else {
-        created = lsCreateCourse(payload);
-        await new Promise((r) => setTimeout(r, 150));
-      }
+      // Local-Saving
+      const created = lsCreateCourse(courseToSave);
 
       setMsg({ type: "success", text: "Course saved successfully." });
-      showToast(publishMode === "publish" ? "Course published" : "Course saved");
+      showToast(status === "published" ? "Course published" : "Course saved");
+
+      // Bubble up, if needed (e.g., navigate away)
       onCreated?.(created);
     } catch (err) {
       console.error(err);
@@ -468,7 +468,7 @@ export default function CourseCreation({
           )}
         </div>
 
-        {/* ✅ Builder ONLY (Preview removed completely) */}
+        {/* Modules Builder */}
         <CourseModulesBuilder
           modules={modules}
           setModules={setModules}
@@ -487,36 +487,32 @@ export default function CourseCreation({
           </div>
         )}
 
-        
+        {/* Total Time Bar */}
+        <div className="cb-total-bar">
+          <div>
+            <div className="cb-total-bar__label">Total Course Time</div>
+            <div className="cb-total-bar__value">{formatDuration(totalMinutes)}</div>
+          </div>
+          <div className="cb-total-bar__hint">Based on item durations</div>
+        </div>
 
-{/* ✅ Total Time Bar (before submit) */}
-<div className="cb-total-bar">
-  <div>
-    <div className="cb-total-bar__label">Total Course Time</div>
-    <div className="cb-total-bar__value">{formatDuration(totalMinutes)}</div>
-  </div>
-  <div className="cb-total-bar__hint">Based on item durations</div>
-</div>
-
-{/* Actions */}
-<div className="assignment-card__actions">
-  <button
-    type="button"
-    disabled={saving}
-    className="assignment-card__btn-primary"
-    onClick={handleSave}
-  >
-    {saving
-      ? publishMode === "publish"
-        ? "Publishing..."
-        : "Saving..."
-      : publishMode === "publish"
-      ? "Publish Course"
-      : "Save as Draft"}
-  </button>
-</div>
-
-
+        {/* Actions */}
+        <div className="assignment-card__actions">
+          <button
+            type="button"
+            disabled={saving}
+            className="assignment-card__btn-primary"
+            onClick={handleSave}
+          >
+            {saving
+              ? publishMode === "publish"
+                ? "Publishing..."
+                : "Saving..."
+              : publishMode === "publish"
+              ? "Publish Course"
+              : "Save as Draft"}
+          </button>
+        </div>
       </div>
 
       {toast && <Toast message={toast.msg} type={toast.type} />}

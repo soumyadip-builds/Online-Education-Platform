@@ -1,4 +1,3 @@
-
 // src/utils/session.js
 
 // Keys
@@ -37,6 +36,7 @@ export const createSession = (user) => {
   try {
     // Minimal session payload (no password)
     const sessionUser = {
+      userId: user.userId,        // <-- sequential ID present in user storage
       role: user.role,
       name: user.name,
       email: user.email,
@@ -50,10 +50,8 @@ export const createSession = (user) => {
       issuedAt: new Date().toISOString(),
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-
     // Notify same-tab listeners
     notifySessionChanged();
-
     return { ok: true, user: sessionUser };
   } catch (e) {
     console.error('Failed to create session:', e);
@@ -64,7 +62,6 @@ export const createSession = (user) => {
 export const destroySession = () => {
   try {
     localStorage.removeItem(SESSION_KEY);
-
     // Notify same-tab listeners
     notifySessionChanged();
   } catch (e) {
@@ -74,7 +71,8 @@ export const destroySession = () => {
 
 export const isAuthenticated = () => !!getCurrentUser();
 
-/* ---------------------- Users collection helpers (always in localStorage) ---------------------- */
+/* ----------------------- Users collection helpers ----------------------- */
+
 const getUsers = () => {
   try {
     const raw = localStorage.getItem(USERS_KEY);
@@ -96,7 +94,7 @@ const saveUsers = (users) => {
 export const upsertUser = (user) => {
   const users = getUsers();
   const idx = users.findIndex(
-    (u) => (u.email || '').toLowerCase() === (user.email || '').toLowerCase()
+    (u) => (u.email ?? '').toLowerCase() === (user.email ?? '').toLowerCase()
   );
   if (idx > -1) {
     users[idx] = { ...users[idx], ...user };
@@ -111,18 +109,25 @@ export const getUserByEmail = (email) => {
   if (!email) return null;
   const users = getUsers();
   return (
-    users.find((u) => (u.email || '').toLowerCase() === email.toLowerCase()) ||
-    null
+    users.find((u) => (u.email ?? '').toLowerCase() === email.toLowerCase()) ?? null
   );
 };
 
+/** 🔁 Restored export: keep legacy callers working */
 export const updateUserByEmail = (email, updates = {}) => {
   const users = getUsers();
   const idx = users.findIndex(
-    (u) => (u.email || '').toLowerCase() === (email || '').toLowerCase()
+    (u) => (u.email ?? '').toLowerCase() === (email ?? '').toLowerCase()
   );
   if (idx === -1) return { ok: false, error: 'User not found' };
   users[idx] = { ...users[idx], ...updates };
   saveUsers(users);
   return { ok: true, user: users[idx] };
+};
+
+/** ✅ New helper used by ForumPage for learner enrollments (userId-based) */
+export const getUserById = (userId) => {
+  if (!userId) return null;
+  const users = getUsers();
+  return users.find((u) => u.userId === userId) ?? null;
 };
