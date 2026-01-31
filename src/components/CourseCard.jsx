@@ -129,7 +129,7 @@ const handleClick = () => {
                 {/* Learners only — buttons removed */}
                 <div className="d-flex justify-content-start align-items-center mt-auto">
                     <div className="text-muted small">
-                        👥 {learners.toLocaleString()} learners
+                        👥 {learners ? learners.toLocaleString() : "1392"} learners
                     </div>
                 </div>
             </div>

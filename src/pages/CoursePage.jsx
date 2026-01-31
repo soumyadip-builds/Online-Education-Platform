@@ -14,6 +14,27 @@ import { useLocation } from "react-router-dom";
  * - Toggle to filter bestsellers
  * - Renders CourseCard for each course
  */
+// Created courses are stored by CourseCreator in localStorage under this key
+const LS_KEY_COURSES = "cb_courses_v1";
+
+function loadCreatedCourses() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_COURSES) || "[]";
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergeCourses(seedCourses, createdCourses) {
+  // Avoid duplicates by id; created items override seed with same id
+  const map = new Map();
+  [...(seedCourses || []), ...(createdCourses || [])].forEach((c) => {
+    if (c && c.id) map.set(c.id, c);
+  });
+  return Array.from(map.values());
+}
 export default function CoursePage() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -62,15 +83,23 @@ export default function CoursePage() {
                 const data = await res.json();
                 if (!Array.isArray(data))
                     throw new Error("courseDetails.json must be an array");
-                if (alive) setCourses(data);
+                const created = loadCreatedCourses();
+                const merged = mergeCourses(data, created);
+                if (alive) setCourses(merged);
             } catch (e) {
                 if (alive) setLoadErr(e.message || "Failed to load courses");
             } finally {
                 if (alive) setLoading(false);
             }
         })();
+        const reload = () => {
+        const createdNow = loadCreatedCourses();
+        setCourses((prev) => mergeCourses(prev, createdNow));
+        };
+        window.addEventListener("courses-changed", reload);
         return () => {
             alive = false;
+            window.removeEventListener("courses-changed", reload);
         };
     }, []);
 

@@ -4,6 +4,8 @@ import "../styles/courseBuilder.css";
 
 import CourseModulesBuilder from "./CourseModulesBuilder";
 import { ICONS, emptyModule, formatDuration } from "./courseBuilderShared";
+import { getCurrentUser } from "../utils/session";
+import { recordCourseCreated } from "../utils/userStorage";
 
 /** Local Storage helpers */
 const LS_KEY_COURSES = "cb_courses_v1";
@@ -161,8 +163,10 @@ export default function CourseCreation({
     const status = publishMode === "publish" ? "published" : "draft";
 
     // Building the course object directly from state
+    const me = getCurrentUser();
     const courseToSave = {
       title: title.trim(),
+      author: (me?.name ?? "").trim(),     // ✅ AUTO author from logged-in user
       description: description.trim(),
       learningOutcomes: cleanOutcomes,
       thumbnail: {
@@ -172,7 +176,7 @@ export default function CourseCreation({
       modules: modules.map((m) => ({
         ...m,
         title: m.title.trim(),
-        description: (m.description || "").trim(),
+        description: (m.description ?? "").trim(),
         items: m.items.map((it) => ({
           ...it,
           title: it.title.trim(),
@@ -195,6 +199,13 @@ export default function CourseCreation({
     try {
       // Local-Saving
       const created = lsCreateCourse(courseToSave);
+      // ✅ Add this course into instructor's "coursesCreated" list
+      if (me?.email) {
+        recordCourseCreated(me.email, created.id);
+      }
+
+      // ✅ Tell CoursePage to refresh the list
+      window.dispatchEvent(new Event("courses-changed"));
 
       setMsg({ type: "success", text: "Course saved successfully." });
       showToast(status === "published" ? "Course published" : "Course saved");

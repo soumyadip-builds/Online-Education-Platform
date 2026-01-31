@@ -460,11 +460,11 @@ export default function ForumPage() {
           </button>
         </div>
         {postError && <div className="text-danger small mt-2">{postError}</div>}
-        {!currentServiceUser?.userId && (
+        {/* {!currentServiceUser?.userId && (
           <div className="text-muted small mt-1">
             Tip: Add a user with your session identity to <code>/data/forum.json → users[]</code>.
           </div>
-        )}
+        )} */}
         {!courseId && (
           <div className="text-muted small mt-1">
             No course available/selected. Instructors see authored; learners see enrolled.
