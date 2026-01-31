@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ForumPost from '../components/ForumPost';
 import {
   getUsers,
@@ -189,7 +189,7 @@ export default function ForumPage() {
 
       const role = (currentSessionUser.role ?? '').toLowerCase();
 
-      if (role === 'instructor' || role === 'mentor') {
+      if (role === 'instructor') {
         // Filter by instructor name === course author (case-insensitive)
         const instructorName = (currentSessionUser?.name ?? '').trim().toLowerCase();
         const authored = courseDetails.filter(

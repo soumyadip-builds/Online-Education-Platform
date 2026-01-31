@@ -1,5 +1,4 @@
-// src/pages/AuthPage.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/auth.css";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +8,7 @@ import { addUser, findUser } from "../utils/userStorage";
 import { createSession, getCurrentUser } from "../utils/session";
 
 const STUDENT_HOME_PATH = "/student-home";
-const MENTOR_HOME_PATH = "/mentor-home";
+const INSTRUCTOR_HOME_PATH = "/instructor-home";
 
 const AuthPage = () => {
     const navigate = useNavigate();
@@ -56,7 +55,7 @@ const AuthPage = () => {
               ? [u.role]
               : [];
         if (roles.includes("instructor")) {
-            navigate(MENTOR_HOME_PATH, { replace: true });
+            navigate(INSTRUCTOR_HOME_PATH, { replace: true });
         } else if (roles.includes("learner")) {
             navigate(STUDENT_HOME_PATH, { replace: true });
         }
@@ -76,7 +75,6 @@ const AuthPage = () => {
         return errs;
     };
 
-    // In src/pages/AuthPage.jsx
     const validateRegister = (data) => {
         const errs = {};
         if (!data.role) errs.role = "Please select a role.";
@@ -109,7 +107,7 @@ const AuthPage = () => {
         if (roles.includes("learner")) {
             navigate(STUDENT_HOME_PATH, { replace: true });
         } else if (roles.includes("instructor")) {
-            navigate(MENTOR_HOME_PATH, { replace: true });
+            navigate(INSTRUCTOR_HOME_PATH, { replace: true });
         } else {
             navigate("/not-authorized", { replace: true });
         }

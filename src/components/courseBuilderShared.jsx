@@ -1,6 +1,3 @@
-
-import React from "react";
-
 /** Time helpers */
 export const toMinutes = (hours = 0, minutes = 0) => {
   const h = Number(hours) || 0;

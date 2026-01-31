@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import "../styles/assignmentCard.css";
 import "../styles/courseBuilder.css";
 

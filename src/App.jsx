@@ -1,4 +1,3 @@
-// src/App.jsx
 import {
   BrowserRouter,
   Routes,
@@ -7,7 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import CoursePage from './pages/CoursePage';
 import CourseDetails from './components/CourseDetails';
 import AssignmentPage from './pages/AssignmentPage';
@@ -18,12 +17,12 @@ import NavbarComponent from './components/NavbarComponent';
 import Footer from './components/FooterComponent';
 import ForumPage from './pages/ForumPage';
 import EditProfile from './components/EditProfile';
-import MentorHome from './pages/InstructorHomePage'; // Instructor Home
+import InstructorHome from './pages/InstructorHomePage'; // Instructor Home
 import { getCurrentUser, isAuthenticated } from './utils/session';
 import CourseCreator from './components/CourseCreator';
-import MentorDashboard from "./pages/MentorDashboard";
+import InstructorDashboard from "./pages/InstructorDashboard";
 import StudentDashboard from "./pages/StudentMetrics";
-import MentorStudentCourseProgress from "./pages/MentorStudentCourseProgress";
+import InstructorStudentCourseProgress from "./pages/InstructorStudentCourseProgress";
 
 // --- Helpers ----------------------------------------------------------------
 function roleHomePath(user) {
@@ -32,7 +31,7 @@ function roleHomePath(user) {
     : user?.role
       ? [user.role]
       : [];
-  if (roles.includes('instructor')) return '/mentor-home';
+  if (roles.includes('instructor')) return '/instructor-home';
   if (roles.includes('learner')) return '/student-home';
   return '/not-authorized';
 }
@@ -89,7 +88,7 @@ function NotAuthorized() {
     if (role === 'learner') {
       navigate('/student-home', { replace: true });
     } else if (role === 'instructor') {
-      navigate('/mentor-home', { replace: true });
+      navigate('/instructor-home', { replace: true });
     } else {
       // Fallback if role is unknown or user not authed
       navigate('/', { replace: true });
@@ -140,10 +139,10 @@ export default function App() {
           <Route path="/course-creator" element={<CourseCreator />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route 
-            path="/performance-mentor" 
+            path="/performance-instructor" 
             element={
               <RequireRole role="instructor">
-              <MentorDashboard />
+              <InstructorDashboard />
               </RequireRole>
             } 
           />
@@ -154,16 +153,16 @@ export default function App() {
           } />
 
           <Route 
-            path="/performance-mentor" 
+            path="/performance-instructor" 
             element={
               <RequireRole role="instructor">
-              <MentorDashboard />
+              <InstructorStudentCourseProgress />
               </RequireRole>
             } 
           />
           <Route path="/performance-student" element={
             <RequireRole role="learner">
-            <MentorStudentCourseProgress />
+            <InstructorStudentCourseProgress />
             </RequireRole>
           } />
 
@@ -178,10 +177,10 @@ export default function App() {
             }
           />
           <Route
-            path="/mentor-home"
+            path="/instructor-home"
             element={
               <RequireRole role="instructor">
-                <MentorHome />
+                <InstructorHome />
               </RequireRole>
             }
           />

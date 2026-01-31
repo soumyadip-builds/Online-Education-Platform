@@ -1,5 +1,3 @@
-// src/components/CourseCard.jsx
-import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import "../styles/course.css";
@@ -22,13 +20,6 @@ export default function CourseCard({ course }) {
 
     const { id, title, author, isBestseller, rating, learners, thumbnail } =
         course;
-
-    // const handleClick = () => {
-    // 	navigate(`/courses/${id}`);
-
-    // 	setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }), 0);
-    // };
-
     
 const handleClick = () => {
   // Basic context logs

@@ -1,12 +1,5 @@
-
-import React from 'react';
 import '../styles/forum-post.css';
 
-/**
- * ForumPostSkeleton.jsx
- * - Lightweight loading skeleton with a soft shimmer
- * - Scoped to `.ed-forum`
- */
 const ForumPostSkeleton = ({ lines = 2, className = '' }) => {
   const bodyLines = Array.from({ length: Math.max(1, lines) });
 

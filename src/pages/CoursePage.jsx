@@ -1,9 +1,6 @@
-// src/components/CoursePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CourseCard from "../components/CourseCard";
 import "../styles/course.css";
-import NavbarComponent from "../components/NavbarComponent";
-import Footer from "../components/FooterComponent";
 
 // NEW: pull user + role-aware lists
 import { getCurrentUser } from "../utils/session";

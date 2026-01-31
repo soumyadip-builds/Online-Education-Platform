@@ -188,10 +188,10 @@ export async function notifyCourseEnrollment({
     (u) => (u.email ?? "").toLowerCase() === (learnerEmail ?? "").toLowerCase()
   );
 
-  // Prefer notifying instructors/mentors if roles exist; else fallback to everyone except learner
+  // Prefer notifying instructors if roles exist; else fallback to everyone except learner
   const instructors = (data.users ?? []).filter((u) => {
     const role = (u.role ?? "").toLowerCase();
-    return role === "instructor" || role === "mentor";
+    return role === "instructor";
   });
 
   const receivers =

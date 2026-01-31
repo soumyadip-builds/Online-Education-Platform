@@ -1,16 +1,5 @@
-
-// src/pages/QuizPage.jsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-
-/**
- * QuizPage.jsx — self-scoped, student-facing quiz page
- * - Theme: Purple (#6C4BF4) + Cyan (#22D3EE)
- * - All CSS scoped under `.ap-quiz-page` to avoid clashes
- * - Data sources:
- *    GET /data/quizData.json       (no answers)
- *    GET /data/quizAnswers.json    (answers fetched only on submit)
- */
 
 export default function QuizPage() {
     const { quizId } = useParams();

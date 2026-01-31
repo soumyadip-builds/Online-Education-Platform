@@ -1,22 +1,6 @@
-// src/pages/StudentMetrics.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/studentMetrics.css";
-
-/**
- * StudentMetrics.jsx
- * - Progress bar per enrolled course
- * - Module-wise tracking of quizzes & assignments
- * - Data sources:
- *    /data/courseDetails.json
- *    /data/assignmentData.json
- *    /data/quizData.json
- *
- * Completion sources (localStorage):
- *    enrolled:<courseId> = "true"
- *    quizResult:<quizId> = JSON.stringify({ score, maxScore, submittedAt })
- *    assignmentSubmission:<assignmentId> = JSON.stringify({ submittedAt, link, fileName })
- */
 
 function safeJSONParse(raw) {
   try { return JSON.parse(raw); } catch { return null; }

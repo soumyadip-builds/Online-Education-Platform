@@ -1,12 +1,5 @@
-
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-
-/**
- * AssignmentPage.jsx — self-scoped version
- * - All CSS is scoped under `.ap-assignment-page` to avoid global clashes.
- * - Color theme: purple (#6C4BF4) + cyan (#22D3EE)
- */
 
 export default function AssignmentPage() {
     const { assignmentId } = useParams();

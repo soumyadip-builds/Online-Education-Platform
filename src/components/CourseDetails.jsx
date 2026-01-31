@@ -124,7 +124,7 @@ export default function CourseDetails() {
     }
     setEnrolled(true);
 
-    // ✅ NEW: create a forum notification for instructors/mentors (or fallback users)
+    // ✅ NEW: create a forum notification for instructors (or fallback users)
     try {
       await notifyCourseEnrollment({
         courseId: id,

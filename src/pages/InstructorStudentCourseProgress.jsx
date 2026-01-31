@@ -1,13 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import "../styles/mentorMetrics.css";
-
-/**
- * MentorStudentCourseProgress.jsx
- * - Shows progress of one student in one course
- * - Module-wise quiz & assignment tracking
- * - Shows score + completion date
- */
+import "../styles/instructorMetrics.css";
 
 function safeJSONParse(raw, fallback) {
   try {
@@ -41,7 +34,7 @@ function readAssignmentSubmission(studentId, assignmentId) {
   return v || fallback;
 }
 
-export default function MentorStudentCourseProgress() {
+export default function InstructorStudentCourseProgress() {
   const { courseId, studentId } = useParams();
 
   const [loading, setLoading] = useState(true);
@@ -170,7 +163,7 @@ export default function MentorStudentCourseProgress() {
         <div className="mm-card">
           <h2 className="mm-title">Student Progress</h2>
           <div className="mm-alert mm-alert--err">{err || "Course not found"}</div>
-          <Link className="mm-link" to="/mentor-dashboard">← Back</Link>
+          <Link className="mm-link" to="/instructor-dashboard">← Back</Link>
         </div>
       </div>
     );
@@ -188,7 +181,7 @@ export default function MentorStudentCourseProgress() {
           </div>
 
           <div className="mm-headerActions">
-            <Link className="mm-link" to="/mentor-dashboard">← Dashboard</Link>
+            <Link className="mm-link" to="/instructor-dashboard">← Dashboard</Link>
             <Link className="mm-openCourse" to={`/course/${course.id}`} target="_blank" rel="noreferrer">
               Open Course
             </Link>
