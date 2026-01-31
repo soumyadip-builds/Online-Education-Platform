@@ -1,12 +1,12 @@
 // src/components/CourseDetails.jsx
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import "../styles/course.css";
-import NavbarComponent from "./NavbarComponent";
 import CourseCollapsibleSection from "./CourseCollapsibleSection";
 
 import { getCurrentUser, getUserByEmail } from "../utils/session";
 import { enrollInCourse } from "../utils/userStorage";
+import { notifyCourseEnrollment } from "../services/communicationService";
 
 /** Prefix a path with app base (Vite BASE_URL or CRA PUBLIC_URL). */
 function withBase(path) {
@@ -107,15 +107,13 @@ export default function CourseDetails() {
     };
   }, [refreshEnrollmentAndRole]);
 
-  // Enroll handler (only learners can enroll)
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     const me = getCurrentUser();
     if (!me?.email) {
       alert("Please log in to enroll.");
       return;
     }
     if (me.role !== "learner") {
-      // For instructors, we won’t show the button anyway, but guard just in case
       alert("Only learners can enroll in courses.");
       return;
     }
@@ -125,6 +123,18 @@ export default function CourseDetails() {
       return;
     }
     setEnrolled(true);
+
+    // ✅ NEW: create a forum notification for instructors/mentors (or fallback users)
+    try {
+      await notifyCourseEnrollment({
+        courseId: id,
+        courseTitle: course?.title,     // available in this component state
+        learnerEmail: me.email,
+        learnerName: me.name,
+      });
+    } catch (e) {
+      console.warn("Enrollment notification failed:", e);
+    }
   };
 
   // Fetch from public/data/
