@@ -1,14 +1,7 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import '../styles/forum-post.css';
 
-/**
- * ForumReply.jsx
- * - Minimal reply composer under `.ed-forum` namespace
- * - No third-party dependencies
- * - Emits onSubmit(text) and onCancel() events
- */
 const ForumReply = ({
   placeholder = 'Write your reply…',
   onSubmit,
