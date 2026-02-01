@@ -22,27 +22,21 @@ export default function CourseCard({ course }) {
         course;
     
 const handleClick = () => {
-  // Basic context logs
-  console.groupCollapsed('[CourseCard] handleClick');
-  console.log('course.id:', id);
-  console.log('course.title:', title);
 
   // Auth check
   const authed = isAuthenticated();
-  console.log('isAuthenticated():', authed);
 
   if (authed) {
     // Route must match App.jsx → /course/:courseId  (singular)
     const target = `/courses/${id}`;
-    console.log('Navigating to:', target);
 
     try {
       navigate(target);
-      console.log('navigate() called successfully');
+
 
       // Scroll after route update
       setTimeout(() => {
-        console.log('Scrolling to top after navigation');
+
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }, 0);
     } catch (err) {
@@ -52,7 +46,6 @@ const handleClick = () => {
     console.warn('User not authenticated. Redirecting to /auth');
     try {
       navigate('/auth');
-      console.log('navigate("/auth") called successfully');
     } catch (err) {
       console.error('Error navigating to /auth:', err);
     }
