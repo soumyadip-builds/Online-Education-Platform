@@ -1,4 +1,3 @@
-// src/components/CourseDetails.jsx
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import "../styles/course.css";
@@ -7,6 +6,53 @@ import CourseCollapsibleSection from "./CourseCollapsibleSection";
 import { getCurrentUser, getUserByEmail } from "../utils/session";
 import { enrollInCourse } from "../utils/userStorage";
 import { notifyCourseEnrollment } from "../services/communicationService";
+
+const LS_KEY_COURSES = "cb_courses_v1";
+
+function loadCreatedCourses() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_COURSES) || "[]";
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergeCourses(seedCourses, createdCourses) {
+  const map = new Map();
+  [...(seedCourses || []), ...(createdCourses || [])].forEach((c) => {
+    if (c && c.id) map.set(c.id, c);
+  });
+  return Array.from(map.values());
+}
+function deriveVideosFromCourse(courseObj) {
+  // Prefer existing top-level videos if present
+  if (Array.isArray(courseObj?.videos) && courseObj.videos.length > 0) {
+    return courseObj.videos;
+  }
+
+  // Otherwise, derive from sections/items or modules/items
+  const itemsFromSections =
+    (courseObj?.sections ?? []).flatMap((s) => s?.items ?? []);
+
+  const itemsFromModules =
+    (courseObj?.modules ?? []).flatMap((m) => m?.items ?? []);
+
+  const allItems = [...itemsFromSections, ...itemsFromModules];
+
+  const videos = allItems
+    .filter((it) => (it?.type ?? "").toLowerCase() === "video")
+    .map((v, i) => ({
+      id: v?.id ?? `video-${i + 1}`,
+      title: v?.title ?? `Video ${i + 1}`,
+      url: v?.url ?? "",
+      estimatedMinutes: v?.estimatedMinutes ?? v?.durationMinutes ?? 0,
+    }))
+    .filter((v) => !!v.url); // keep only valid URLs
+
+  return videos;
+}
 
 /** Prefix a path with app base (Vite BASE_URL or CRA PUBLIC_URL). */
 function withBase(path) {
@@ -162,9 +208,43 @@ export default function CourseDetails() {
           qRes.json(),
         ]);
 
-        const foundCourse =
-          (Array.isArray(coursesJson) ? coursesJson : []).find((c) => c.id === id) ??
-          null;
+        const seedCourses = Array.isArray(coursesJson) ? coursesJson : [];
+        const createdCourses = loadCreatedCourses();
+        const allCourses = mergeCourses(seedCourses, createdCourses);
+
+        const foundCourse = allCourses.find((c) => c.id === id) ?? null;
+        const normalizedCourse = foundCourse
+        ? {
+            ...foundCourse,
+
+            // thumbnail in creator is {mode, link} but details expects string
+            thumbnail:
+              typeof foundCourse.thumbnail === "string"
+                ? foundCourse.thumbnail
+                : foundCourse.thumbnail?.link || "",
+
+            // modules -> sections mapping (if you already did this, keep it)
+            sections: Array.isArray(foundCourse.sections)
+              ? foundCourse.sections
+              : (foundCourse.modules || []).map((m, idx) => ({
+                  id: m.id || `module-${idx + 1}`,
+                  title: m.title || `Module ${idx + 1}`,
+                  description: m.description || "",
+                  items: (m.items || []).map((it, ii) => ({
+                    id: it.id || `${m.id || `module-${idx + 1}`}-item-${ii + 1}`,
+                    title: it.title || `Item ${ii + 1}`,
+                    type: it.type || "reading",
+                    url: it.url || "",
+                    estimatedMinutes: it.estimatedMinutes || 0,
+                  })),
+                })),
+
+            // ✅ NEW: populate videos for right-side panel
+            videos: deriveVideosFromCourse(foundCourse),
+          }
+        : null;
+
+      setCourse(normalizedCourse);
         const aForCourse = (Array.isArray(assignmentsJson) ? assignmentsJson : []).filter(
           (a) => a.courseId === id
         );
@@ -173,7 +253,8 @@ export default function CourseDetails() {
         );
 
         if (!alive) return;
-        setCourse(foundCourse);
+        // setCourse(foundCourse);
+        // setCourse(normalizedCourse);
         setAssignments(aForCourse);
         setQuizzes(qForCourse);
         if (!foundCourse) setLoadErr("Course not found.");
@@ -184,9 +265,17 @@ export default function CourseDetails() {
         if (alive) setLoading(false);
       }
     })();
+    // ✅ Refresh details page when a new course is created or updated
+    const reload = () => {
+      // re-run the same async block by reloading the URL or re-running the logic
+      window.location.reload();
+    };
+    window.addEventListener("courses-changed", reload);
     return () => {
       alive = false;
+      window.removeEventListener("courses-changed", reload);
     };
+    
   }, [id]);
 
   /** Convert course.sections into normalized modules */
@@ -337,11 +426,11 @@ export default function CourseDetails() {
     videos = [],
   } = course;
 
-  const stars = Math.round(Number(rating ?? 0));
-  const formattedLearners = new Intl.NumberFormat().format(learners ?? 0);
+  const stars = Math.round(Number(rating ?? 3.5));
+  const formattedLearners = new Intl.NumberFormat().format(learners ?? 1369);
   const formattedRatings = ratingsCount
     ? new Intl.NumberFormat().format(ratingsCount)
-    : null;
+    : 12;
 
   return (
     <div>
@@ -355,7 +444,7 @@ export default function CourseDetails() {
             <div className="course-details__chips">
               <span className="chip" title="Rating">
                 <strong style={{ marginRight: 6 }}>
-                  {Number(rating ?? 0).toFixed(1)}
+                  {Number(rating ?? 3.5).toFixed(1)}
                 </strong>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} filled={i < stars} />
