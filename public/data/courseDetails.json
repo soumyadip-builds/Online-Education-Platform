@@ -24,19 +24,204 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Getting Started with React", "lectures": 5, "length": "25min" },
-			{ "title": "JSX, Props & State", "lectures": 8, "length": "54min" },
-			{ "title": "Events & Forms", "lectures": 6, "length": "41min" }
+			{
+				"id": "react-basics-section-1",
+				"title": "Getting Started with React",
+				"description": "",
+				"items": [
+					{
+						"id": "react-basics-s1-v1",
+						"title": "Intro to React",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "react-basics-s1-v2",
+						"title": "JSX & Components",
+						"type": "video",
+						"url": "https://youtu.be/MhkGQAoc7bc",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "react-basics-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=600",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "react-basics-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=900",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "react-basics-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=1200",
+						"estimatedMinutes": 5
+					}
+				]
+			},
+			{
+				"id": "react-basics-section-2",
+				"title": "JSX, Props & State",
+				"description": "",
+				"items": [
+					{
+						"id": "react-basics-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=2100",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec7",
+						"title": "Lecture 7",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=2520",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s2-lec8",
+						"title": "Lecture 8",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=2940",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "react-basics-section-3",
+				"title": "Events & Forms",
+				"description": "",
+				"items": [
+					{
+						"id": "react-basics-s3-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s3-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s3-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s3-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s3-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-basics-s3-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "react-basics-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "react-basics-doc-1",
+						"title": "Slides",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "react-basics-link-1",
+						"title": "React Docs",
+						"type": "link",
+						"url": "https://react.dev",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
 				"title": "Intro to React",
 				"url": "https://www.youtube.com/watch?v=dGcsHMXbSOA"
 			},
-			{ "title": "JSX & Components", "url": "https://youtu.be/MhkGQAoc7bc" }
+			{
+				"title": "JSX & Components",
+				"url": "https://youtu.be/MhkGQAoc7bc"
+			}
 		],
-		"docs": [{ "title": "Slides", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "React Docs", "url": "https://react.dev" }],
+		"docs": [
+			{
+				"title": "Slides",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "React Docs",
+				"url": "https://react.dev"
+			}
+		],
 		"isBestseller": true
 	},
 	{
@@ -64,9 +249,174 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Type System Basics", "lectures": 6, "length": "42min" },
-			{ "title": "Interfaces & Generics", "lectures": 7, "length": "55min" },
-			{ "title": "Tooling & Integrations", "lectures": 5, "length": "36min" }
+			{
+				"id": "typescript-essentials-section-1",
+				"title": "Type System Basics",
+				"description": "",
+				"items": [
+					{
+						"id": "typescript-essentials-s1-v1",
+						"title": "TypeScript Crash Course",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s1-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "typescript-essentials-section-2",
+				"title": "Interfaces & Generics",
+				"description": "",
+				"items": [
+					{
+						"id": "typescript-essentials-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "typescript-essentials-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=480",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "typescript-essentials-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=960",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "typescript-essentials-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=1440",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "typescript-essentials-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=1920",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "typescript-essentials-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=2400",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "typescript-essentials-s2-lec7",
+						"title": "Lecture 7",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=2880",
+						"estimatedMinutes": 8
+					}
+				]
+			},
+			{
+				"id": "typescript-essentials-section-3",
+				"title": "Tooling & Integrations",
+				"description": "",
+				"items": [
+					{
+						"id": "typescript-essentials-s3-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s3-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s3-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s3-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "typescript-essentials-s3-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=BCg4U1FzODs&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "typescript-essentials-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "typescript-essentials-doc-1",
+						"title": "TypeScript Cheatsheet",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "typescript-essentials-link-1",
+						"title": "TypeScript Handbook",
+						"type": "link",
+						"url": "https://www.typescriptlang.org/docs/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -74,7 +424,12 @@
 				"url": "https://www.youtube.com/watch?v=BCg4U1FzODs"
 			}
 		],
-		"docs": [{ "title": "TypeScript Cheatsheet", "url": "/docs/dummy.pdf" }],
+		"docs": [
+			{
+				"title": "TypeScript Cheatsheet",
+				"url": "/docs/dummy.pdf"
+			}
+		],
 		"links": [
 			{
 				"label": "TypeScript Handbook",
@@ -108,9 +463,153 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Redux Toolkit Fundamentals", "lectures": 6, "length": "38min" },
-			{ "title": "RTK Query & Async Data", "lectures": 5, "length": "34min" },
-			{ "title": "Patterns & Best Practices", "lectures": 4, "length": "28min" }
+			{
+				"id": "redux-toolkit-section-1",
+				"title": "Redux Toolkit Fundamentals",
+				"description": "",
+				"items": [
+					{
+						"id": "redux-toolkit-s1-v1",
+						"title": "Redux Toolkit Overview",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "redux-toolkit-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "redux-toolkit-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "redux-toolkit-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "redux-toolkit-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=1440",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "redux-toolkit-s1-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=1800",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "redux-toolkit-section-2",
+				"title": "RTK Query & Async Data",
+				"description": "",
+				"items": [
+					{
+						"id": "redux-toolkit-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "redux-toolkit-section-3",
+				"title": "Patterns & Best Practices",
+				"description": "",
+				"items": [
+					{
+						"id": "redux-toolkit-s3-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s3-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s3-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "redux-toolkit-s3-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=9zySeP5vH9c&t=1260",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "redux-toolkit-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "redux-toolkit-doc-1",
+						"title": "Redux Style Guide",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "redux-toolkit-link-1",
+						"title": "Redux Toolkit Docs",
+						"type": "link",
+						"url": "https://redux-toolkit.js.org/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -118,9 +617,17 @@
 				"url": "https://www.youtube.com/watch?v=9zySeP5vH9c"
 			}
 		],
-		"docs": [{ "title": "Redux Style Guide", "url": "/docs/dummy.pdf" }],
+		"docs": [
+			{
+				"title": "Redux Style Guide",
+				"url": "/docs/dummy.pdf"
+			}
+		],
 		"links": [
-			{ "label": "Redux Toolkit Docs", "url": "https://redux-toolkit.js.org/" }
+			{
+				"label": "Redux Toolkit Docs",
+				"url": "https://redux-toolkit.js.org/"
+			}
 		]
 	},
 	{
@@ -148,9 +655,160 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Auth Fundamentals", "lectures": 5, "length": "32min" },
-			{ "title": "JWT & Sessions", "lectures": 6, "length": "41min" },
-			{ "title": "RBAC & Security", "lectures": 5, "length": "32min" }
+			{
+				"id": "express-auth-section-1",
+				"title": "Auth Fundamentals",
+				"description": "",
+				"items": [
+					{
+						"id": "express-auth-s1-v1",
+						"title": "JWT Auth with Express",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=1440",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "express-auth-section-2",
+				"title": "JWT & Sessions",
+				"description": "",
+				"items": [
+					{
+						"id": "express-auth-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "express-auth-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "express-auth-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "express-auth-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "express-auth-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "express-auth-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "express-auth-section-3",
+				"title": "RBAC & Security",
+				"description": "",
+				"items": [
+					{
+						"id": "express-auth-s3-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s3-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s3-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s3-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "express-auth-s3-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4&t=1440",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "express-auth-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "express-auth-doc-1",
+						"title": "Auth Checklist",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "express-auth-link-1",
+						"title": "OWASP Cheat Sheet",
+						"type": "link",
+						"url": "https://cheatsheetseries.owasp.org/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -158,9 +816,17 @@
 				"url": "https://www.youtube.com/watch?v=mbsmsi7l3r4"
 			}
 		],
-		"docs": [{ "title": "Auth Checklist", "url": "/docs/dummy.pdf" }],
+		"docs": [
+			{
+				"title": "Auth Checklist",
+				"url": "/docs/dummy.pdf"
+			}
+		],
 		"links": [
-			{ "label": "OWASP Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/" }
+			{
+				"label": "OWASP Cheat Sheet",
+				"url": "https://cheatsheetseries.owasp.org/"
+			}
 		]
 	},
 	{
@@ -188,8 +854,111 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Data Modeling & CRUD", "lectures": 5, "length": "35min" },
-			{ "title": "Indexes & Aggregation", "lectures": 5, "length": "33min" }
+			{
+				"id": "mongodb-basics-section-1",
+				"title": "Data Modeling & CRUD",
+				"description": "",
+				"items": [
+					{
+						"id": "mongodb-basics-s1-v1",
+						"title": "MongoDB Crash Course",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "mongodb-basics-section-2",
+				"title": "Indexes & Aggregation",
+				"description": "",
+				"items": [
+					{
+						"id": "mongodb-basics-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "mongodb-basics-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ofme2o29ngU&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "mongodb-basics-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "mongodb-basics-doc-1",
+						"title": "MongoDB Notes",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "mongodb-basics-link-1",
+						"title": "MongoDB Docs",
+						"type": "link",
+						"url": "https://www.mongodb.com/docs/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -197,8 +966,18 @@
 				"url": "https://www.youtube.com/watch?v=ofme2o29ngU"
 			}
 		],
-		"docs": [{ "title": "MongoDB Notes", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "MongoDB Docs", "url": "https://www.mongodb.com/docs/" }]
+		"docs": [
+			{
+				"title": "MongoDB Notes",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "MongoDB Docs",
+				"url": "https://www.mongodb.com/docs/"
+			}
+		]
 	},
 	{
 		"id": "docker-basics",
@@ -225,8 +1004,118 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Images & Containers", "lectures": 5, "length": "34min" },
-			{ "title": "Dockerfiles & Best Practices", "lectures": 6, "length": "41min" }
+			{
+				"id": "docker-basics-section-1",
+				"title": "Images & Containers",
+				"description": "",
+				"items": [
+					{
+						"id": "docker-basics-s1-v1",
+						"title": "Docker Crash Course",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "docker-basics-section-2",
+				"title": "Dockerfiles & Best Practices",
+				"description": "",
+				"items": [
+					{
+						"id": "docker-basics-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "docker-basics-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "docker-basics-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "docker-basics-doc-1",
+						"title": "Docker Commands",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "docker-basics-link-1",
+						"title": "Docker Docs",
+						"type": "link",
+						"url": "https://docs.docker.com/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -234,8 +1123,18 @@
 				"url": "https://www.youtube.com/watch?v=eB0nUzAI7M8"
 			}
 		],
-		"docs": [{ "title": "Docker Commands", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Docker Docs", "url": "https://docs.docker.com/" }]
+		"docs": [
+			{
+				"title": "Docker Commands",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "Docker Docs",
+				"url": "https://docs.docker.com/"
+			}
+		]
 	},
 	{
 		"id": "kubernetes-intro",
@@ -262,8 +1161,118 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Core Concepts", "lectures": 6, "length": "46min" },
-			{ "title": "Services & Networking", "lectures": 5, "length": "42min" }
+			{
+				"id": "kubernetes-intro-section-1",
+				"title": "Core Concepts",
+				"description": "",
+				"items": [
+					{
+						"id": "kubernetes-intro-s1-v1",
+						"title": "Kubernetes Basics",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=480",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=960",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=1440",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=1920",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s1-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=2400",
+						"estimatedMinutes": 8
+					}
+				]
+			},
+			{
+				"id": "kubernetes-intro-section-2",
+				"title": "Services & Networking",
+				"description": "",
+				"items": [
+					{
+						"id": "kubernetes-intro-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=480",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=960",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=1440",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "kubernetes-intro-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=X48VuDVv0do&t=1920",
+						"estimatedMinutes": 8
+					}
+				]
+			},
+			{
+				"id": "kubernetes-intro-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "kubernetes-intro-doc-1",
+						"title": "K8s Quickstart",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "kubernetes-intro-link-1",
+						"title": "Kubernetes Docs",
+						"type": "link",
+						"url": "https://kubernetes.io/docs/home/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -271,9 +1280,17 @@
 				"url": "https://www.youtube.com/watch?v=X48VuDVv0do"
 			}
 		],
-		"docs": [{ "title": "K8s Quickstart", "url": "/docs/dummy.pdf" }],
+		"docs": [
+			{
+				"title": "K8s Quickstart",
+				"url": "/docs/dummy.pdf"
+			}
+		],
 		"links": [
-			{ "label": "Kubernetes Docs", "url": "https://kubernetes.io/docs/home/" }
+			{
+				"label": "Kubernetes Docs",
+				"url": "https://kubernetes.io/docs/home/"
+			}
 		]
 	},
 	{
@@ -301,8 +1318,118 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Git Fundamentals", "lectures": 5, "length": "30min" },
-			{ "title": "GitHub Collaboration", "lectures": 6, "length": "38min" }
+			{
+				"id": "git-github-workflow-section-1",
+				"title": "Git Fundamentals",
+				"description": "",
+				"items": [
+					{
+						"id": "git-github-workflow-s1-v1",
+						"title": "Git & GitHub Tutorial",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=1440",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "git-github-workflow-section-2",
+				"title": "GitHub Collaboration",
+				"description": "",
+				"items": [
+					{
+						"id": "git-github-workflow-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=1440",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "git-github-workflow-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RGOj5yH7evk&t=1800",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "git-github-workflow-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "git-github-workflow-doc-1",
+						"title": "Git Commands",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "git-github-workflow-link-1",
+						"title": "Pro Git Book",
+						"type": "link",
+						"url": "https://git-scm.com/book/en/v2",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -310,8 +1437,18 @@
 				"url": "https://www.youtube.com/watch?v=RGOj5yH7evk"
 			}
 		],
-		"docs": [{ "title": "Git Commands", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Pro Git Book", "url": "https://git-scm.com/book/en/v2" }],
+		"docs": [
+			{
+				"title": "Git Commands",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "Pro Git Book",
+				"url": "https://git-scm.com/book/en/v2"
+			}
+		],
 		"isBestseller": true
 	},
 	{
@@ -339,8 +1476,118 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Jest Fundamentals", "lectures": 5, "length": "34min" },
-			{ "title": "React & API Testing", "lectures": 6, "length": "41min" }
+			{
+				"id": "jest-testing-section-1",
+				"title": "Jest Fundamentals",
+				"description": "",
+				"items": [
+					{
+						"id": "jest-testing-s1-v1",
+						"title": "Jest Crash Course",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "jest-testing-section-2",
+				"title": "React & API Testing",
+				"description": "",
+				"items": [
+					{
+						"id": "jest-testing-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "jest-testing-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=7r4xVDI2vho&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "jest-testing-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "jest-testing-doc-1",
+						"title": "Testing Checklist",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "jest-testing-link-1",
+						"title": "Jest Docs",
+						"type": "link",
+						"url": "https://jestjs.io/docs/getting-started",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -348,9 +1595,17 @@
 				"url": "https://www.youtube.com/watch?v=7r4xVDI2vho"
 			}
 		],
-		"docs": [{ "title": "Testing Checklist", "url": "/docs/dummy.pdf" }],
+		"docs": [
+			{
+				"title": "Testing Checklist",
+				"url": "/docs/dummy.pdf"
+			}
+		],
 		"links": [
-			{ "label": "Jest Docs", "url": "https://jestjs.io/docs/getting-started" }
+			{
+				"label": "Jest Docs",
+				"url": "https://jestjs.io/docs/getting-started"
+			}
 		]
 	},
 	{
@@ -378,8 +1633,111 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Schema & Migrations", "lectures": 5, "length": "33min" },
-			{ "title": "Queries & Integrations", "lectures": 5, "length": "31min" }
+			{
+				"id": "prisma-orm-section-1",
+				"title": "Schema & Migrations",
+				"description": "",
+				"items": [
+					{
+						"id": "prisma-orm-s1-v1",
+						"title": "Prisma Crash Course",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "prisma-orm-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "prisma-orm-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "prisma-orm-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "prisma-orm-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "prisma-orm-section-2",
+				"title": "Queries & Integrations",
+				"description": "",
+				"items": [
+					{
+						"id": "prisma-orm-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "prisma-orm-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "prisma-orm-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "prisma-orm-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "prisma-orm-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=RebA5J-rlwg&t=1440",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "prisma-orm-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "prisma-orm-doc-1",
+						"title": "Prisma Notes",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "prisma-orm-link-1",
+						"title": "Prisma Docs",
+						"type": "link",
+						"url": "https://www.prisma.io/docs",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -387,8 +1745,18 @@
 				"url": "https://www.youtube.com/watch?v=RebA5J-rlwg"
 			}
 		],
-		"docs": [{ "title": "Prisma Notes", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Prisma Docs", "url": "https://www.prisma.io/docs" }]
+		"docs": [
+			{
+				"title": "Prisma Notes",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "Prisma Docs",
+				"url": "https://www.prisma.io/docs"
+			}
+		]
 	},
 	{
 		"id": "graphql-basics",
@@ -415,8 +1783,111 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Schema & Resolvers", "lectures": 5, "length": "31min" },
-			{ "title": "Client Queries & Mutations", "lectures": 5, "length": "33min" }
+			{
+				"id": "graphql-basics-section-1",
+				"title": "Schema & Resolvers",
+				"description": "",
+				"items": [
+					{
+						"id": "graphql-basics-s1-v1",
+						"title": "GraphQL Crash Course",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "graphql-basics-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=360",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "graphql-basics-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=720",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "graphql-basics-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=1080",
+						"estimatedMinutes": 6
+					},
+					{
+						"id": "graphql-basics-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=1440",
+						"estimatedMinutes": 6
+					}
+				]
+			},
+			{
+				"id": "graphql-basics-section-2",
+				"title": "Client Queries & Mutations",
+				"description": "",
+				"items": [
+					{
+						"id": "graphql-basics-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "graphql-basics-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "graphql-basics-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "graphql-basics-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "graphql-basics-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "graphql-basics-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "graphql-basics-doc-1",
+						"title": "GraphQL Notes",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "graphql-basics-link-1",
+						"title": "GraphQL Docs",
+						"type": "link",
+						"url": "https://graphql.org/learn/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -424,8 +1895,18 @@
 				"url": "https://www.youtube.com/watch?v=ed8SzALpx1Q"
 			}
 		],
-		"docs": [{ "title": "GraphQL Notes", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "GraphQL Docs", "url": "https://graphql.org/learn/" }]
+		"docs": [
+			{
+				"title": "GraphQL Notes",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "GraphQL Docs",
+				"url": "https://graphql.org/learn/"
+			}
+		]
 	},
 	{
 		"id": "react-native-intro",
@@ -452,8 +1933,118 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Core Components & Styling", "lectures": 5, "length": "34min" },
-			{ "title": "Navigation & APIs", "lectures": 6, "length": "41min" }
+			{
+				"id": "react-native-intro-section-1",
+				"title": "Core Components & Styling",
+				"description": "",
+				"items": [
+					{
+						"id": "react-native-intro-s1-v1",
+						"title": "React Native Tutorial",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=1680",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "react-native-intro-section-2",
+				"title": "Navigation & APIs",
+				"description": "",
+				"items": [
+					{
+						"id": "react-native-intro-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "react-native-intro-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "react-native-intro-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "react-native-intro-doc-1",
+						"title": "RN Quickstart",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "react-native-intro-link-1",
+						"title": "React Native Docs",
+						"type": "link",
+						"url": "https://reactnative.dev/docs/getting-started",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -461,7 +2052,12 @@
 				"url": "https://www.youtube.com/watch?v=0-S5a0eXPoc"
 			}
 		],
-		"docs": [{ "title": "RN Quickstart", "url": "/docs/dummy.pdf" }],
+		"docs": [
+			{
+				"title": "RN Quickstart",
+				"url": "/docs/dummy.pdf"
+			}
+		],
 		"links": [
 			{
 				"label": "React Native Docs",
@@ -494,8 +2090,125 @@
 			"certificate": true
 		},
 		"sections": [
-			{ "title": "Files & CLI Automation", "lectures": 6, "length": "44min" },
-			{ "title": "APIs & Scheduling", "lectures": 6, "length": "46min" }
+			{
+				"id": "python-automation-section-1",
+				"title": "Files & CLI Automation",
+				"description": "",
+				"items": [
+					{
+						"id": "python-automation-s1-v1",
+						"title": "Python Automation",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "python-automation-s1-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=420",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "python-automation-s1-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=840",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "python-automation-s1-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=1260",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "python-automation-s1-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=1680",
+						"estimatedMinutes": 7
+					},
+					{
+						"id": "python-automation-s1-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=2100",
+						"estimatedMinutes": 7
+					}
+				]
+			},
+			{
+				"id": "python-automation-section-2",
+				"title": "APIs & Scheduling",
+				"description": "",
+				"items": [
+					{
+						"id": "python-automation-s2-lec1",
+						"title": "Lecture 1",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "python-automation-s2-lec2",
+						"title": "Lecture 2",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=480",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "python-automation-s2-lec3",
+						"title": "Lecture 3",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=960",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "python-automation-s2-lec4",
+						"title": "Lecture 4",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=1440",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "python-automation-s2-lec5",
+						"title": "Lecture 5",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=1920",
+						"estimatedMinutes": 8
+					},
+					{
+						"id": "python-automation-s2-lec6",
+						"title": "Lecture 6",
+						"type": "video",
+						"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk&t=2400",
+						"estimatedMinutes": 8
+					}
+				]
+			},
+			{
+				"id": "python-automation-section-resources",
+				"title": "Resources",
+				"description": "Documents and external links",
+				"items": [
+					{
+						"id": "python-automation-doc-1",
+						"title": "Python Cheatsheet",
+						"type": "reading",
+						"url": "/docs/dummy.pdf",
+						"estimatedMinutes": 5
+					},
+					{
+						"id": "python-automation-link-1",
+						"title": "Python Docs",
+						"type": "link",
+						"url": "https://docs.python.org/3/",
+						"estimatedMinutes": 5
+					}
+				]
+			}
 		],
 		"videos": [
 			{
@@ -503,8 +2216,18 @@
 				"url": "https://www.youtube.com/watch?v=PXMJ6FS7llk"
 			}
 		],
-		"docs": [{ "title": "Python Cheatsheet", "url": "/docs/dummy.pdf" }],
-		"links": [{ "label": "Python Docs", "url": "https://docs.python.org/3/" }],
+		"docs": [
+			{
+				"title": "Python Cheatsheet",
+				"url": "/docs/dummy.pdf"
+			}
+		],
+		"links": [
+			{
+				"label": "Python Docs",
+				"url": "https://docs.python.org/3/"
+			}
+		],
 		"isBestseller": true
 	}
 ]
