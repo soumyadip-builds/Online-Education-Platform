@@ -37,6 +37,10 @@ export default function QuizPage() {
   const [timeLeftSec, setTimeLeftSec] = useState(null);
   const timerRef = useRef(null);
 
+  // BackPath for the dedicated user roles
+  const currentUser = getCurrentUser();
+  const backPath = currentUser?.role === "learner" ? "/student-home" : "/";
+
   // Load the quiz (no answers inside)
   useEffect(() => {
     let alive = true;
@@ -420,7 +424,7 @@ export default function QuizPage() {
                     Score: {score} / {maxScore} (Passing: {passingMarks})
                   </div>
                 </div>
-                <Link to="/" className="apq-btn ghost">
+                <Link to={backPath} className="apq-btn ghost">
                   Back
                 </Link>
               </>

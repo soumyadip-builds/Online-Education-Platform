@@ -36,6 +36,10 @@ export default function AssignmentPage() {
   const [lastSubmission, setLastSubmission] = useState(null); // ✅ show last submission in UI
   const fileInputRef = useRef(null);
 
+  // BackPath for the dedicated user roles
+  const currentUser = getCurrentUser();
+  const backPath = currentUser?.role === "learner" ? "/student-home" : "/";
+
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -378,7 +382,7 @@ export default function AssignmentPage() {
               <button type="submit" className="ap-btn">
                 Submit Assignment
               </button>
-              <Link to="/" className="ap-btn ghost">
+              <Link to={backPath} className="ap-btn ghost">
                 Cancel
               </Link>
             </div>
