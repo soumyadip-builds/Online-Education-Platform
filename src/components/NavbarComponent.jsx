@@ -1,5 +1,4 @@
-// src/components/NavbarComponent.jsx
-import React, {
+import {
     useCallback,
     useEffect,
     useMemo,
@@ -36,7 +35,7 @@ const NavbarComponent = () => {
         if (!user) return "/"; // fallback for guests
         switch (user.role) {
             case "instructor":
-                return "/mentor-home";
+                return "/instructor-home";
             case "learner":
                 return "/student-home";
             default:
@@ -163,7 +162,7 @@ const NavbarComponent = () => {
         if (role === "learner") {
             navigate("/performance-student");
         } else if (role === "instructor") {
-            navigate("/performance-mentor");
+            navigate("/performance-instructor");
         } else {
             // Optional: fallback (e.g., generic dashboard or home)
             navigate("/performance-dashboard");

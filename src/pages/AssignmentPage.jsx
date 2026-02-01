@@ -1,5 +1,4 @@
-// src/pages/AssignmentPage.jsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getCurrentUser } from '../utils/session'; // ✅ added
 

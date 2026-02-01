@@ -1,5 +1,3 @@
-// src/components/CourseCard.jsx
-import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import "../styles/course.css";
@@ -22,36 +20,23 @@ export default function CourseCard({ course }) {
 
     const { id, title, author, isBestseller, rating, learners, thumbnail } =
         course;
-
-    // const handleClick = () => {
-    // 	navigate(`/courses/${id}`);
-
-    // 	setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }), 0);
-    // };
-
     
 const handleClick = () => {
-  // Basic context logs
-  console.groupCollapsed('[CourseCard] handleClick');
-  console.log('course.id:', id);
-  console.log('course.title:', title);
 
   // Auth check
   const authed = isAuthenticated();
-  console.log('isAuthenticated():', authed);
 
   if (authed) {
     // Route must match App.jsx → /course/:courseId  (singular)
     const target = `/courses/${id}`;
-    console.log('Navigating to:', target);
 
     try {
       navigate(target);
-      console.log('navigate() called successfully');
+
 
       // Scroll after route update
       setTimeout(() => {
-        console.log('Scrolling to top after navigation');
+
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }, 0);
     } catch (err) {
@@ -61,7 +46,6 @@ const handleClick = () => {
     console.warn('User not authenticated. Redirecting to /auth');
     try {
       navigate('/auth');
-      console.log('navigate("/auth") called successfully');
     } catch (err) {
       console.error('Error navigating to /auth:', err);
     }
@@ -138,7 +122,7 @@ const handleClick = () => {
                 {/* Learners only — buttons removed */}
                 <div className="d-flex justify-content-start align-items-center mt-auto">
                     <div className="text-muted small">
-                        👥 {learners.toLocaleString()} learners
+                        👥 {learners ? learners.toLocaleString() : "1392"} learners
                     </div>
                 </div>
             </div>

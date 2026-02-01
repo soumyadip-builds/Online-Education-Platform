@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "../styles/instructorHome.css";
 import CourseCard from "../components/CourseCard";
 // import NavbarComponent from "../components/NavbarComponent";
@@ -10,7 +10,7 @@ import { useNavigate, Link } from "react-router-dom";
 
 // NEW: read the current user from your session util
 import { getCurrentUser } from "../utils/session";
-import { listPosts, addReply, subscribe, getUsers } from '../services/communicationService';
+import { listPosts, addReply, getUsers } from '../services/communicationService';
 import { getCurrentUser as getSessionUser } from '../utils/session';
 
 export default function InstructorHomePage({ authorName }) {
@@ -47,7 +47,7 @@ export default function InstructorHomePage({ authorName }) {
             rightImg: "/images/HeroSlide_2.png",
         },
         {
-            t: "Mentors Make Momentum",
+            t: "Instructors Make Momentum",
             d: "Your guidance turns effort into excellence.",
             bg: "#198754",
             rightImg: "/images/HeroSlide_3.png",
@@ -197,7 +197,7 @@ export default function InstructorHomePage({ authorName }) {
                 {/* ===== HERO CAROUSEL (unchanged) ===== */}
                 <div className="position-relative">
                     <div
-                        id="mentorCarousel"
+                        id="instructorCarousel"
                         className="carousel slide"
                         data-bs-ride="carousel"
                     >
@@ -240,7 +240,7 @@ export default function InstructorHomePage({ authorName }) {
                         <button
                             className="btn btn-light btn-lg rounded-circle carousel-ctrl position-absolute top-50 start-0 translate-middle-y"
                             type="button"
-                            data-bs-target="#mentorCarousel"
+                            data-bs-target="#instructorCarousel"
                             data-bs-slide="prev"
                             aria-label="Previous"
                         >
@@ -249,7 +249,7 @@ export default function InstructorHomePage({ authorName }) {
                         <button
                             className="btn btn-light btn-lg rounded-circle carousel-ctrl position-absolute top-50 end-0 translate-middle-y"
                             type="button"
-                            data-bs-target="#mentorCarousel"
+                            data-bs-target="#instructorCarousel"
                             data-bs-slide="next"
                             aria-label="Next"
                         >
@@ -264,7 +264,7 @@ export default function InstructorHomePage({ authorName }) {
                         <div className="col-lg-5">
                             <h2 className="mb-2">
                                 Welcome back,{" "}
-                                <span className="text-primary">Mentor</span> 👋
+                                <span className="text-primary">Instructor</span> 👋
                             </h2>
                             <p className="text-muted mb-0">
                                 A quick glance at your impact and learner
@@ -404,7 +404,7 @@ export default function InstructorHomePage({ authorName }) {
 
 // Small inline reply component
 function InlineReply({ onSubmit }) {
-  const [txt, setTxt] = React.useState('');
+  const [txt, setTxt] = useState('');
   return (
     <div className="d-flex gap-2">
       <input

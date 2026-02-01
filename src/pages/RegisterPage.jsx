@@ -1,6 +1,4 @@
-
-// src/pages/RegisterPage.jsx
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin }) => {
   const [showPasswords, setShowPasswords] = useState(false);

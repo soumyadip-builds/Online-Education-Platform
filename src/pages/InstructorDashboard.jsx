@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import "../styles/mentorMetrics.css";
-
-
+import "../styles/instructorMetrics.css";
 
 function safeJSONParse(raw, fallback) {
   try {
@@ -28,7 +26,7 @@ function getCurrentInstructor() {
   return { name: "" };
 }
 
-export default function MentorDashboard() {
+export default function InstructorDashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [courses, setCourses] = useState([]);

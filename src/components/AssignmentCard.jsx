@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import '../styles/assignmentCard.css';
 import QuizEditor from './QuizEditor';
 
