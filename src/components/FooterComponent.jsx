@@ -1,5 +1,4 @@
-// src/components/Footer.jsx
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "../styles/EdFooter.css";
 import edLogo from "../assets/edLogo.png";
 import { getCurrentUser } from "../utils/session";
@@ -43,7 +42,7 @@ const Footer = () => {
         if (!user) return '/'; // fallback for guests
         switch (user.role) {
           case 'instructor':
-            return '/mentor-home';
+            return '/instructor-home';
           case 'learner':
             return '/student-home';
           default:

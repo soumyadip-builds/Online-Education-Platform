@@ -1,6 +1,4 @@
-
-// src/pages/LoginPage.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const LoginPage = ({ data, setData, errors, status, onSubmit, onSwitchToRegister }) => {
   const [showPassword, setShowPassword] = useState(false);

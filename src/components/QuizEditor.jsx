@@ -1,5 +1,4 @@
-
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import "../styles/assignmentCard.css";
 
 export default function QuizEditor({ value, onChange }) {

@@ -1,24 +1,29 @@
-// src/pages/StudentMetrics.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/studentMetrics.css";
+import { getCurrentUser, getUserByEmail } from "../utils/session";
 
 /**
  * StudentMetrics.jsx
  * - Progress bar per enrolled course
  * - Module-wise tracking of quizzes & assignments
- * - Data sources:
- *    /data/courseDetails.json
- *    /data/assignmentData.json
- *    /data/quizData.json
  *
- * Completion sources (localStorage):
- *    quizResult:<quizId> = JSON.stringify({ score, maxScore, submittedAt })
- *    assignmentSubmission:<assignmentId> = JSON.stringify({ submittedAt, link, fileName })
+ * Data sources:
+ *  /data/courseDetails.json
+ *  /data/assignmentData.json
+ *  /data/quizData.json
  *
- * Enrollment source (localStorage):
- *    edstream_users = JSON.stringify([{ userId, email, coursesEnrolled: [] , ... }])
- *    edstream_current_user = JSON.stringify({ userId, email, ... })
+ * ✅ Quizzes (per-user):
+ *  quizAttempt:<email>:<quizId>
+ *  quizResult:<email>:<quizId>
+ *
+ * ✅ Assignments (per-user):
+ *  assignmentAttempt:<email>:<assignmentId>
+ *  assignmentResult:<email>:<assignmentId>
+ *  assignmentAttemptFile:<email>:<assignmentId>   (JSON document string, fetched via data URL)
+ *
+ * Your earlier code tracked assignments using assignmentSubmission:<id> (global),
+ * but AssignmentPage didn’t actually write that key, so completion never synced. [2](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/StudentMetrics.jsx)[1](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/AssignmentPage.jsx)
  */
 
 function safeJSONParse(raw) {
@@ -28,66 +33,92 @@ function safeJSONParse(raw) {
     return null;
   }
 }
-
-function readQuizResult(quizId) {
-  return safeJSONParse(localStorage.getItem(`quizResult:${quizId}`));
+function getWho(email) {
+  return email || "anonymous";
 }
-
-function readAssignmentSubmission(assignmentId) {
-  return safeJSONParse(localStorage.getItem(`assignmentSubmission:${assignmentId}`));
-}
-
 function fmtDateTime(iso) {
   if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return "—";
+  try { return new Date(iso).toLocaleString(); } catch { return "—"; }
+}
+
+/* ---------------------- QUIZ READERS (per-user) ---------------------- */
+function readQuizAttempt(quizId, email) {
+  const who = getWho(email);
+  const key = `quizAttempt:${who}:${quizId}`;
+  const found = safeJSONParse(localStorage.getItem(key));
+  if (found) return found;
+  // legacy fallback (if any)
+  return safeJSONParse(localStorage.getItem(`quizAttempt:${quizId}`));
+}
+function readQuizResult(quizId, email) {
+  const attempt = readQuizAttempt(quizId, email);
+  if (attempt) {
+    return {
+      score: attempt.score,
+      maxScore: attempt.maxScore,
+      submittedAt: attempt.submittedAt,
+      passed: attempt.passed,
+      questions: attempt.questions,
+    };
   }
+  const who = getWho(email);
+  return (
+    safeJSONParse(localStorage.getItem(`quizResult:${who}:${quizId}`)) ||
+    safeJSONParse(localStorage.getItem(`quizResult:${quizId}`)) // legacy fallback
+  );
 }
 
-/** Read current logged in user object */
-function readCurrentUser() {
-  const raw = localStorage.getItem("edstream_current_user");
-  const parsed = safeJSONParse(raw);
-  return parsed && typeof parsed === "object" ? parsed : null;
+/* ------------------- ASSIGNMENT READERS (per-user) ------------------- */
+function readAssignmentAttempt(assignmentId, email) {
+  const who = getWho(email);
+  return (
+    safeJSONParse(localStorage.getItem(`assignmentAttempt:${who}:${assignmentId}`)) ||
+    null
+  );
 }
 
-/** Read edstream_users array */
-function readEdstreamUsers() {
-  const raw = localStorage.getItem("edstream_users");
-  const parsed = safeJSONParse(raw);
-  return Array.isArray(parsed) ? parsed : [];
+function readAssignmentResult(assignmentId, email) {
+  const who = getWho(email);
+  return (
+    safeJSONParse(localStorage.getItem(`assignmentResult:${who}:${assignmentId}`)) ||
+    null
+  );
 }
 
 /**
- * Get enrolled course IDs for the currently logged-in student
- * from edstream_users[*].coursesEnrolled.
+ * ✅ Fetch “JSON file” for assignment details
+ * We store JSON string in localStorage as assignmentAttemptFile:<who>:<assignmentId>,
+ * then fetch it through a data URL.
  */
-function getCurrentStudentEnrolledCourseIds() {
-  const current = readCurrentUser();
-  const users = readEdstreamUsers();
+async function fetchAssignmentAttemptFile(assignmentId, email) {
+  const who = getWho(email);
+  const raw = localStorage.getItem(`assignmentAttemptFile:${who}:${assignmentId}`);
+  if (!raw) return null;
 
-  if (!current) return [];
-
-  const match =
-    (current.userId && users.find((u) => u.userId === current.userId)) ||
-    (current.email && users.find((u) => u.email === current.email)) ||
-    null;
-
-  const enrolled = match?.coursesEnrolled;
-  return Array.isArray(enrolled) ? enrolled : [];
+  const url = `data:application/json;charset=utf-8,${encodeURIComponent(raw)}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return res.json();
 }
 
 export default function StudentMetrics() {
+  const meEmail = getCurrentUser()?.email || "anonymous";
+
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
 
-  // Expand/collapse per course
-  const [openCourse, setOpenCourse] = useState({}); // { [courseId]: boolean }
+  const [openCourse, setOpenCourse] = useState({});
+  const [openQuizDetails, setOpenQuizDetails] = useState({});
+  const [openAssignmentDetails, setOpenAssignmentDetails] = useState({}); // ✅ NEW
+
+  const [assignmentDetailsCache, setAssignmentDetailsCache] = useState({}); // { [assignmentId]: payload }
+  const [assignmentDetailsLoading, setAssignmentDetailsLoading] = useState({}); // { [assignmentId]: boolean }
+  const [assignmentDetailsError, setAssignmentDetailsError] = useState({}); // { [assignmentId]: string }
+
+  const [metricsVersion, setMetricsVersion] = useState(0);
 
   // Fetch base datasets
   useEffect(() => {
@@ -132,18 +163,77 @@ export default function StudentMetrics() {
     };
   }, []);
 
-  /**
-   * Enrollment: from edstream_users -> current user's coursesEnrolled[]
-   * NOTE: This is computed once on mount. If you need it to update without refresh,
-   * you can convert this to state+effect based on your enrollment flow.
-   */
-  const enrolledCourseIds = useMemo(() => {
-    return getCurrentStudentEnrolledCourseIds();
+  // Enrolled courses from profile
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState([]);
+  useEffect(() => {
+    const refreshEnrollments = () => {
+      const me = getCurrentUser();
+      if (!me?.email) {
+        setEnrolledCourseIds([]);
+        return;
+      }
+      const full = getUserByEmail(me.email) || me;
+      const ids = Array.isArray(full.coursesEnrolled) ? full.coursesEnrolled : [];
+      setEnrolledCourseIds(ids);
+    };
+
+    refreshEnrollments();
+    window.addEventListener("session-changed", refreshEnrollments);
+    window.addEventListener("users-changed", refreshEnrollments);
+    return () => {
+      window.removeEventListener("session-changed", refreshEnrollments);
+      window.removeEventListener("users-changed", refreshEnrollments);
+    };
+  }, []);
+
+  // Sync metrics on updates
+  useEffect(() => {
+    const bump = () => setMetricsVersion((v) => v + 1);
+
+    window.addEventListener("metrics-changed", bump);
+
+    const onStorage = (e) => {
+      if (!e?.key) return;
+      if (
+        e.key.startsWith("quizAttempt:") ||
+        e.key.startsWith("quizResult:") ||
+        e.key.startsWith("assignmentAttempt:") ||
+        e.key.startsWith("assignmentResult:") ||
+        e.key.startsWith("assignmentAttemptFile:")
+      ) {
+        bump();
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("metrics-changed", bump);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   const enrolledCourses = useMemo(() => {
     return courses.filter((c) => enrolledCourseIds.includes(c.id));
   }, [courses, enrolledCourseIds]);
+
+  // Load assignment details on demand (when user clicks View Details)
+  const ensureAssignmentDetailsLoaded = async (assignmentId) => {
+    if (assignmentDetailsCache[assignmentId]) return;
+
+    setAssignmentDetailsLoading((p) => ({ ...p, [assignmentId]: true }));
+    setAssignmentDetailsError((p) => ({ ...p, [assignmentId]: "" }));
+
+    try {
+      const payload = await fetchAssignmentAttemptFile(assignmentId, meEmail);
+      if (!payload) throw new Error("No assignment details found (JSON document missing).");
+
+      setAssignmentDetailsCache((p) => ({ ...p, [assignmentId]: payload }));
+    } catch (e) {
+      setAssignmentDetailsError((p) => ({ ...p, [assignmentId]: e.message || "Failed to load details" }));
+    } finally {
+      setAssignmentDetailsLoading((p) => ({ ...p, [assignmentId]: false }));
+    }
+  };
 
   // Build metrics per course
   const courseMetrics = useMemo(() => {
@@ -151,21 +241,17 @@ export default function StudentMetrics() {
       const aFor = assignments.filter((a) => a.courseId === c.id);
       const qFor = quizzes.filter((q) => q.courseId === c.id);
 
-      // Completed = assignment submission exists OR quiz result exists
-      const aDone = aFor.filter((a) => !!readAssignmentSubmission(a.id));
-      const qDone = qFor.filter((q) => !!readQuizResult(q.id));
+      // ✅ Completed = per-user assignmentResult exists OR per-user quizResult exists
+      const aDone = aFor.filter((a) => !!readAssignmentResult(a.id, meEmail));
+      const qDone = qFor.filter((q) => !!readQuizResult(q.id, meEmail));
 
       const totalTrackable = aFor.length + qFor.length;
       const completedTrackable = aDone.length + qDone.length;
-
       const progressPct =
-        totalTrackable === 0
-          ? 0
-          : Math.round((completedTrackable / totalTrackable) * 100);
+        totalTrackable === 0 ? 0 : Math.round((completedTrackable / totalTrackable) * 100);
 
       // Group into modules
       const moduleMap = new Map();
-
       function ensureModule(name) {
         const key = name || "General";
         if (!moduleMap.has(key)) {
@@ -180,8 +266,7 @@ export default function StudentMetrics() {
 
       qFor.forEach((q) => {
         const mod = ensureModule(q.moduleTitle || q.module || q.sectionTitle || "General");
-        const result = readQuizResult(q.id);
-
+        const result = readQuizResult(q.id, meEmail);
         mod.quizzes.push({
           ...q,
           completed: !!result,
@@ -193,42 +278,32 @@ export default function StudentMetrics() {
 
       aFor.forEach((a) => {
         const mod = ensureModule(a.moduleTitle || a.module || a.sectionTitle || "General");
-        const sub = readAssignmentSubmission(a.id);
-
+        const res = readAssignmentResult(a.id, meEmail);
         mod.assignments.push({
           ...a,
-          completed: !!sub,
-          completedAt: sub?.submittedAt ?? null,
-          score: sub?.score ?? null, // placeholder if you store score later
+          completed: !!res,
+          completedAt: res?.submittedAt ?? null,
+          link: res?.link ?? null,
+          fileName: res?.fileName ?? null,
+          status: res?.status ?? null,
         });
       });
 
       const modules = Array.from(moduleMap.values()).map((m) => {
-        const quizzesSorted = [...m.quizzes].sort(
-          (x, y) => Number(y.completed) - Number(x.completed)
-        );
-        const assignmentsSorted = [...m.assignments].sort(
-          (x, y) => Number(y.completed) - Number(x.completed)
-        );
+        const quizzesSorted = [...m.quizzes].sort((x, y) => Number(y.completed) - Number(x.completed));
+        const assignmentsSorted = [...m.assignments].sort((x, y) => Number(y.completed) - Number(x.completed));
         return { ...m, quizzes: quizzesSorted, assignments: assignmentsSorted };
       });
 
-      // Optional: stable module ordering (General last)
       modules.sort((a, b) => {
         if (a.moduleTitle === "General") return 1;
         if (b.moduleTitle === "General") return -1;
         return a.moduleTitle.localeCompare(b.moduleTitle);
       });
 
-      return {
-        course: c,
-        progressPct,
-        completedTrackable,
-        totalTrackable,
-        modules,
-      };
+      return { course: c, progressPct, completedTrackable, totalTrackable, modules };
     });
-  }, [enrolledCourses, assignments, quizzes]);
+  }, [enrolledCourses, assignments, quizzes, metricsVersion, meEmail]);
 
   const toggleCourse = (courseId) => {
     setOpenCourse((prev) => ({ ...prev, [courseId]: !prev[courseId] }));
@@ -272,9 +347,7 @@ export default function StudentMetrics() {
         {courseMetrics.length === 0 ? (
           <div className="sm-empty">
             <p className="sm-muted">No enrolled courses found.</p>
-            <p className="sm-muted">
-              Enroll in a course first to see progress and tracking.
-            </p>
+            <p className="sm-muted">Enroll in a course first to see progress and tracking.</p>
           </div>
         ) : (
           <div className="sm-list">
@@ -296,7 +369,6 @@ export default function StudentMetrics() {
                         Completed {cm.completedTrackable}/{cm.totalTrackable} (Quizzes + Assignments)
                       </div>
                     </div>
-
                     <div className="sm-courseRight">
                       <div className="sm-progressNum">{cm.progressPct}%</div>
                       <div className={`sm-chevron ${isOpen ? "open" : ""}`}>▾</div>
@@ -324,7 +396,7 @@ export default function StudentMetrics() {
                             </div>
                           </div>
 
-                          {/* Assignments */}
+                          {/* ---------------- ASSIGNMENTS (with details) ---------------- */}
                           {m.assignments.length > 0 && (
                             <div className="sm-block">
                               <div className="sm-blockTitle">Assignments</div>
@@ -336,11 +408,15 @@ export default function StudentMetrics() {
                                         <span className="sm-tag sm-tag--assignment">📘</span>
                                         {a.title}
                                       </div>
+
                                       <div className="sm-itemSub">
                                         Completion:{" "}
-                                        <b>
-                                          {a.completed ? fmtDateTime(a.completedAt) : "Not completed"}
-                                        </b>
+                                        <b>{a.completed ? fmtDateTime(a.completedAt) : "Not completed"}</b>
+                                        {a.completed && a.status ? (
+                                          <>
+                                            {" "}• Status: <b>{a.status}</b>
+                                          </>
+                                        ) : null}
                                       </div>
                                     </div>
 
@@ -348,22 +424,122 @@ export default function StudentMetrics() {
                                       <span className={`sm-status ${a.completed ? "ok" : "muted"}`}>
                                         {a.completed ? "Completed" : "Pending"}
                                       </span>
-                                      <Link
-                                        to={`/assignment/${a.id}`}
-                                        className="sm-open"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
+
+                                      {a.completed && (
+                                        <button
+                                          type="button"
+                                          className="sm-open"
+                                          style={{ border: "none", cursor: "pointer" }}
+                                          onClick={async () => {
+                                            const next = !openAssignmentDetails[a.id];
+                                            setOpenAssignmentDetails((p) => ({ ...p, [a.id]: next }));
+                                            if (next) await ensureAssignmentDetailsLoaded(a.id);
+                                          }}
+                                        >
+                                          {openAssignmentDetails[a.id] ? "Hide Details" : "View Details"}
+                                        </button>
+                                      )}
+
+                                      <Link to={`/assignment/${a.id}`} className="sm-open" rel="noopener noreferrer">
                                         Open
                                       </Link>
                                     </div>
+
+                                    {/* ✅ Assignment detail panel (fetched JSON doc) */}
+                                    {a.completed && openAssignmentDetails[a.id] && (
+                                      <div
+                                        className="sm-assignmentDetails"
+                                        style={{
+                                          marginTop: 10,
+                                          padding: 10,
+                                          border: "1px solid #e5e7eb",
+                                          borderRadius: 10,
+                                          background: "#fafafa",
+                                          width: "100%",
+                                        }}
+                                      >
+                                        {assignmentDetailsLoading[a.id] ? (
+                                          <div className="sm-muted">Loading assignment details…</div>
+                                        ) : assignmentDetailsError[a.id] ? (
+                                          <div className="sm-muted">{assignmentDetailsError[a.id]}</div>
+                                        ) : (() => {
+                                          const payload = assignmentDetailsCache[a.id] || null;
+                                          if (!payload) return <div className="sm-muted">No detailed assignment data found.</div>;
+
+                                          const snap = payload.assignmentSnapshot || {};
+                                          return (
+                                            <div>
+                                              <div style={{ fontWeight: 700, marginBottom: 8 }}>Assignment Submission Review</div>
+                                              <div style={{ fontSize: 13, marginBottom: 8 }}>
+                                                <div><b>Submitted At:</b> {fmtDateTime(payload.submittedAt)}</div>
+                                                <div><b>Status:</b> {payload.status || "Submitted"}</div>
+                                                {payload.link ? (
+                                                  <div>
+                                                    <b>Link:</b>{" "}
+                                                    <a href={payload.link} target="_blank" rel="noreferrer">
+                                                      {payload.link}
+                                                    </a>
+                                                  </div>
+                                                ) : null}
+                                                {payload.fileName ? <div><b>File:</b> {payload.fileName}</div> : null}
+                                              </div>
+
+                                              <div style={{ marginTop: 10, fontWeight: 700 }}>Assignment Details</div>
+                                              <div style={{ fontSize: 13, marginTop: 6 }}>
+                                                <div><b>Title:</b> {snap.title || payload.title || "—"}</div>
+                                                <div><b>Course:</b> {(snap.courseId || payload.courseId || "—").toString().replace(/-/g, " ")}</div>
+                                                <div><b>Max Score:</b> {snap.maxScore ?? "—"}</div>
+                                                <div><b>Expected Time:</b> {snap.expectedTimeMins ?? "—"} mins</div>
+                                              </div>
+
+                                              {snap.description ? (
+                                                <div style={{ marginTop: 10 }}>
+                                                  <div style={{ fontWeight: 700 }}>Instructions</div>
+                                                  <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.6 }}>
+                                                    {snap.description}
+                                                  </div>
+                                                </div>
+                                              ) : null}
+
+                                              {Array.isArray(snap.attachments) && snap.attachments.length > 0 ? (
+                                                <div style={{ marginTop: 10 }}>
+                                                  <div style={{ fontWeight: 700 }}>Attachments</div>
+                                                  <ul style={{ margin: "6px 0 0 18px", padding: 0 }}>
+                                                    {snap.attachments.map((att) => (
+                                                      <li key={att.url}>
+                                                        <a href={att.url} target="_blank" rel="noreferrer">
+                                                          {att.name}
+                                                        </a>
+                                                      </li>
+                                                    ))}
+                                                  </ul>
+                                                </div>
+                                              ) : null}
+
+                                              {Array.isArray(snap.rubric) && snap.rubric.length > 0 ? (
+                                                <div style={{ marginTop: 10 }}>
+                                                  <div style={{ fontWeight: 700 }}>Rubric</div>
+                                                  <ul style={{ margin: "6px 0 0 18px", padding: 0 }}>
+                                                    {snap.rubric.map((r, idx) => (
+                                                      <li key={idx} style={{ marginBottom: 4 }}>
+                                                        <b>{r.criterion}:</b> {r.points} pts
+                                                      </li>
+                                                    ))}
+                                                  </ul>
+                                                </div>
+                                              ) : null}
+                                            </div>
+                                          );
+                                        })()}
+                                      </div>
+                                    )}
                                   </li>
                                 ))}
                               </ul>
                             </div>
                           )}
 
-                          {/* Quizzes */}
+                          {/* ---------------- QUIZZES (existing behavior) ---------------- */}
                           {m.quizzes.length > 0 && (
                             <div className="sm-block">
                               <div className="sm-blockTitle">Quizzes</div>
@@ -378,15 +554,10 @@ export default function StudentMetrics() {
                                       <div className="sm-itemSub">
                                         Score:{" "}
                                         <b>
-                                          {q.completed
-                                            ? `${q.score ?? 0} / ${q.maxScore ?? "—"}`
-                                            : "—"}
-                                        </b>
-                                        {" • "}
-                                        Completion:{" "}
-                                        <b>
-                                          {q.completed ? fmtDateTime(q.completedAt) : "Not completed"}
-                                        </b>
+                                          {q.completed ? `${q.score ?? 0} / ${q.maxScore ?? "—"}` : "—"}
+                                        </b>{" "}
+                                        • Completion:{" "}
+                                        <b>{q.completed ? fmtDateTime(q.completedAt) : "Not completed"}</b>
                                       </div>
                                     </div>
 
@@ -394,15 +565,80 @@ export default function StudentMetrics() {
                                       <span className={`sm-status ${q.completed ? "ok" : "muted"}`}>
                                         {q.completed ? "Completed" : "Pending"}
                                       </span>
-                                      <Link
-                                        to={`/quiz/${q.id}`}
-                                        className="sm-open"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
+
+                                      {q.completed && (
+                                        <button
+                                          type="button"
+                                          className="sm-open"
+                                          style={{ border: "none", cursor: "pointer" }}
+                                          onClick={() =>
+                                            setOpenQuizDetails((prev) => ({ ...prev, [q.id]: !prev[q.id] }))
+                                          }
+                                        >
+                                          {openQuizDetails[q.id] ? "Hide Details" : "View Details"}
+                                        </button>
+                                      )}
+
+                                      <Link to={`/quiz/${q.id}`} className="sm-open" rel="noopener noreferrer">
                                         Open
                                       </Link>
                                     </div>
+
+                                    {q.completed && openQuizDetails[q.id] && (
+                                      <div
+                                        className="sm-quizDetails"
+                                        style={{
+                                          marginTop: 10,
+                                          padding: 10,
+                                          border: "1px solid #e5e7eb",
+                                          borderRadius: 10,
+                                          background: "#fafafa",
+                                          width: "100%",
+                                        }}
+                                      >
+                                        {(() => {
+                                          const attempt = readQuizAttempt(q.id, meEmail);
+                                          if (!attempt?.questions?.length) {
+                                            return <div className="sm-muted">No detailed attempt data found.</div>;
+                                          }
+                                          return (
+                                            <div>
+                                              <div style={{ fontWeight: 700, marginBottom: 8 }}>Quiz Attempt Review</div>
+                                              <div style={{ fontSize: 13, marginBottom: 8 }}>
+                                                Score: <b>{attempt.score}</b> / <b>{attempt.maxScore}</b> • Status:{" "}
+                                                <b>{attempt.passed ? "Passed" : "Not Passed"}</b>
+                                              </div>
+
+                                              <ol style={{ margin: 0, paddingLeft: 18 }}>
+                                                {attempt.questions.map((qq) => {
+                                                  const optMap = new Map((qq.options || []).map((o) => [o.oid, o.text]));
+                                                  const chosen = (qq.selectedOptionIds || []).map((oid) => `${oid}. ${optMap.get(oid) || ""}`.trim());
+                                                  const correct = (qq.correctOptionIds || []).map((oid) => `${oid}. ${optMap.get(oid) || ""}`.trim());
+                                                  const isCorrect =
+                                                    JSON.stringify([...(qq.selectedOptionIds || [])].sort()) ===
+                                                    JSON.stringify([...(qq.correctOptionIds || [])].sort());
+                                                  return (
+                                                    <li key={qq.qid} style={{ marginBottom: 10 }}>
+                                                      <div style={{ fontWeight: 600 }}>{qq.text}</div>
+                                                      <div style={{ fontSize: 13, marginTop: 4 }}>
+                                                        <div><b>Your Answer:</b> {chosen.length ? chosen.join(", ") : "—"}</div>
+                                                        <div><b>Correct Answer:</b> {correct.length ? correct.join(", ") : "—"}</div>
+                                                        <div>
+                                                          <b>Result:</b>{" "}
+                                                          <span style={{ color: isCorrect ? "#065f46" : "#9b1c1c" }}>
+                                                            {isCorrect ? "Correct" : "Incorrect"}
+                                                          </span>
+                                                        </div>
+                                                      </div>
+                                                    </li>
+                                                  );
+                                                })}
+                                              </ol>
+                                            </div>
+                                          );
+                                        })()}
+                                      </div>
+                                    )}
                                   </li>
                                 ))}
                               </ul>

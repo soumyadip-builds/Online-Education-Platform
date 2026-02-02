@@ -1,5 +1,4 @@
-
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '../styles/editProfile.css';
 
 import {
@@ -19,10 +18,15 @@ function TagInput({
   const [input, setInput] = useState('');
 
   function addTag(e) {
-    if (e.key === 'Enter' && input.trim()) {
-      const next = Array.from(new Set([...(value || []), input.trim()]));
-      onChange?.(next);
-      setInput('');
+    if (e.key === 'Enter') {
+      // Prevent Enter from submitting the whole form
+      e.preventDefault();
+
+      if (input.trim()) {
+        const next = Array.from(new Set([...(value || []), input.trim()]));
+        onChange?.(next);
+        setInput('');
+      }
     }
   }
 
@@ -52,6 +56,72 @@ function TagInput({
       </div>
 
       <small className="hint">Press Enter to add. Click a chip to remove.</small>
+    </div>
+  );
+}
+
+/** Skills input with explicit Add button */
+function SkillsInput({
+  label,
+  value = [],
+  placeholder = 'Type a skill',
+  onChange,
+}) {
+  const [input, setInput] = useState('');
+
+  function addSkill() {
+    const skill = input.trim();
+    if (!skill) return;
+
+    // prevent duplicates
+    const next = Array.from(new Set([...(value || []), skill]));
+    onChange?.(next);
+    setInput('');
+  }
+
+  function removeSkill(skill) {
+    const next = (value || []).filter(s => s !== skill);
+    onChange?.(next);
+  }
+
+  return (
+    <div className="form-group">
+      <label className="label">{label}</label>
+
+      <div className="skill-add-row" style={{ display: 'flex', gap: 8 }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={(e) => {
+            // Optional: allow Enter to add skill, but still do NOT submit the form
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addSkill();
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={addSkill}
+          disabled={!input.trim()}
+        >
+          Add Skill
+        </button>
+      </div>
+
+      <div className="chip-input" style={{ marginTop: 10 }} aria-label="Added skills">
+        {(value || []).map(skill => (
+          <span key={skill} className="chip" onClick={() => removeSkill(skill)}>
+            {skill}
+            <button type="button">&times;</button>
+          </span>
+        ))}
+      </div>
+
+      <small className="hint">Type a skill and click “Add Skill”. Click a chip to remove.</small>
     </div>
   );
 }
@@ -133,6 +203,10 @@ export default function EditProfile() {
   const [loading, setLoading] = useState(true);
   const [initial, setInitial] = useState(null);
 
+  // Bootstrap alert state
+  const [alertState, setAlertState] = useState(null);
+  // alertState = { type: 'success'|'danger'|'warning'|'info', message: string }
+
   const [form, setForm] = useState({
     name: '',
     dob: '',
@@ -195,25 +269,30 @@ export default function EditProfile() {
 
   function save(e) {
     e.preventDefault();
+    setAlertState(null);
+
     if (!initial?.email) return;
 
     const changes = diff(initial, form);
     if (Object.keys(changes).length === 0) {
-      alert('Nothing to update.');
+      setAlertState({ type: 'warning', message: 'Nothing to update.' });
       return;
     }
 
     const res = updateUserByEmail(initial.email, changes);
     if (!res.ok) {
-      alert(res.error || 'Failed to update profile.');
+      setAlertState({
+        type: 'danger',
+        message: res.error || 'Failed to update profile.',
+      });
       return;
     }
 
     const updatedUser = { ...initial, ...changes };
     createSession(updatedUser);
-
     setInitial(updatedUser);
-    alert('Profile updated!');
+
+    setAlertState({ type: 'success', message: 'Profile updated successfully!' });
   }
 
   if (loading) {
@@ -241,10 +320,34 @@ export default function EditProfile() {
     <div className="edit-profile-layout">
       <div className="aurora-bg" />
 
-      <form className="editcard" onSubmit={save}>
+      <form
+        className="editcard"
+        onSubmit={save}
+        onKeyDown={(e) => {
+          // Only Save Changes should submit the form
+          if (e.key === 'Enter') e.preventDefault();
+        }}
+      >
         <h2 className="title">
           Edit Profile <span className="role-pill">{role}</span>
         </h2>
+
+        {/* Bootstrap Alert */}
+        {alertState && (
+          <div
+            className={`alert alert-${alertState.type} alert-dismissible fade show`}
+            role="alert"
+            style={{ marginTop: 12 }}
+          >
+            {alertState.message}
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Close"
+              onClick={() => setAlertState(null)}
+            />
+          </div>
+        )}
 
         {/* Common fields */}
         <div className="form-group">
@@ -268,11 +371,12 @@ export default function EditProfile() {
         {/* Learner */}
         {role === 'learner' && (
           <>
-            <TagInput
+            <SkillsInput
               label="Skills (optional)"
               value={form.skills}
               onChange={(v) => patch('skills', v)}
             />
+
             <div className="form-group">
               <label className="label">Occupation (optional)</label>
               <input
@@ -318,7 +422,10 @@ export default function EditProfile() {
           <button
             type="button"
             className="btn ghost"
-            onClick={() => setForm(initial)}
+            onClick={() => {
+              setForm(initial);
+              setAlertState(null);
+            }}
           >
             Reset
           </button>

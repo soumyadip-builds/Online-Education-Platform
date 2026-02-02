@@ -1,5 +1,4 @@
-// src/pages/Home.jsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CourseCard from '../components/CourseCard';
 import '../styles/home.css';
 
@@ -34,8 +33,6 @@ import Acc1 from '/images/accelerators/Acc1.png';
 import Acc2 from '/images/accelerators/Acc3.png';
 import Acc3 from '/images/accelerators/Acc4.png';
 
-import NavbarComponent from '../components/NavbarComponent';
-import Footer from '../components/FooterComponent';
 import { useNavigate } from 'react-router-dom';
 
 const heroSlides = [

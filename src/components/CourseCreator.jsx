@@ -1,9 +1,11 @@
-import React, { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import "../styles/assignmentCard.css";
 import "../styles/courseBuilder.css";
 
 import CourseModulesBuilder from "./CourseModulesBuilder";
 import { ICONS, emptyModule, formatDuration } from "./courseBuilderShared";
+import { getCurrentUser } from "../utils/session";
+import { recordCourseCreated } from "../utils/userStorage";
 
 /** ---------------------------
  *  Local Storage keys
@@ -122,7 +124,11 @@ function Toast({ message, type }) {
   );
 }
 
-export default function CourseCreation({ assignmentService, onCreated }) {
+export default function CourseCreation({
+
+  assignmentService,
+  onCreated,
+}) {
   const [title, setTitle] = useState("New Course");
   const [description, setDescription] = useState("");
   const [editingCourseTitle, setEditingCourseTitle] = useState(false);
@@ -222,15 +228,18 @@ export default function CourseCreation({ assignmentService, onCreated }) {
       return;
     }
 
+    //normalization
     const cleanOutcomes = learningOutcomes
       .map((s) => (s || "").trim())
       .filter(Boolean);
 
     const status = publishMode === "publish" ? "published" : "draft";
 
-    // Build course object directly from state
+    // Building the course object directly from state
+    const me = getCurrentUser();
     const courseToSave = {
       title: title.trim(),
+      author: (me?.name ?? "").trim(),     // ✅ AUTO author from logged-in user
       description: description.trim(),
       learningOutcomes: cleanOutcomes,
       thumbnail: {
@@ -240,7 +249,7 @@ export default function CourseCreation({ assignmentService, onCreated }) {
       modules: modules.map((m) => ({
         ...m,
         title: m.title.trim(),
-        description: (m.description || "").trim(),
+        description: (m.description ?? "").trim(),
         items: m.items.map((it) => ({
           ...it,
           title: it.title.trim(),
@@ -261,10 +270,15 @@ export default function CourseCreation({ assignmentService, onCreated }) {
 
     setSaving(true);
     try {
+      // Local-Saving
       const created = lsCreateCourse(courseToSave);
+      // ✅ Add this course into instructor's "coursesCreated" list
+      if (me?.email) {
+        recordCourseCreated(me.email, created.id);
+      }
 
-      /**push course title into current instructor coursesCreated */
-      addCourseTitleToCoursesCreated(created.title);
+      // ✅ Tell CoursePage to refresh the list
+      window.dispatchEvent(new Event("courses-changed"));
 
       setMsg({ type: "success", text: "Course saved successfully." });
       showToast(status === "published" ? "Course published" : "Course saved");

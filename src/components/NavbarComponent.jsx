@@ -1,11 +1,4 @@
-// src/components/NavbarComponent.jsx
-import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import edLogo from "../assets/edLogo.png";
 import userLogo from "../assets/userLogo.png";
 import {
@@ -36,7 +29,7 @@ const NavbarComponent = () => {
         if (!user) return "/"; // fallback for guests
         switch (user.role) {
             case "instructor":
-                return "/mentor-home";
+                return "/instructor-home";
             case "learner":
                 return "/student-home";
             default:
@@ -157,17 +150,17 @@ const NavbarComponent = () => {
 
     // Add below other callbacks (e.g., after goToRoleHome / handleLogout)
     const handlePerformanceClick = useCallback(() => {
-    // Prefer current auth state; fall back to session if needed
-    const role = auth.user?.role ?? getCurrentUser()?.role;
+        // Prefer current auth state; fall back to session if needed
+        const role = auth.user?.role ?? getCurrentUser()?.role;
 
-    if (role === "learner") {
-        navigate("/performance-student");
-    } else if (role === "instructor") {
-        navigate("/performance-mentor");
-    } else {
-        // Optional: fallback (e.g., generic dashboard or home)
-        navigate("/performance-dashboard");
-    }
+        if (role === "learner") {
+            navigate("/performance-student");
+        } else if (role === "instructor") {
+            navigate("/performance-instructor");
+        } else {
+            // Optional: fallback (e.g., generic dashboard or home)
+            navigate("/performance-dashboard");
+        }
     }, [auth.user, navigate]);
     // --------------------------------------------------------------------
 
@@ -386,7 +379,7 @@ const NavbarComponent = () => {
                                 }
                                 id="profile-dropdown"
                             >
-                                <NavDropdown.Item 
+                                <NavDropdown.Item
                                     onClick={handlePerformanceClick}
                                 >
                                     📊 Performance Metrics
