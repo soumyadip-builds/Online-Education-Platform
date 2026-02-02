@@ -13,13 +13,20 @@ import "../styles/studentMetrics.css";
  *    /data/quizData.json
  *
  * Completion sources (localStorage):
- *    enrolled:<courseId> = "true"
  *    quizResult:<quizId> = JSON.stringify({ score, maxScore, submittedAt })
  *    assignmentSubmission:<assignmentId> = JSON.stringify({ submittedAt, link, fileName })
+ *
+ * Enrollment source (localStorage):
+ *    edstream_users = JSON.stringify([{ userId, email, coursesEnrolled: [] , ... }])
+ *    edstream_current_user = JSON.stringify({ userId, email, ... })
  */
 
 function safeJSONParse(raw) {
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 function readQuizResult(quizId) {
@@ -32,7 +39,44 @@ function readAssignmentSubmission(assignmentId) {
 
 function fmtDateTime(iso) {
   if (!iso) return "—";
-  try { return new Date(iso).toLocaleString(); } catch { return "—"; }
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return "—";
+  }
+}
+
+/** Read current logged in user object */
+function readCurrentUser() {
+  const raw = localStorage.getItem("edstream_current_user");
+  const parsed = safeJSONParse(raw);
+  return parsed && typeof parsed === "object" ? parsed : null;
+}
+
+/** Read edstream_users array */
+function readEdstreamUsers() {
+  const raw = localStorage.getItem("edstream_users");
+  const parsed = safeJSONParse(raw);
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+/**
+ * Get enrolled course IDs for the currently logged-in student
+ * from edstream_users[*].coursesEnrolled.
+ */
+function getCurrentStudentEnrolledCourseIds() {
+  const current = readCurrentUser();
+  const users = readEdstreamUsers();
+
+  if (!current) return [];
+
+  const match =
+    (current.userId && users.find((u) => u.userId === current.userId)) ||
+    (current.email && users.find((u) => u.email === current.email)) ||
+    null;
+
+  const enrolled = match?.coursesEnrolled;
+  return Array.isArray(enrolled) ? enrolled : [];
 }
 
 export default function StudentMetrics() {
@@ -42,11 +86,13 @@ export default function StudentMetrics() {
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
 
-  // For expand/collapse per course
+  // Expand/collapse per course
   const [openCourse, setOpenCourse] = useState({}); // { [courseId]: boolean }
 
+  // Fetch base datasets
   useEffect(() => {
     let alive = true;
+
     (async () => {
       try {
         setLoading(true);
@@ -58,9 +104,9 @@ export default function StudentMetrics() {
           fetch("/data/quizData.json"),
         ]);
 
-        if (!cRes.ok) throw new Error(`Failed to load courseDetails.json`);
-        if (!aRes.ok) throw new Error(`Failed to load assignmentData.json`);
-        if (!qRes.ok) throw new Error(`Failed to load quizData.json`);
+        if (!cRes.ok) throw new Error("Failed to load courseDetails.json");
+        if (!aRes.ok) throw new Error("Failed to load assignmentData.json");
+        if (!qRes.ok) throw new Error("Failed to load quizData.json");
 
         const [cJson, aJson, qJson] = await Promise.all([
           cRes.json(),
@@ -69,65 +115,73 @@ export default function StudentMetrics() {
         ]);
 
         if (!alive) return;
+
         setCourses(Array.isArray(cJson) ? cJson : []);
         setAssignments(Array.isArray(aJson) ? aJson : []);
         setQuizzes(Array.isArray(qJson) ? qJson : []);
       } catch (e) {
         if (!alive) return;
-        setErr(e.message || "Failed to load metrics.");
+        setErr(e?.message || "Failed to load metrics.");
       } finally {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // Enrolled courseIds from localStorage
+  /**
+   * Enrollment: from edstream_users -> current user's coursesEnrolled[]
+   * NOTE: This is computed once on mount. If you need it to update without refresh,
+   * you can convert this to state+effect based on your enrollment flow.
+   */
   const enrolledCourseIds = useMemo(() => {
-    const ids = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k) continue;
-      if (k.startsWith("enrolled:") && localStorage.getItem(k) === "true") {
-        ids.push(k.replace("enrolled:", ""));
-      }
-    }
-    return ids;
+    return getCurrentStudentEnrolledCourseIds();
   }, []);
 
   const enrolledCourses = useMemo(() => {
-    return courses.filter(c => enrolledCourseIds.includes(c.id));
+    return courses.filter((c) => enrolledCourseIds.includes(c.id));
   }, [courses, enrolledCourseIds]);
 
   // Build metrics per course
   const courseMetrics = useMemo(() => {
     return enrolledCourses.map((c) => {
-      const aFor = assignments.filter(a => a.courseId === c.id);
-      const qFor = quizzes.filter(q => q.courseId === c.id);
+      const aFor = assignments.filter((a) => a.courseId === c.id);
+      const qFor = quizzes.filter((q) => q.courseId === c.id);
 
       // Completed = assignment submission exists OR quiz result exists
-      const aDone = aFor.filter(a => !!readAssignmentSubmission(a.id));
-      const qDone = qFor.filter(q => !!readQuizResult(q.id));
+      const aDone = aFor.filter((a) => !!readAssignmentSubmission(a.id));
+      const qDone = qFor.filter((q) => !!readQuizResult(q.id));
 
       const totalTrackable = aFor.length + qFor.length;
       const completedTrackable = aDone.length + qDone.length;
 
-      const progressPct = totalTrackable === 0
-        ? 0
-        : Math.round((completedTrackable / totalTrackable) * 100);
+      const progressPct =
+        totalTrackable === 0
+          ? 0
+          : Math.round((completedTrackable / totalTrackable) * 100);
 
-      // Group into modules (by moduleTitle if present, else "General")
+      // Group into modules
       const moduleMap = new Map();
 
       function ensureModule(name) {
         const key = name || "General";
-        if (!moduleMap.has(key)) moduleMap.set(key, { moduleTitle: key, quizzes: [], assignments: [] });
+        if (!moduleMap.has(key)) {
+          moduleMap.set(key, {
+            moduleTitle: key,
+            quizzes: [],
+            assignments: [],
+          });
+        }
         return moduleMap.get(key);
       }
 
       qFor.forEach((q) => {
         const mod = ensureModule(q.moduleTitle || q.module || q.sectionTitle || "General");
         const result = readQuizResult(q.id);
+
         mod.quizzes.push({
           ...q,
           completed: !!result,
@@ -140,19 +194,22 @@ export default function StudentMetrics() {
       aFor.forEach((a) => {
         const mod = ensureModule(a.moduleTitle || a.module || a.sectionTitle || "General");
         const sub = readAssignmentSubmission(a.id);
+
         mod.assignments.push({
           ...a,
           completed: !!sub,
           completedAt: sub?.submittedAt ?? null,
-          // no score stored yet → placeholder
-          score: sub?.score ?? null,
+          score: sub?.score ?? null, // placeholder if you store score later
         });
       });
 
       const modules = Array.from(moduleMap.values()).map((m) => {
-        // Sort to show completed first optionally
-        const quizzesSorted = [...m.quizzes].sort((x, y) => Number(y.completed) - Number(x.completed));
-        const assignmentsSorted = [...m.assignments].sort((x, y) => Number(y.completed) - Number(x.completed));
+        const quizzesSorted = [...m.quizzes].sort(
+          (x, y) => Number(y.completed) - Number(x.completed)
+        );
+        const assignmentsSorted = [...m.assignments].sort(
+          (x, y) => Number(y.completed) - Number(x.completed)
+        );
         return { ...m, quizzes: quizzesSorted, assignments: assignmentsSorted };
       });
 
@@ -174,7 +231,7 @@ export default function StudentMetrics() {
   }, [enrolledCourses, assignments, quizzes]);
 
   const toggleCourse = (courseId) => {
-    setOpenCourse(prev => ({ ...prev, [courseId]: !prev[courseId] }));
+    setOpenCourse((prev) => ({ ...prev, [courseId]: !prev[courseId] }));
   };
 
   if (loading) {
@@ -194,7 +251,9 @@ export default function StudentMetrics() {
         <div className="sm-card">
           <h2 className="sm-title">My Dashboard</h2>
           <p className="sm-alert sm-alert--err">{err}</p>
-          <Link to="/" className="sm-link">← Back</Link>
+          <Link to="/" className="sm-link">
+            ← Back
+          </Link>
         </div>
       </div>
     );
@@ -205,7 +264,9 @@ export default function StudentMetrics() {
       <div className="sm-card">
         <div className="sm-header">
           <h2 className="sm-title">My Dashboard</h2>
-          <Link to="/" className="sm-link">← Back</Link>
+          <Link to="/" className="sm-link">
+            ← Back
+          </Link>
         </div>
 
         {courseMetrics.length === 0 ? (
@@ -242,7 +303,13 @@ export default function StudentMetrics() {
                     </div>
                   </button>
 
-                  <div className="sm-progressBar" role="progressbar" aria-valuenow={cm.progressPct} aria-valuemin={0} aria-valuemax={100}>
+                  <div
+                    className="sm-progressBar"
+                    role="progressbar"
+                    aria-valuenow={cm.progressPct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
                     <div className="sm-progressFill" style={{ width: `${cm.progressPct}%` }} />
                   </div>
 
@@ -270,7 +337,10 @@ export default function StudentMetrics() {
                                         {a.title}
                                       </div>
                                       <div className="sm-itemSub">
-                                        Completion: <b>{a.completed ? fmtDateTime(a.completedAt) : "Not completed"}</b>
+                                        Completion:{" "}
+                                        <b>
+                                          {a.completed ? fmtDateTime(a.completedAt) : "Not completed"}
+                                        </b>
                                       </div>
                                     </div>
 
@@ -313,7 +383,10 @@ export default function StudentMetrics() {
                                             : "—"}
                                         </b>
                                         {" • "}
-                                        Completion: <b>{q.completed ? fmtDateTime(q.completedAt) : "Not completed"}</b>
+                                        Completion:{" "}
+                                        <b>
+                                          {q.completed ? fmtDateTime(q.completedAt) : "Not completed"}
+                                        </b>
                                       </div>
                                     </div>
 

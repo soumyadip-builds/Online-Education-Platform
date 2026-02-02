@@ -61,38 +61,40 @@ const addCourseTitleToCoursesCreated = (courseTitle) => {
   const title = (courseTitle || "").trim();
   if (!title) return;
 
-  const currentUser = loadCurrentUser();
-  if (!currentUser?.userId) return;
-
   const users = loadUsers();
   if (!Array.isArray(users) || users.length === 0) return;
 
-  const idx = users.findIndex((u) => u.userId === currentUser.userId);
-  if (idx === -1) return;
-
-  const user = users[idx];
-  const existing = Array.isArray(user.coursesCreated) ? user.coursesCreated : [];
-
-  // Keep only valid strings, trim, remove empties
-  const normalized = existing
-    .filter((x) => typeof x === "string")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  // Avoid duplicates
-  if (normalized.includes(title)) return;
-
-  const updatedCoursesCreated = [...normalized, title];
-
-  // Update user in edstream_users
-  const updatedUser = { ...user, coursesCreated: updatedCoursesCreated };
+  // Duplicate users array for update
   const updatedUsers = [...users];
-  updatedUsers[idx] = updatedUser;
+
+  // Loop through all instructors & append course title
+  updatedUsers.forEach((user, index) => {
+    const isInstructor = String(user.role || "").toLowerCase() === "instructor";
+    if (!isInstructor) return;
+
+    const existing = Array.isArray(user.coursesCreated)
+      ? user.coursesCreated
+      : [];
+
+    const normalized = existing
+      .filter((x) => typeof x === "string")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    // Prevent duplicate course titles
+    if (!normalized.includes(title)) {
+      updatedUsers[index] = {
+        ...user,
+        coursesCreated: [...normalized, title],
+      };
+    }
+  });
+
   saveUsers(updatedUsers);
 
-  // Update edstream_current_user as well (keeps UI consistent)
-  saveCurrentUser({ ...currentUser, coursesCreated: updatedCoursesCreated });
+  
 };
+
 
 /** ---------------------------
  *  UI: Toast
@@ -261,7 +263,7 @@ export default function CourseCreation({ assignmentService, onCreated }) {
     try {
       const created = lsCreateCourse(courseToSave);
 
-      /** ✅ FIX HERE: push course title into current instructor coursesCreated */
+      /**push course title into current instructor coursesCreated */
       addCourseTitleToCoursesCreated(created.title);
 
       setMsg({ type: "success", text: "Course saved successfully." });

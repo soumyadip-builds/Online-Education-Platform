@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import "../styles/assignmentCard.css";
 
 export default function QuizEditor({ value, onChange }) {
-  // Default quiz structure (removed timeLimitMinutes, shuffleOptions, showAnswersAfterSubmit)
+  // Default quiz structure
   const quiz = value || {
     shuffleQuestions: true,
     questions: [],
@@ -235,9 +235,6 @@ export default function QuizEditor({ value, onChange }) {
 
             {/* Explanation (optional) */}
             <div className="quiz-editor__group">
-              <label className="assignment-card__label">
-                Explanation (optional)
-              </label>
               <label className="assignment-card__label">
                 Explanation (optional)
               </label>
