@@ -14,7 +14,11 @@ import { enrollInCourse } from "../utils/userStorage";
 import { notifyCourseEnrollment } from "../services/communicationService";
 
 const LS_KEY_COURSES = "cb_courses_v1";
-
+const LS_ASSIGNMENTS_KEY = "cb_assignments_v1";
+function lsAssignmentsLoad() {
+  try { return JSON.parse(localStorage.getItem(LS_ASSIGNMENTS_KEY) || "[]"); }
+  catch { return []; }
+}
 function loadCreatedCourses() {
     try {
         const raw = localStorage.getItem(LS_KEY_COURSES) || "[]";
@@ -270,9 +274,11 @@ export default function CourseDetails() {
                     : null;
 
                 setCourse(normalizedCourse);
-                const aForCourse = (
-                    Array.isArray(assignmentsJson) ? assignmentsJson : []
-                ).filter((a) => a.courseId === id);
+                
+                const lsAll = lsAssignmentsLoad();
+                const mergedAssignments = [...(Array.isArray(assignmentsJson) ? assignmentsJson : []), ...lsAll];
+                const aForCourse = mergedAssignments.filter((a) => a.courseId === id);
+
                 const qForCourse = (
                     Array.isArray(quizzesJson) ? quizzesJson : []
                 ).filter((q) => q.courseId === id);
@@ -665,7 +671,7 @@ export default function CourseDetails() {
                         <h3 className="section-title">Course content</h3>
                         <CourseCollapsibleSection
                             modules={contentModules}
-                            role="learner"
+                            role={role ?? "learner"}
                             defaultCollapsed={true}
                         />
                     </section>

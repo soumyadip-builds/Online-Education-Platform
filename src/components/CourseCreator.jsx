@@ -56,7 +56,8 @@ function Toast({ message, type }) {
 export default function CourseCreation({ assignmentService, onCreated }) {
 	const [title, setTitle] = useState('New Course');
 	const [description, setDescription] = useState('');
-	const [editingCourseTitle, setEditingCourseTitle] = useState(false);
+	const [courseId, setCourseId] = useState(null);
+
 	// Udemy-style metadata
 	const [level, setLevel] = useState('Beginner'); // Beginner | Intermediate | Advanced
 	const [tagsText, setTagsText] = useState(''); // comma separated tags
@@ -249,6 +250,7 @@ export default function CourseCreation({ assignmentService, onCreated }) {
 		try {
 			// Local-Saving
 			const created = lsCreateCourse(courseToSave);
+			setCourseId(created.id);
 			// ✅ Add this course into instructor's "coursesCreated" list
 			if (me?.email) {
 				recordCourseCreated(me.email, created.id);
@@ -554,6 +556,7 @@ export default function CourseCreation({ assignmentService, onCreated }) {
 						setModules={setModules}
 						assignmentService={assignmentService}
 						showToast={showToast}
+						courseId={courseId}
 					/>
 
 					{/* Status message */}
