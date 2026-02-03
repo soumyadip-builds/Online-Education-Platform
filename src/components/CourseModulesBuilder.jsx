@@ -9,11 +9,7 @@ import {
   uid,
 } from "./courseBuilderShared";
 
-export default function CourseModulesBuilder({
-  modules,
-  setModules,
-  showToast,
-}) {
+export default function CourseModulesBuilder({ modules, setModules, showToast }) {
   const [aqModal, setAqModal] = useState({ open: false, moduleId: null });
   const openAQ = (mid) => setAqModal({ open: true, moduleId: mid });
   const closeAQ = () => setAqModal({ open: false, moduleId: null });
@@ -68,11 +64,6 @@ export default function CourseModulesBuilder({
   const setAllCollapsed = (collapsed) =>
     setModules((prev) => prev.map((m) => ({ ...m, collapsed })));
 
-  const focusById = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.focus();
-  };
-
   /** AQ created */
   const handleAQCreated = useCallback(
     (created) => {
@@ -124,7 +115,7 @@ export default function CourseModulesBuilder({
         </button>
       </div>
 
-      {/*cb-modules wrapper*/}
+      {/* Modules wrapper */}
       <div className="cb-modules">
         {modules.map((m, mIdx) => {
           const moduleMinutes = m.items.reduce(
@@ -149,89 +140,40 @@ export default function CourseModulesBuilder({
 
                 <span className="cb-module__index">{mIdx + 1}</span>
 
+                {/* Module title input (no edit button) */}
                 <div
                   className="cb-module__title"
                   style={{ display: "flex", alignItems: "center", gap: 8 }}
                 >
-                  <span
+                  <input
                     id={`mod-title-${m.id}`}
-                    contentEditable={m.editingTitle}
-                    suppressContentEditableWarning
-                    role="textbox"
-                    aria-label="Module title"
+                    type="text"
+                    className="assignment-card-input cb-module-title-input"
+                    value={m.title || ""}
+                    placeholder="Untitled module"
+                    onChange={(e) =>
+                      patchModule(m.id, { title: e.target.value })
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        const text = e.currentTarget.textContent || "";
-                        patchModule(m.id, { title: text, editingTitle: false });
-                        showToast?.("Module title saved");
+                        e.currentTarget.blur(); // keep "save on Enter"
                       }
                     }}
                     onBlur={(e) => {
-                      const text = e.currentTarget.textContent || "";
-                      if (m.editingTitle) {
-                        patchModule(m.id, { title: text, editingTitle: false });
-                        showToast?.("Module title saved");
-                      } else {
-                        patchModule(m.id, { title: text });
-                      }
+                      const text = (e.currentTarget.value || "").trim();
+                      patchModule(m.id, { title: text });
+                      showToast?.("Module title saved");
                     }}
-                  >
-                    {m.title || "Untitled module"}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    title={m.editingTitle ? "Save" : "Edit title"}
-                    aria-label={m.editingTitle ? "Save title" : "Edit title"}
-                    onClick={() => {
-                      if (m.editingTitle) {
-                        const span = document.getElementById(`mod-title-${m.id}`);
-                        const text = (span?.textContent || "").trim();
-                        patchModule(m.id, { title: text, editingTitle: false });
-                        showToast?.("Module title saved");
-                      } else {
-                        patchModule(m.id, { editingTitle: true });
-                        requestAnimationFrame(() => focusById(`mod-title-${m.id}`));
-                      }
-                    }}
-                  >
-                    {m.editingTitle ? ICONS.save : ICONS.edit}
-                  </button>
+                  />
                 </div>
 
                 <div className="cb-module__meta">
                   {ICONS.clock} <span>{formatDuration(moduleMinutes)}</span>
                 </div>
 
+                {/* Actions: keep ONLY delete button (as requested) */}
                 <div className="cb-module__actions">
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    title={m.editingDesc ? "Save description" : "Edit description"}
-                    aria-label={
-                      m.editingDesc ? "Save description" : "Edit description"
-                    }
-                    onClick={() => {
-                      if (m.editingDesc) {
-                        const el = document.getElementById(`mod-desc-${m.id}`);
-                        const text = (el?.textContent || "").trim();
-                        patchModule(m.id, {
-                          description: text,
-                          editingDesc: false,
-                        });
-                        showToast?.("Module description saved");
-                      } else {
-                        patchModule(m.id, { editingDesc: true });
-                        requestAnimationFrame(() => focusById(`mod-desc-${m.id}`));
-                      }
-                    }}
-                  >
-                    {m.editingDesc ? ICONS.save : ICONS.edit}
-                  </button>
-
-                  {/* disable delete when only 1 module */}
                   <button
                     type="button"
                     className="icon-btn danger"
@@ -243,48 +185,51 @@ export default function CourseModulesBuilder({
                     aria-label="Delete module"
                     onClick={() => rmModule(m.id)}
                     disabled={disableDelete}
-                    style={disableDelete ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+                    style={
+                      disableDelete
+                        ? { opacity: 0.5, cursor: "not-allowed" }
+                        : undefined
+                    }
                   >
                     {ICONS.delete}
                   </button>
                 </div>
               </header>
 
+              {/* Module description (textarea with placeholder; no edit button) */}
               {!m.collapsed && (
-                <div
-                  id={`mod-desc-${m.id}`}
-                  className="cb-module__desc"
-                  contentEditable={m.editingDesc}
-                  role="textbox"
-                  aria-label="Module description"
-                  suppressContentEditableWarning
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && m.editingDesc) {
-                      e.preventDefault();
-                      e.currentTarget.blur();
-                      const text = e.currentTarget.textContent || "";
-                      patchModule(m.id, { description: text, editingDesc: false });
-                      showToast?.("Module description saved");
+                <div style={{ paddingTop: 8 }}>
+                  <textarea
+                    id={`mod-desc-${m.id}`}
+                    className="assignment-card-input cb-module-desc-input"
+                    value={m.description || ""}
+                    placeholder="Describe this module…"
+                    rows={3}
+                    onChange={(e) =>
+                      patchModule(m.id, { description: e.target.value })
                     }
-                  }}
-                  onBlur={(e) => {
-                    const text = e.currentTarget.textContent || "";
-                    if (m.editingDesc) {
-                      patchModule(m.id, { description: text, editingDesc: false });
-                      showToast?.("Module description saved");
-                    } else {
+                    onKeyDown={(e) => {
+                      // keep old "Enter saves" behavior:
+                      // Allow Shift+Enter for newline.
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const text = (e.currentTarget.value || "").trim();
                       patchModule(m.id, { description: text });
-                    }
-                  }}
-                >
-                  {m.description || "Describe this module…"}
+                      showToast?.("Module description saved");
+                    }}
+                  />
                 </div>
               )}
 
               {!m.collapsed && (
                 <div className="cb-items">
                   {m.items.map((it) => {
-                    const isLinkType = it.type === "video" || it.type === "reading";
+                    const isLinkType =
+                      it.type === "video" || it.type === "reading";
 
                     return (
                       <div key={it.id} className="cb-item">
@@ -308,7 +253,9 @@ export default function CourseModulesBuilder({
                               value={it.title}
                               placeholder="Item title"
                               onChange={(e) =>
-                                patchItem(m.id, it.id, { title: e.target.value })
+                                patchItem(m.id, it.id, {
+                                  title: e.target.value,
+                                })
                               }
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -463,10 +410,9 @@ export default function CourseModulesBuilder({
                 {ICONS.delete}
               </button>
             </div>
+
             <div className="cb-modal__body">
-              <AssignmentCard
-                onCreated={handleAQCreated}
-              />
+              <AssignmentCard onCreated={handleAQCreated} />
             </div>
           </div>
         </div>
@@ -474,3 +420,4 @@ export default function CourseModulesBuilder({
     </>
   );
 }
+``

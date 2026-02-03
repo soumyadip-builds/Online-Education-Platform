@@ -925,3 +925,16 @@
   color: #888;
   pointer-events: none;
 }
+.cb-module__header {
+  display: grid;
+  grid-template-columns: 36px 44px 1fr auto auto; /* icon | number | title | meta | actions */
+  align-items: center;
+  gap: 10px;
+}
+.cb-module__header {
+  display: grid;
+  grid-template-columns: 36px 44px 1fr auto auto; /* icon | number | title | meta | actions */
+  align-items: center;
+  gap: 10px;
+}
+

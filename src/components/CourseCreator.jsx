@@ -314,7 +314,6 @@ export default function CourseCreation() {
         <div className="assignment-card__group assignment-card__group--full">
           <label className="assignment-card__label">Course Description</label>
           <div
-            //ref={courseDescRef}
             className="cb-desc-edit"
             contentEditable
             role="textbox"

@@ -561,3 +561,18 @@ html, body {
   text-align: center;
   padding-bottom: 8px;
 }
+
+.cb-module-title-input {
+  min-width: 240px;
+  font-weight: 600;
+}
+
+.cb-module-desc-input {
+  width: 100%;
+  resize: vertical;
+}
+
+.cb-duration__select {
+  width: 78px;
+  padding: 6px 8px;
+}

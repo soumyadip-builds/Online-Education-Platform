@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import "../styles/assignmentCard.css";
 import QuizEditor from "./QuizEditor";
@@ -94,7 +95,7 @@ const INITIAL_FORM = () => ({
   title: "",
   description: "",
   maxScore: 100,
-  passingScore: 40,
+  passingScore: 0,
   estimatedMinutes: 60,
   attachment: null,
 });
