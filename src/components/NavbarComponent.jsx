@@ -237,7 +237,6 @@ const NavbarComponent = () => {
                         <Form
                             className="d-flex me-3"
                             role="search"
-                            onSubmit={handleSubmit}
                         >
                             <FormControl
                                 ref={inputRef}
@@ -247,13 +246,7 @@ const NavbarComponent = () => {
                                 placeholder="Search for Courses"
                                 aria-label="Search for Courses"
                             />
-                            <Button
-                                type="submit"
-                                variant="outline-primary"
-                                className="ms-2"
-                            >
-                                Search
-                            </Button>
+                            
                         </Form>
 
                         {/* Suggestions dropdown */}
