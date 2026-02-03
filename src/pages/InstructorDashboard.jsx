@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import "../styles/instructorMetrics.css";
 import { getCurrentUser } from "../utils/session"; // session-based per-user instructor identity
 
-const LS_USERS_KEY = "edstream_users";      
-const LS_CREATED_COURSES_KEY = "cb_courses_v1"; 
+const LS_USERS_KEY = "edstream_users";      // used in session.js internally [1](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/InstructorDashboard.jsx)
+const LS_CREATED_COURSES_KEY = "cb_courses_v1"; // used elsewhere for created courses [2](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/StudentMetrics.jsx)
 
 function safeJSONParse(raw, fallback = null) {
   try {

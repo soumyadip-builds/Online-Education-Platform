@@ -1,154 +1,209 @@
+
 /* =========================================================
-   Course Builder (Bootstrap-first) — Minimal Theme CSS
-   Palette:
-   --bg, --bg-2, --surface, --text, --muted, --accent, --accent-2, --shadow
+   Course Builder stylesheet (Preview below + 1-line items)
    ========================================================= */
 
-:root {
-  --bg: #f7f7fb;
-  --bg-2: #ffffff;
-  --surface: rgba(255,255,255,0.75);
-  --text: #1f2937;
-  --muted: #4b5563;
-  --accent: #7c3aed;
-  --accent-2: #0ea5e9;
-  --shadow: rgba(0,0,0,0.18);
-
-  /* Bootstrap variable overrides (works great in Bootstrap 5.2+) */
-  --bs-body-bg: var(--bg);
-  --bs-body-color: var(--text);
-
-  --bs-primary: var(--accent);
-  --bs-link-color: var(--accent);
-  --bs-link-hover-color: color-mix(in srgb, var(--accent) 85%, black);
-
-  --bs-secondary-color: var(--muted);
-  --bs-border-color: color-mix(in srgb, var(--text) 12%, transparent);
-
-  --bs-border-radius: 14px;
-  --bs-border-radius-sm: 12px;
-
-  --bs-focus-ring-color: color-mix(in srgb, var(--accent) 28%, transparent);
-  --bs-focus-ring-width: 0.2rem;
+/* -------- Layout: modules stacked above preview -------- */
+.cb-layout {
+  display: grid;
+  gap: 18px;
+  /* Single column: modules first, preview below */
+  grid-template-columns: 1fr;
 }
 
-/* Global page background */
-body {
-  background: var(--bg);
+.cb-modules {
+  max-height: 60vh;         
+  overflow: auto;
+  padding-right: 10px;
+}
+.cb-modules::-webkit-scrollbar { width: 8px; }
+.cb-modules::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 4px;
 }
 
-/* Card look: subtle shadow matching your theme */
-.card {
-  border-color: color-mix(in srgb, var(--text) 10%, transparent);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--shadow) 35%, transparent);
-}
+.cb-preview { position: relative; }
+.cb-preview__title { margin: 0 0 6px 0; color: var(--text); font-weight: 800; }
 
-/* Make card headers blend with theme */
-.card-header,
-.card-footer {
-  background: var(--bg-2);
-  border-color: color-mix(in srgb, var(--text) 10%, transparent);
+/* -------- Toolbar above modules -------- */
+.cb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
 }
-
-/* Inputs: slightly softer borders, theme focus */
-.form-control,
-.form-select,
-.input-group-text {
-  border-color: color-mix(in srgb, var(--text) 14%, transparent);
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-/* Buttons: optional polish for outline-primary to match accent */
-.btn-outline-primary {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+.cb-link {
+  border: none;
+  background: transparent;
   color: var(--accent);
-}
-.btn-outline-primary:hover {
-  background: color-mix(in srgb, var(--accent) 12%, white 88%);
-  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
-  color: var(--accent);
-}
-
-/* Toast: keep it clean and readable */
-.toast {
-  border-radius: 12px;
-}
-
-/* =========================================================
-   Learning Outcomes row — FIX overlap/glow bleed
-   Works with your Bootstrap "input-group" outcomes row
-   ========================================================= */
-
-/* If you kept this as a div with overflow scrolling */
-.cb-outcomes-scroll {
-  /* prevent focus shadow from "drawing" over header area */
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  /* give breathing room so focus ring doesn't touch header */
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-
-  /* smooth iOS scroll */
-  -webkit-overflow-scrolling: touch;
-
-  /* optional: create separation without visible line */
-  border-top: 1px solid transparent;
-}
-
-/* Outcomes input-group: force it to stay on one line */
-.cb-outcomes-scroll .input-group {
-  flex: 0 0 auto;
-  min-width: 260px; /* adjust if needed */
-}
-
-/* If you want the remove (✕) button aligned nicely */
-.cb-outcomes-scroll .btn {
-  line-height: 1;
-}
-
-/* Optional: if you want ZERO glow for outcomes only (comment out if not needed) */
-/*
-.cb-outcomes-scroll .form-control:focus {
-  box-shadow: none;
-}
-*/
-
-/* =========================================================
-   DurationField (keep only if your component still uses these)
-   ========================================================= */
-
-.duration-field {
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 8px;
 }
-.duration-field__h {
-  width: 56px;
-  text-align: right;
+.cb-link:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-2) 90%);
 }
-.duration-field__m {
-  width: 64px;
+.cb-divider { color: var(--muted); }
+
+/* -------- Title & Description (inline editable) -------- */
+.cb-title-edit {
+  outline: none;
+  min-width: 200px;
+  border-bottom: 1px dashed transparent;
 }
-.duration-field__suffix {
+.cb-title-edit:focus {
+  border-bottom-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.cb-desc-edit {
+  min-height: 80px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(31,41,55,0.12);
+  background: var(--bg-2);
+  outline: none;
+  white-space: pre-wrap;
+  color: var(--text);
+}
+.cb-desc-edit:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* -------- Icon-only button -------- */
+.icon-btn {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(31,41,55,0.15);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.icon-btn.drag { border-style: dashed; }
+.icon-btn:hover { background: color-mix(in srgb, var(--bg) 60%, white 40%); }
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.icon-btn.danger {
+  color: #b91c1c;
+  border-color: rgba(239,68,68,0.45);
+}
+
+/* -------- Module card -------- */
+.cb-module {
+  border: 1px solid rgba(31,41,55,0.12);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-2) 92%, var(--bg) 8%);
+  margin-bottom: 14px;
+}
+.cb-module.is-drag-over {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-2) 20%, transparent);
+}
+.cb-module__header {
+  display: grid;
+  grid-template-columns: 28px 28px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px dashed rgba(31,41,55,0.12);
+}
+.cb-module__index {
+  width: 28px; height: 28px; border-radius: 8px;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color:#fff; font-weight: 800; font-size: 12px;
+}
+.cb-module__title span { outline: none; }
+.cb-module__title span[placeholder]:empty:before {
+  content: attr(placeholder);
   color: var(--muted);
-  font-weight: 700;
+}
+.cb-module__meta {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--muted); font-weight: 700; margin-left: 8px;
   white-space: nowrap;
+}
+.cb-module__actions { display: inline-flex; gap: 6px; }
+.cb-module__desc {
+  padding: 10px 12px;
+  outline: none;
+  min-height: 50px;
+  color: var(--text);
+}
+.cb-module__desc:focus {
+  background: color-mix(in srgb, var(--bg) 60%, white 40%);
+  border-radius: 10px;
+}
+
+/* -------- Items container -------- */
+.cb-items {
+  padding: 10px 12px;
+  display: grid;
+  gap: 10px;
 }
 
 /* =========================================================
-   Optional: Type badges (only if you still use cb-badge--*)
+   ITEM ROW: SINGLE LINE ON DESKTOP
+   left | title | time | url | actions
    ========================================================= */
+.cb-item {
+  display: grid;
+  grid-template-columns:
+    auto                    /* left: drag + badge */
+    minmax(220px, 1fr)      /* title */
+    minmax(90px, 120px)     /* minutes */
+    minmax(320px, 1.2fr)    /* url */
+    auto;                   /* actions */
+  grid-template-areas: "left title time url actions";
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(31,41,55,0.12);
+  border-radius: 12px;
+  background: var(--bg-2);
+  padding: 10px 12px;
+}
+.cb-item.is-drag-over {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-2) 20%, transparent);
+}
+/* allow shrinking inside grid cells */
+.cb-item > * { min-width: 0; }
 
+/* Grid areas */
+.cb-item__left    { grid-area: left; display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.cb-item__title   { grid-area: title; min-width: 0; }
+.cb-item__time    { grid-area: time; display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.cb-item__url     { grid-area: url; display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.cb-item__actions { grid-area: actions; display: inline-flex; gap: 8px; }
+
+/* Inputs sizing */
+.cb-item .assignment-card-input { width: 100%; min-width: 0; }
+.cb-item__title-input { width: 100%; max-width: none; }
+.cb-item__title-text  { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); font-weight: 700; }
+
+.cb-mins-input { width: 70px; padding: 8px 10px; border-radius: 10px; }
+.cb-mins-suffix { color: var(--muted); font-weight: 700; }
+
+.cb-url-input  { width: 100%; }
+.cb-url-link {
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.cb-url-link:hover { text-decoration: underline; }
+
+/* Badges */
 .cb-badge {
-  border-radius: 999px;
-  padding: 0.25rem 0.55rem;
-  font-size: 0.75rem;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 12px;
   font-weight: 800;
   color: #fff;
   white-space: nowrap;
@@ -157,3 +212,711 @@ body {
 .cb-badge--reading    { background: #7c3aed; }
 .cb-badge--assignment { background: #2563eb; }
 .cb-badge--quiz       { background: #16a34a; }
+
+/* -------- Item row breakpoints -------- */
+/* Tablet: allow URL to wrap to next row with actions if space tight */
+@media (max-width: 900px) {
+  .cb-item {
+    grid-template-columns:
+      auto minmax(180px, 1fr) minmax(100px, 120px) 1fr auto;
+    grid-template-areas:
+      "left title time actions actions"
+      "left url   url  actions actions";
+  }
+  .cb-item__actions { justify-content: flex-end; align-self: center; }
+}
+
+/* Mobile: stack fully */
+@media (max-width: 560px) {
+  .cb-item {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "left"
+      "title"
+      "time"
+      "url"
+      "actions";
+  }
+}
+
+/* -------- Add rows -------- */
+.cb-add-row {
+  border-top: 1px dashed rgba(31,41,55,0.12);
+  padding-top: 10px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.cb-add-module {
+  display: flex; justify-content: center; margin: 6px 0 10px;
+}
+
+/* -------- Modal (reusing theme) -------- */
+.cb-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; }
+.cb-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+.cb-modal__panel {
+  position: relative;
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  background: var(--bg-2);
+  border: 1px solid rgba(31,41,55,0.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 60px var(--shadow);
+  display: flex; flex-direction: column;
+}
+.cb-modal__header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+.cb-modal__body { overflow: auto; padding: 12px 16px; }
+
+/* -------- Minor helpers -------- */
+.cb-item input[type="text"],
+.cb-item input[type="number"],
+.cb-item input[type="url"] { box-sizing: border-box; }
+
+@media (max-width: 760px) {
+  .cb-module__header {
+    grid-template-columns: auto auto 1fr auto; /* let actions wrap if needed */
+    row-gap: 8px;
+  }
+}
+
+.cb-module:hover { box-shadow: 0 2px 14px var(--shadow); }
+.cb-module .cb-items .cb-item + .cb-item { position: relative; }
+.cb-module .cb-items .cb-item + .cb-item::before {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px; top: -6px;
+  border-top: 1px dashed rgba(31,41,55,0.1);
+}
+
+
+/* a11y helper */
+.sr-only { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); }
+
+/* Duration field */
+.duration-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.duration-field__h { width: 64px; text-align: right; }
+.duration-field__m { width: 72px; }
+.duration-field__suffix { color: var(--muted); font-weight: 700; }
+
+/* Slightly tighter in the item row cell */
+.cb-duration .duration-field__h { width: 56px; }
+.cb-duration .duration-field__m { width: 64px; }
+
+
+
+/* =====================================
+   PRIORITIZE TIME — SHRINK TITLE & URL
+   ===================================== */
+
+/* 1) Grid: fix time width, shrink title & URL first */
+.cb-item {
+  grid-template-columns:
+    auto                      /* left: drag + badge */
+    minmax(140px, 1fr)        /* title: allow smaller min */
+    156px                     /* time: fixed width (fits H + M + suffix) */
+    minmax(200px, 1fr)        /* url: lower min so it yields space */
+    auto;                     /* actions */
+  /* areas unchanged */
+}
+
+/* 2) Make inner cells and inputs shrinkable */
+.cb-item__title,
+.cb-item__url,
+.cb-item__time,
+.cb-item__actions {
+  min-width: 0;               /* critical: allow shrinking */
+}
+
+.cb-item .assignment-card-input,
+.cb-item__title-input,
+.cb-url-input {
+  min-width: 0;               /* prevent implicit min-content sizing */
+  width: 100%;
+}
+
+/* 3) Duration field widths: compact to keep time in 156px without wrapping */
+.cb-duration .duration-field__h { width: 48px; }  /* hours */
+.cb-duration .duration-field__m { width: 56px; }  /* minutes */
+.duration-field__suffix { white-space: nowrap; }  /* keep "h" / "m" tight */
+
+/* 4) Title text & URL link: allow ellipsis rather than push neighbors */
+.cb-item__title-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cb-url-link {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 5) Keep actions at the right without stealing space */
+.cb-item__actions {
+  justify-self: end;
+  flex-wrap: nowrap;
+}
+
+/* 6) Medium screens: let URL wrap under Actions before collision */
+@media (max-width: 1100px) {
+  .cb-item {
+    grid-template-columns:
+      auto minmax(130px, 1fr) 156px 1fr auto;
+    grid-template-areas:
+      "left title time actions actions"
+      "left url   url  actions actions";
+  }
+}
+
+/* 7) Preserve your existing mobile stack while keeping shrinkability */
+@media (max-width: 900px) {
+  .cb-item {
+    grid-template-columns:
+      auto minmax(130px, 1fr) 156px 1fr auto;
+  }
+}
+
+
+
+/* Normal Edit button */
+.icon-btn.edit {
+  color: var(--text);
+  border-color: rgba(31,41,55,0.18);
+}
+
+/* When pressed/toggled */
+.icon-btn.edit[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-2) 82%);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+
+
+.cb-toggle {
+  background: #f0f4ff;
+  padding: 4px;
+  border-radius: 40px;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cb-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 18px;
+  border-radius: 30px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #4a4a6a;
+  transition: 0.2s;
+}
+
+.cb-toggle-btn.active {
+  background: linear-gradient(90deg, #4b6bff, #8f7bff);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+
+
+/* Compact, neutral look */
+.ccs { display: grid; gap: 12px; }
+.ccs__module { border: 1px solid #e2e2e2; border-radius: 8px; background: #fff; }
+
+.ccs__moduleHeader {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-bottom: 1px solid #eee;
+}
+
+.ccs__toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 0; background: transparent; cursor: pointer; font: inherit;
+}
+.ccs__moduleIndex { font-weight: 600; color: #666; }
+.ccs__moduleTitle { font-weight: 600; }
+
+.ccs__spacer { flex: 1; }
+.ccs__meta { display: inline-flex; align-items: center; gap: 6px; color: #666; font-size: 0.9rem; }
+
+.ccs__actions, .ccs__itemActions { display: inline-flex; gap: 6px; }
+.ccs__iconBtn { border: 0; background: transparent; cursor: pointer; font-size: 1rem; padding: 4px; }
+.cc--danger { color: #b42318; }
+
+.ccs__moduleBody { padding: 8px 12px; }
+.ccs__moduleDesc { margin: 6px 0 10px; color: #555; }
+
+.ccs__items { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ccs__item { display: flex; align-items: center; gap: 10px; }
+.ccs__badge {
+  font-size: 0.75rem; font-weight: 600; padding: 2px 6px; border-radius: 999px; border: 1px solid #ddd; color: #444;
+}
+.ccs__badge.type-video { background: #f0f7ff; border-color: #cfe3ff; }
+.ccs__badge.type-reading { background: #f6f5ff; border-color: #dcd7ff; }
+.ccs__badge.type-assignment { background: #fff7ed; border-color: #ffe1bf; }
+.ccs__badge.type-quiz { background: #eefdf3; border-color: #c8f3d6; }
+
+.ccs__itemTitle { font-weight: 500; color: #222; text-decoration: none; }
+.ccs__itemTitle:hover { text-decoration: underline; }
+.ccs__itemDur { color: #666; font-size: 0.9rem; }
+
+
+
+/* =========================================================
+   Course meta cards (What you'll learn + Thumbnail)
+   Match existing CB theme: borders, bg-2, radius, focus glow
+   ========================================================= */
+
+.cb-meta-card {
+  border: 1px solid rgba(31,41,55,0.12);
+  border-radius: 14px;
+  background: var(--bg-2);
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+
+.cb-meta-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(31,41,55,0.12);
+  margin-bottom: 10px;
+}
+
+.cb-meta-title {
+  margin: 0;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.cb-meta-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.cb-meta-hint {
+  margin-top: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+/* =========================================================
+   Horizontally scrollable learning outcomes (bullet pills)
+   ========================================================= */
+
+.cb-outcomes-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 2px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* themed scrollbar similar to cb-modules */
+.cb-outcomes-scroll::-webkit-scrollbar { height: 8px; }
+.cb-outcomes-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px;
+}
+
+.cb-outcome-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(31,41,55,0.12);
+  background: color-mix(in srgb, var(--bg-2) 92%, var(--bg) 8%);
+  scroll-snap-align: start;
+  min-width: 340px; /* makes horizontal scrolling meaningful */
+}
+
+@media (max-width: 560px) {
+  .cb-outcome-pill { min-width: 280px; }
+}
+
+.cb-outcome-dot {
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cb-outcome-input {
+  width: 100%;
+  min-width: 160px;
+}
+
+/* =========================================================
+   Radio buttons row (thumbnail mode)
+   ========================================================= */
+
+.cb-radio-row {
+  display: inline-flex;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 55%, white 45%);
+  border: 1px solid rgba(31,41,55,0.12);
+}
+
+.cb-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--text) 70%, var(--muted) 30%);
+}
+
+.cb-radio input {
+  accent-color: var(--accent);
+}
+
+.cb-radio.is-active {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-2) 82%);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.cb-radio.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   Thumbnail link + preview
+   ========================================================= */
+
+.cb-thumb-link {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.cb-thumb-input {
+  width: 100%;
+}
+
+.cb-thumb-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cb-thumb-img {
+  width: 160px;
+  height: 90px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(31,41,55,0.12);
+  background: var(--bg);
+}
+
+
+
+/* src/styles/courseBuilder.css */
+
+:root{
+  --ccs-bg: #ffffff;
+  --ccs-card: #ffffff;
+  --ccs-border: rgba(15, 23, 42, 0.10);
+  --ccs-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
+
+  --ccs-text: #0f172a;     /* slate-900 */
+  --ccs-subtext: #475569;  /* slate-600 */
+  --ccs-muted: #64748b;    /* slate-500 */
+
+  --ccs-accent: #7c3aed;   /* violet-600 */
+  --ccs-accent-2: #a78bfa; /* violet-300 */
+
+  --ccs-hover: rgba(124, 58, 237, 0.08);
+  --ccs-focus: 0 0 0 3px rgba(124, 58, 237, 0.25);
+
+  --ccs-radius: 16px;
+  --ccs-radius-sm: 12px;
+}
+
+/* Container */
+.ccs{
+  display: grid;
+  gap: 14px;
+}
+
+/* Module card */
+.ccs__module{
+  background: var(--ccs-card);
+  border: 1px solid var(--ccs-border);
+  border-radius: var(--ccs-radius);
+  box-shadow: var(--ccs-shadow);
+  overflow: hidden;
+}
+
+/* Header row */
+.ccs__moduleHeader{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(124,58,237,0.06), rgba(124,58,237,0.02));
+}
+
+/* Toggle button */
+.ccs__toggle{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ccs-text);
+  font-weight: 700;
+  padding: 6px 8px;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.ccs__toggle:hover{
+  background: var(--ccs-hover);
+}
+
+.ccs__toggle:focus-visible{
+  outline: none;
+  box-shadow: var(--ccs-focus);
+}
+
+.ccs__moduleIndex{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  font-weight: 800;
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--ccs-accent);
+}
+
+.ccs__moduleTitle{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spacer + meta */
+.ccs__spacer{ flex: 1; }
+
+.ccs__meta{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ccs-subtext);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* Instructor actions */
+.ccs__actions{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ccs__iconBtn{
+  border: 1px solid rgba(15,23,42,0.10);
+  background: rgba(255,255,255,0.8);
+  color: var(--ccs-text);
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ccs__iconBtn:hover{
+  background: rgba(124,58,237,0.10);
+  border-color: rgba(124,58,237,0.25);
+}
+
+.ccs__iconBtn:focus-visible{
+  outline: none;
+  box-shadow: var(--ccs-focus);
+}
+
+.cc--danger{
+  color: #b91c1c;
+}
+.cc--danger:hover{
+  background: rgba(185,28,28,0.10);
+  border-color: rgba(185,28,28,0.25);
+}
+
+/* Body */
+.ccs__moduleBody{
+  padding: 10px 14px 14px;
+}
+
+.ccs__moduleDesc{
+  margin: 0 0 10px;
+  color: var(--ccs-subtext);
+  line-height: 1.4;
+}
+
+/* Items list */
+.ccs__items{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ccs__item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Clickable item wrapper */
+.ccs__itemLink{
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--ccs-radius-sm);
+  border: 1px solid rgba(15,23,42,0.08);
+  background: rgba(255,255,255,0.92);
+  text-decoration: none;
+  color: var(--ccs-text);
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.ccs__itemLink:hover{
+  background: rgba(124,58,237,0.06);
+  border-color: rgba(124,58,237,0.25);
+  transform: translateY(-1px);
+}
+
+.ccs__itemLink:focus-visible{
+  outline: none;
+  box-shadow: var(--ccs-focus);
+}
+
+.ccs__itemLink--disabled{
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: rgba(15,23,42,0.03);
+}
+
+.ccs__itemTitle{
+  font-weight: 650;
+  color: var(--ccs-text);
+}
+
+/* Right meta (due/date/dur/lock) */
+.ccs__itemRight{
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ccs-muted);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.ccs__itemDue{
+  color: var(--ccs-subtext);
+  background: rgba(15,23,42,0.03);
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.ccs__itemDur{
+  color: var(--ccs-muted);
+}
+
+.ccs__itemLock{
+  opacity: 0.85;
+}
+
+/* Badge styles */
+.ccs__badge{
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border: 1px solid rgba(15,23,42,0.10);
+  background: rgba(15,23,42,0.03);
+  color: var(--ccs-subtext);
+}
+
+/* Type-based color accents */
+.ccs__badge.type-video{
+  background: rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.20);
+  color: #1d4ed8;
+}
+.ccs__badge.type-reading,
+.ccs__badge.type-doc{
+  background: rgba(16,185,129,0.12);
+  border-color: rgba(16,185,129,0.20);
+  color: #047857;
+}
+.ccs__badge.type-link{
+  background: rgba(245,158,11,0.14);
+  border-color: rgba(245,158,11,0.20);
+  color: #b45309;
+}
+.ccs__badge.type-assignment{
+  background: rgba(124,58,237,0.14);
+  border-color: rgba(124,58,237,0.22);
+  color: #6d28d9;
+}
+.ccs__badge.type-quiz{
+  background: rgba(236,72,153,0.14);
+  border-color: rgba(236,72,153,0.22);
+  color: #be185d;
+}
+
+/* Item actions */
+.ccs__itemActions{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Responsive */
+@media (max-width: 640px){
+  .ccs__meta{ display:none; }
+  .ccs__moduleHeader{ flex-wrap: wrap; }
+  .ccs__itemLink{ flex-wrap: wrap; }
+  .ccs__itemRight{ width: 100%; justify-content: flex-start; margin-left: 0; }
+}
+
