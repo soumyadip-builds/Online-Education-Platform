@@ -562,9 +562,7 @@ export default function CourseDetails() {
                                                 <div className="video-thumb">
                                                     {thumbnail ? (
                                                         <img
-                                                            src={withBase(
-                                                                thumbnail,
-                                                            )}
+                                                            src={thumbnail}
                                                             alt={`Video ${i + 1}`}
                                                         />
                                                     ) : (
