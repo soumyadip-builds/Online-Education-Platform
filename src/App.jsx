@@ -132,14 +132,13 @@ export default function App() {
           <Route path="/courses?scope=created" element={<CoursePage />}/>
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/quiz/:quizId" element={<QuizPage />} />
-          <Route
-            path="/assignment/:assignmentId"
-            element={<AssignmentPage />}
-          />
-          <Route path="/course-creator" element={<CourseCreator />} />
+          <Route path="/assignment/:assignmentId" element={<AssignmentPage />}/>
+          <Route path="/course-creator" element={
+            <RequireRole role="instructor">
+              <CourseCreator />
+              </RequireRole>} />
           <Route path="/edit-profile" element={<EditProfile />} />
-          <Route 
-            path="/performance-instructor" 
+          <Route path="/performance-instructor" 
             element={
               <RequireRole role="instructor">
               <InstructorDashboard />
