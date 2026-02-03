@@ -10,13 +10,22 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
 
   
   // ---- Password Strength Calculation ----
+  // To avoid recalculating the strength on every render, we use useMemo
+  // Without useMemo, this calculation would run on every render, which is inefficient
+  // With useMemo, it only recalculates when data.password changes
   const strength = useMemo(() => {
+
+    // Getting the Password from the registration data
     const pwd = data.password || '';
     let score = 0;
 
+    // Checking the length of the password and assigning scores based on length
+    // If length >= 12, score 2; if length >= 8, score 1; else score 0
     const lengthScore = pwd.length >= 12 ? 2 : pwd.length >= 8 ? 1 : 0;
     score += lengthScore;
 
+    // Checking for character variety: lowercase, uppercase, digits, special characters
+    // Each regex checks whether the password contains at least one character from each set
     const sets =
       (/[a-z]/.test(pwd) ? 1 : 0) +
       (/[A-Z]/.test(pwd) ? 1 : 0) +
@@ -24,6 +33,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
       (/[^A-Za-z0-9]/.test(pwd) ? 1 : 0);
     score += sets;
 
+    // Based on the total score, determine the strength level
     let level = 1;
     if (score <= 1) level = 1;
     else if (score === 2) level = 2;
@@ -31,6 +41,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
     else if (score === 4 || score === 5) level = 4;
     else level = 5;
 
+    // Converting the level to percentage, label, and CSS class for UI representation
     const percent = [20, 40, 60, 80, 100][level - 1];
     const label = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'][level - 1];
     const cls = `strength-${level}`;
@@ -60,6 +71,8 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
             className={`role-btn ${data.role === 'instructor' ? 'active' : ''}`}
             onClick={() => setData((prev) => ({ ...prev, role: 'instructor' }))}
           >
+            {/* ...prev copies all existing properties
+            role: "instructor" overwrites the role property */}
             Instructor
           </button>
           <button

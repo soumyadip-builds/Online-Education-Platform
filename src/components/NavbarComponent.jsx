@@ -68,6 +68,7 @@ const NavbarComponent = () => {
         // 3) navigate to home (change to '/' if that's your home route)
         navigate("/home", { replace: true });
     }, [navigate]);
+    // Function will only be recreated if 'navigate' changes
 
     const editProfile = useCallback(
         () => navigate("/edit-profile"),
@@ -128,6 +129,8 @@ const NavbarComponent = () => {
         const trimmed = query.trim();
         if (!trimmed) return;
 
+        console.log("Searching for:", trimmed);
+
         // Navigate to a results page with state (query + results)
         navigate(`/search?q=${encodeURIComponent(trimmed)}`, {
             state: { query: trimmed, results: matches },
@@ -184,59 +187,6 @@ const NavbarComponent = () => {
 
                 <Navbar.Toggle aria-controls="main-nav" />
                 <Navbar.Collapse id="main-nav">
-                    {/* Explore Dropdown */}
-                    {/* <Nav className="me-auto">
-                        <NavDropdown title="Explore" id="explore-dropdown">
-                            <NavDropdown.Item
-                                onClick={() => navigate("/explore/science")}
-                            >
-                                Science
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                onClick={() => navigate("/explore/technology")}
-                            >
-                                Technology
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                onClick={() => navigate("/explore/engineering")}
-                            >
-                                Engineering
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                onClick={() => navigate("/explore/mathematics")}
-                            >
-                                Mathematics
-                            </NavDropdown.Item>
-                        </NavDropdown> */}
-
-                    {/* My Learning Dropdown */}
-                    {/* <NavDropdown
-                            title="My Learning"
-                            id="mylearning-dropdown"
-                        >
-                            <NavDropdown.Item
-                                onClick={() =>
-                                    navigate("/courses/react-basics")
-                                }
-                            >
-                                React Basics
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                onClick={() =>
-                                    navigate("/courses/data-structures")
-                                }
-                            >
-                                Data Structures
-                            </NavDropdown.Item>
-                            <NavDropdown.Item
-                                onClick={() =>
-                                    navigate("/courses/ai-fundamentals")
-                                }
-                            >
-                                AI Fundamentals
-                            </NavDropdown.Item>
-                        </NavDropdown>
-                    </Nav> */}
 
                     <Nav className="me-auto">
                         {/* Explore button: choose a primary landing route for Explore */}
@@ -247,14 +197,6 @@ const NavbarComponent = () => {
                         >
                             Explore Courses
                         </Button>
-                        {/* My Learning button: pick the main destination for the learner */}
-                        {/* <Button
-                            className="nav-btn"
-                            onClick={() => navigate("/my-learning")}
-                            aria-label="Go to My Learning"
-                        >
-                            My Learning
-                        </Button> */}
 
                         {auth.isAuthed && auth.user?.role === "learner" && (
                             <Button
@@ -362,7 +304,7 @@ const NavbarComponent = () => {
                     </div>
                     {/* ---------------------------------------------------------- */}
 
-                    {/* Right Section: Auth-dependent */}
+                    {/* Profile Section: Auth-dependent */}
                     {auth.isAuthed ? (
                         <Nav>
                             <NavDropdown

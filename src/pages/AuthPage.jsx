@@ -49,6 +49,7 @@ const AuthPage = () => {
     // If already authenticated, redirect to role home
     useEffect(() => {
         const u = getCurrentUser();
+        // If u.roles is array, use it; else if u.role exists, make it an array; else empty array
         const roles = Array.isArray(u?.roles)
             ? u.roles
             : u?.role
@@ -98,6 +99,7 @@ const AuthPage = () => {
         return errs;
     };
 
+    // ---- NAVIGATION Helper method to navigate the User to the designated home page after user login ----
     const navigateToUserHome = (user) => {
         const roles = Array.isArray(user?.roles)
             ? user.roles
@@ -124,6 +126,7 @@ const AuthPage = () => {
             return;
         }
 
+        // Check user existence If it not found, switch to Register tab with prefilled email
         const user = findUser(loginData.email);
         if (!user) {
             setRegisterData((prev) => ({ ...prev, email: loginData.email }));
@@ -136,6 +139,7 @@ const AuthPage = () => {
             return;
         }
 
+        // Check password validity for the existing user
         if (user.password !== loginData.password) {
             setLoginStatus({
                 type: "error",
@@ -145,7 +149,7 @@ const AuthPage = () => {
             return;
         }
 
-        // Create session on login, then redirect to role-based home
+        // Create session on login, then redirect to role-based home for successful login
         const sessionRes = createSession(user);
         if (!sessionRes.ok) {
             setLoginStatus({
@@ -156,6 +160,7 @@ const AuthPage = () => {
             return;
         }
 
+        // Navigate to user home
         navigateToUserHome(user);
     };
 

@@ -11,6 +11,7 @@ function notifySessionChanged() {
     window.dispatchEvent(new Event('session-changed'));
   } catch (_) {
     // noop
+    // _ means “I intentionally don’t use this variable”.
   }
 }
 
@@ -69,6 +70,7 @@ export const destroySession = () => {
   }
 };
 
+// The double NOT operator converts a value to a boolean without changing truthiness
 export const isAuthenticated = () => !!getCurrentUser();
 
 /* ----------------------- Users collection helpers ----------------------- */
