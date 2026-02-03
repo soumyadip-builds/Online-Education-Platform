@@ -14,6 +14,7 @@ export default function CourseModulesBuilder({
   setModules,
   assignmentService,
   showToast,
+  currentCourseId
 }) {
   const [aqModal, setAqModal] = useState({ open: false, moduleId: null });
   const openAQ = (mid) => setAqModal({ open: true, moduleId: mid });
@@ -466,6 +467,7 @@ export default function CourseModulesBuilder({
             </div>
             <div className="cb-modal__body">
               <AssignmentCard
+                courseId={currentCourseId}
                 assignmentService={assignmentService}
                 onCreated={handleAQCreated}
               />

@@ -12,7 +12,11 @@ import { getCurrentUser } from '../utils/session'; // ✅ added
  *   assignmentResult:<email>:<assignmentId>   (lightweight summary)
  *   assignmentAttemptFile:<email>:<assignmentId> (JSON document string to be "fetched")
  */
-
+  const LS_ASSIGNMENTS_KEY = "cb_assignments_v1";
+  function lsAssignmentsLoad() {
+    try { return JSON.parse(localStorage.getItem(LS_ASSIGNMENTS_KEY) || "[]"); }
+    catch { return []; }
+  }
 function safeJSONParse(raw) {
   try { return JSON.parse(raw); } catch { return null; }
 }
@@ -48,7 +52,12 @@ export default function AssignmentPage() {
         const res = await fetch('/data/assignmentData.json');
         if (!res.ok) throw new Error(`Failed to fetch assignmentData.json`);
         const all = await res.json();
-        const found = all.find((a) => a.id === assignmentId) || null;
+        let found = all.find((a) => a.id === assignmentId) || null;
+        if (!found) {
+          const lsAll = lsAssignmentsLoad();
+          found = lsAll.find((a) => a.id === assignmentId) || null;
+        }
+
         if (alive) {
           setAssignment(found);
           if (!found) setErr('Assignment not found');

@@ -38,7 +38,7 @@ const INITIAL_FORM = () => ({
   attachment: null,
 });
 
-const AssignmentCard = ({ assignmentService, onCreated }) => {
+const AssignmentCard = ({ assignmentService, onCreated, courseId }) => {
   // ----- Form state -----
   const [form, setForm] = useState(INITIAL_FORM);
   const [quizData, setQuizData] = useState(INITIAL_QUIZ);
@@ -149,6 +149,7 @@ const AssignmentCard = ({ assignmentService, onCreated }) => {
       maxScore: Number(maxScore),
       passingScore: Number(passingScore),
       estimatedMinutes: Number(estimatedMinutes), // <-- Course Creator uses this
+      courseId: courseId ?? null,
     };
 
     const payload =

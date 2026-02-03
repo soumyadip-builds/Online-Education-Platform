@@ -911,6 +911,92 @@
   align-items: center;
   gap: 6px;
 }
+/* ===== Course Creator (Udemy-style form) ===== */
+
+/* Optional wrapper (use on a parent div if you have one) */
+.course-creator .course-builder,
+.course-creator .course-creator,
+.course-creator .course-builder-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Field blocks */
+.course-creator .cb-field {
+  margin: 14px 0;
+}
+
+.course-creator .cb-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #2b2b2b;
+  font-size: 13px;
+}
+
+.course-creator .cb-required {
+  color: #e11d48; /* red */
+  margin-left: 4px;
+}
+
+/* Inputs */
+.course-creator .cb-input,
+.course-creator .cb-textarea,
+.course-creator .cb-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.15);
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+
+.course-creator .cb-input:focus,
+.course-creator .cb-textarea:focus,
+.course-creator .cb-select:focus {
+  border-color: #6d28d9; /* purple focus */
+  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
+}
+
+/* Grid layout for metadata rows */
+.course-creator .cb-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+@media (max-width: 860px) {
+  .course-creator .cb-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.course-creator .cb-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.55);
+}
+
+/* Checkbox row */
+.course-creator .cb-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.course-creator .cb-check-row input[type="checkbox"] {
+  transform: scale(1.1);
+}
+
+/* Section separator */
+.course-creator .cb-section-title {
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 700;
+}
 
 /* Responsive */
 @media (max-width: 640px){

@@ -118,6 +118,7 @@
   margin: 24px auto 48px;
   padding: 0 24px;
   color: #1f2937;
+  min-height: 70vh;
 }
 
 /* Hero */
@@ -159,6 +160,7 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 12px;
+  width: 70%;
 }
 
 .course-details .chip {
@@ -223,10 +225,10 @@
 
 /* Content sections */
 .course-details .resources {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
-  margin-top: 5rem;
+  margin-top: 7rem;
   margin-right: 3rem;
   background: linear-gradient(45deg, #ffffff, #f7f7fb);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
@@ -451,6 +453,12 @@
   .course-details .course-details__hero {
     display: block;
     margin-bottom: 24px;
+  }
+  course-details .course-details__chips {
+    width: 100%;
+  }
+  .course-details {
+    min-height: unset;
   }
 }
 
