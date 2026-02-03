@@ -62,10 +62,6 @@ export default function CourseCreation({ assignmentService, onCreated }) {
 	const [level, setLevel] = useState('Beginner'); // Beginner | Intermediate | Advanced
 	const [tagsText, setTagsText] = useState(''); // comma separated tags
   
-	// Includes (right panel “This course includes”)
-	const [includesHours, setIncludesHours] = useState(0); // hours on-demand video
-	const [includesArticles, setIncludesArticles] = useState(0);
-	const [includesDownloads, setIncludesDownloads] = useState(0);
 
 	// Optional ratings (you can also auto-default these)
 	// const [learners, setLearners] = useState(0);
@@ -182,10 +178,6 @@ export default function CourseCreation({ assignmentService, onCreated }) {
 			.filter(Boolean);
 		if (tags.length === 0) errors.push('At least one tag is required.');
 
-		if (includesHours < 0) errors.push('Hours on-demand video must be 0 or more.');
-		if (includesArticles < 0) errors.push('Articles must be 0 or more.');
-		if (includesDownloads < 0)
-			errors.push('Downloadable resources must be 0 or more.');
 		return errors;
 	};
 
