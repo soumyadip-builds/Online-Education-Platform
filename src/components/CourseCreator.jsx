@@ -6,17 +6,11 @@ import CourseModulesBuilder from "./CourseModulesBuilder";
 import { ICONS, emptyModule, formatDuration } from "./courseBuilderShared";
 import { getCurrentUser } from "../utils/session";
 import { recordCourseCreated } from "../utils/userStorage";
-
-/** ---------------------------
- *  Local Storage keys
- *  --------------------------*/
+import { useNavigate } from "react-router-dom";
+// LocalStorage keys
 const LS_KEY_COURSES = "cb_courses_v1";
-const LS_KEY_USERS = "edstream_users";
-const LS_KEY_CURRENT_USER = "edstream_current_user";
 
-/** ---------------------------
- *  Local Storage helpers
- *  --------------------------*/
+// JSON helpers
 const loadJSON = (key, fallback) => {
   try {
     const raw = localStorage.getItem(key);
@@ -30,10 +24,11 @@ const saveJSON = (key, value) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
-/** Courses store */
+// Courses store helpers
 const loadCourses = () => loadJSON(LS_KEY_COURSES, []);
 const saveCourses = (list) => saveJSON(LS_KEY_COURSES, list);
 
+// Create a course record
 const lsCreateCourse = (payload) => {
   const id = "c_" + Math.random().toString(36).slice(2, 10);
   const now = new Date().toISOString();
@@ -46,61 +41,7 @@ const lsCreateCourse = (payload) => {
   return created;
 };
 
-/** Users store */
-const loadUsers = () => loadJSON(LS_KEY_USERS, []);
-const saveUsers = (users) => saveJSON(LS_KEY_USERS, users);
-
-const loadCurrentUser = () => loadJSON(LS_KEY_CURRENT_USER, null);
-const saveCurrentUser = (user) => saveJSON(LS_KEY_CURRENT_USER, user);
-
-/**
- * - Add course title into current instructor's `coursesCreated`
- * - Updates BOTH: `edstream_users` and `edstream_current_user`
- * - Avoid duplicates
- * - Initializes coursesCreated if missing
- */
-const addCourseTitleToCoursesCreated = (courseTitle) => {
-  const title = (courseTitle || "").trim();
-  if (!title) return;
-
-  const users = loadUsers();
-  if (!Array.isArray(users) || users.length === 0) return;
-
-  // Duplicate users array for update
-  const updatedUsers = [...users];
-
-  // Loop through all instructors & append course title
-  updatedUsers.forEach((user, index) => {
-    const isInstructor = String(user.role || "").toLowerCase() === "instructor";
-    if (!isInstructor) return;
-
-    const existing = Array.isArray(user.coursesCreated)
-      ? user.coursesCreated
-      : [];
-
-    const normalized = existing
-      .filter((x) => typeof x === "string")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    // Prevent duplicate course titles
-    if (!normalized.includes(title)) {
-      updatedUsers[index] = {
-        ...user,
-        coursesCreated: [...normalized, title],
-      };
-    }
-  });
-
-  saveUsers(updatedUsers);
-
-  
-};
-
-
-/** ---------------------------
- *  UI: Toast
- *  --------------------------*/
+// Toast UI
 function Toast({ message, type }) {
   return (
     <div
@@ -124,22 +65,21 @@ function Toast({ message, type }) {
   );
 }
 
-export default function CourseCreation({
-
-  assignmentService,
-  onCreated,
-}) {
+export default function CourseCreation() {
+  // Course meta state
   const [title, setTitle] = useState("New Course");
   const [description, setDescription] = useState("");
   const [editingCourseTitle, setEditingCourseTitle] = useState(false);
 
+  // Editable refs
   const courseTitleRef = useRef(null);
   const courseDescRef = useRef(null);
-
-  /** Default one module */
+  
+  const navigate = useNavigate();
+  // Modules state
   const [modules, setModules] = useState(() => [emptyModule()]);
 
-  // bullet points
+  // Learning outcomes state
   const [learningOutcomes, setLearningOutcomes] = useState([""]);
   const addOutcome = () => setLearningOutcomes((prev) => [...prev, ""]);
   const rmOutcome = (idx) =>
@@ -147,37 +87,35 @@ export default function CourseCreation({
   const patchOutcome = (idx, value) =>
     setLearningOutcomes((prev) => prev.map((v, i) => (i === idx ? value : v)));
 
-  // thumbnail
-  const [thumbnailMode, setThumbnailMode] = useState("link"); // 'upload' | 'link'
+  // Thumbnail state
+  const [thumbnailMode, setThumbnailMode] = useState("link");
   const [thumbnailLink, setThumbnailLink] = useState("");
 
-  // toast
+  // Toast state
   const [toast, setToast] = useState(null);
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 1500);
   };
 
-  // status message + save
+  // Save state
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
-  const [publishMode, setPublishMode] = useState("draft"); // 'draft' | 'publish'
+  const [publishMode, setPublishMode] = useState("draft");
 
-  /** totals + grouped */
+  // Derived: total duration
   const totalMinutes = useMemo(
     () =>
       modules.reduce(
         (sum, m) =>
           sum +
-          m.items.reduce(
-            (s, it) => s + (Number(it.estimatedMinutes) || 0),
-            0
-          ),
+          m.items.reduce((s, it) => s + (Number(it.estimatedMinutes) || 0), 0),
         0
       ),
     [modules]
   );
 
+  // Derived: counts by item type
   const grouped = useMemo(() => {
     const out = { Videos: [], Documentation: [], Assignments: [], Quizzes: [] };
     modules.forEach((m) =>
@@ -191,6 +129,7 @@ export default function CourseCreation({
     return out;
   }, [modules]);
 
+  // Validate course
   const validate = () => {
     const errors = [];
     if (!title.trim()) errors.push("Course title is required.");
@@ -200,15 +139,14 @@ export default function CourseCreation({
       m.items.forEach((it, ii) => {
         if (!it.title.trim())
           errors.push(`Module ${mi + 1}, item ${ii + 1}: title is required.`);
+
         const mins = Number(it.estimatedMinutes);
         if (!Number.isFinite(mins) || mins <= 0)
           errors.push(
             `Module ${mi + 1}, item ${ii + 1}: duration must be > 0 minutes.`
           );
-        if (
-          (it.type === "video" || it.type === "reading") &&
-          !it.url?.trim()
-        )
+
+        if ((it.type === "video" || it.type === "reading") && !it.url?.trim())
           errors.push(
             `Module ${mi + 1}, item ${ii + 1}: URL is required for link items.`
           );
@@ -218,8 +156,8 @@ export default function CourseCreation({
     return errors;
   };
 
-  /** SAVE */
-  const handleSave = async () => {
+  // Save course
+  const handleSave = () => {
     setMsg({ type: "", text: "" });
 
     const errors = validate();
@@ -228,18 +166,16 @@ export default function CourseCreation({
       return;
     }
 
-    //normalization
     const cleanOutcomes = learningOutcomes
       .map((s) => (s || "").trim())
       .filter(Boolean);
 
     const status = publishMode === "publish" ? "published" : "draft";
 
-    // Building the course object directly from state
     const me = getCurrentUser();
     const courseToSave = {
       title: title.trim(),
-      author: (me?.name ?? "").trim(),     // ✅ AUTO author from logged-in user
+      author: (me?.name ?? "").trim(),
       description: description.trim(),
       learningOutcomes: cleanOutcomes,
       thumbnail: {
@@ -270,20 +206,17 @@ export default function CourseCreation({
 
     setSaving(true);
     try {
-      // Local-Saving
       const created = lsCreateCourse(courseToSave);
-      // ✅ Add this course into instructor's "coursesCreated" list
+
       if (me?.email) {
         recordCourseCreated(me.email, created.id);
       }
 
-      // ✅ Tell CoursePage to refresh the list
       window.dispatchEvent(new Event("courses-changed"));
 
       setMsg({ type: "success", text: "Course saved successfully." });
       showToast(status === "published" ? "Course published" : "Course saved");
-
-      onCreated?.(created);
+      navigate("/instructor-home");
     } catch (err) {
       console.error(err);
       const text = err?.message || "Failed to save course.";
@@ -299,7 +232,6 @@ export default function CourseCreation({
       <div className="assignment-card">
         <div className="assignment-card__stripe" />
 
-        {/* Header */}
         <div
           className="assignment-card__header"
           style={{
@@ -361,21 +293,16 @@ export default function CourseCreation({
             </button>
           </h1>
 
-          {/* Publish/Draft toggle */}
           <div className="cb-toggle">
             <button
-              className={`cb-toggle-btn ${
-                publishMode === "publish" ? "active" : ""
-              }`}
+              className={`cb-toggle-btn ${publishMode === "publish" ? "active" : ""}`}
               onClick={() => setPublishMode("publish")}
               type="button"
             >
               Publish
             </button>
             <button
-              className={`cb-toggle-btn ${
-                publishMode === "draft" ? "active" : ""
-              }`}
+              className={`cb-toggle-btn ${publishMode === "draft" ? "active" : ""}`}
               onClick={() => setPublishMode("draft")}
               type="button"
             >
@@ -384,11 +311,10 @@ export default function CourseCreation({
           </div>
         </div>
 
-        {/* Description */}
         <div className="assignment-card__group assignment-card__group--full">
           <label className="assignment-card__label">Course Description</label>
           <div
-            ref={courseDescRef}
+            //ref={courseDescRef}
             className="cb-desc-edit"
             contentEditable
             role="textbox"
@@ -408,11 +334,22 @@ export default function CourseCreation({
               showToast("Course description saved");
             }}
           >
-            {description || "Add a short description for learners…"}
+           <div
+  ref={courseDescRef}
+  className="cb-desc-edit"
+  contentEditable
+  suppressContentEditableWarning
+  onBlur={(e) => {
+    const val = e.currentTarget.textContent.trim();
+    setDescription(val);
+    showToast("Course description saved");
+  }}
+>
+  {description}
+</div>
           </div>
         </div>
 
-        {/* What you'll learn */}
         <div className="cb-meta-card">
           <div className="cb-meta-header">
             <div>
@@ -485,7 +422,6 @@ export default function CourseCreation({
           </div>
         </div>
 
-        {/* Thumbnail */}
         <div className="cb-meta-card">
           <div className="cb-meta-header">
             <div>
@@ -508,7 +444,9 @@ export default function CourseCreation({
               <span>Link</span>
             </label>
 
-            <label className={`cb-radio is-disabled ${thumbnailMode === "upload" ? "is-active" : ""}`}>
+            <label
+              className={`cb-radio is-disabled ${thumbnailMode === "upload" ? "is-active" : ""}`}
+            >
               <input
                 type="radio"
                 name="thumbnailMode"
@@ -555,15 +493,12 @@ export default function CourseCreation({
           )}
         </div>
 
-        {/* Modules Builder */}
         <CourseModulesBuilder
           modules={modules}
           setModules={setModules}
-          assignmentService={assignmentService}
           showToast={showToast}
         />
 
-        {/* Status message */}
         {msg.text && (
           <div
             className={
@@ -578,7 +513,6 @@ export default function CourseCreation({
           </div>
         )}
 
-        {/* Total Time Bar */}
         <div className="cb-total-bar">
           <div>
             <div className="cb-total-bar__label">Total Course Time</div>
@@ -587,7 +521,6 @@ export default function CourseCreation({
           <div className="cb-total-bar__hint">Based on item durations</div>
         </div>
 
-        {/* Actions */}
         <div className="assignment-card__actions">
           <button
             type="button"
@@ -610,3 +543,4 @@ export default function CourseCreation({
     </div>
   );
 }
+

@@ -12,7 +12,6 @@ import {
 export default function CourseModulesBuilder({
   modules,
   setModules,
-  assignmentService,
   showToast,
 }) {
   const [aqModal, setAqModal] = useState({ open: false, moduleId: null });
@@ -22,7 +21,7 @@ export default function CourseModulesBuilder({
   /** Module ops */
   const addModule = () => setModules((prev) => [...prev, emptyModule()]);
 
-  // ✅ Fix: keep at least one module always
+  // keep at least one module always
   const rmModule = (mid) =>
     setModules((prev) => {
       const next = prev.filter((m) => m.id !== mid);
@@ -125,7 +124,7 @@ export default function CourseModulesBuilder({
         </button>
       </div>
 
-      {/* ✅ IMPORTANT: Only ONE cb-modules wrapper (prevents double scrollbar) */}
+      {/*cb-modules wrapper*/}
       <div className="cb-modules">
         {modules.map((m, mIdx) => {
           const moduleMinutes = m.items.reduce(
@@ -232,7 +231,7 @@ export default function CourseModulesBuilder({
                     {m.editingDesc ? ICONS.save : ICONS.edit}
                   </button>
 
-                  {/* ✅ Fix: disable delete when only 1 module */}
+                  {/* disable delete when only 1 module */}
                   <button
                     type="button"
                     className="icon-btn danger"
@@ -466,7 +465,6 @@ export default function CourseModulesBuilder({
             </div>
             <div className="cb-modal__body">
               <AssignmentCard
-                assignmentService={assignmentService}
                 onCreated={handleAQCreated}
               />
             </div>

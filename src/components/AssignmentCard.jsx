@@ -1,17 +1,12 @@
+import { useState, useEffect, useCallback, useMemo } from "react";
+import "../styles/assignmentCard.css";
+import QuizEditor from "./QuizEditor";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import '../styles/assignmentCard.css';
-import QuizEditor from './QuizEditor';
+// LocalStorage keys
+const LS_ASSIGNMENTS = "cb_assignments";
+const LS_QUIZZES = "cb_quiz";
 
-/* =========================================================
-   LocalStorage helpers (split stores)
-   - Assignments stored in: cb_assignments
-   - Quizzes stored in: cb_quiz
-   ========================================================= */
-
-const LS_ASSIGNMENTS = "cb_assignments"; // removed v1/v2
-const LS_QUIZZES = "cb_quiz";            // quiz-specific store
-
+// Safe JSON parse helper
 function safeJsonParse(raw, fallback) {
   try {
     return JSON.parse(raw ?? "");
@@ -20,26 +15,25 @@ function safeJsonParse(raw, fallback) {
   }
 }
 
+// Load list from LocalStorage
 function lsLoad(key) {
   return safeJsonParse(localStorage.getItem(key), []);
 }
 
+// Save list to LocalStorage
 function lsSave(key, list) {
   localStorage.setItem(key, JSON.stringify(list));
 }
 
+// Generate lightweight id
 function uid(prefix = "a_") {
   return prefix + Math.random().toString(36).slice(2, 10);
 }
 
-/**
- * Create record in a specific LS store
- * payload should include { type, title, ... }
- * NOTE: courseId intentionally NOT used in this system.
- */
+// Create record in a specific store
 function lsCreate(key, payload) {
   const list = lsLoad(key);
-  const id = uid("w_"); // work item id (shared namespace)
+  const id = uid("w_");
   const now = new Date().toISOString();
   const created = { id, createdAt: now, updatedAt: now, ...payload };
   list.push(created);
@@ -47,7 +41,7 @@ function lsCreate(key, payload) {
   return created;
 }
 
-/** Update record by id in a specific LS store */
+// Update record by id
 export function lsUpdate(key, id, patch) {
   const list = lsLoad(key);
   const idx = list.findIndex((x) => x.id === id);
@@ -64,7 +58,7 @@ export function lsUpdate(key, id, patch) {
   return updated;
 }
 
-/** Delete record by id in a specific LS store */
+// Delete record by id
 export function lsDelete(key, id) {
   const list = lsLoad(key);
   const next = list.filter((x) => x.id !== id);
@@ -72,18 +66,15 @@ export function lsDelete(key, id) {
   return next.length !== list.length;
 }
 
-/** Convenience loads */
+// Convenience loaders
 export const lsLoadAssignments = () => lsLoad(LS_ASSIGNMENTS);
 export const lsLoadQuizzes = () => lsLoad(LS_QUIZZES);
 
-/** Convenience creates */
+// Convenience creators
 export const lsCreateAssignment = (payload) => lsCreate(LS_ASSIGNMENTS, payload);
 export const lsCreateQuiz = (payload) => lsCreate(LS_QUIZZES, payload);
 
-/**
- * Resolve by refId (useful when course module stores {refType, refId})
- * Searches both stores.
- */
+// Lookup by id across both stores
 export function lsGetById(refId) {
   const a = lsLoadAssignments().find((x) => x.id === refId);
   if (a) return a;
@@ -91,18 +82,15 @@ export function lsGetById(refId) {
   return q || null;
 }
 
-/* =========================================================
-   Initial data
-   ========================================================= */
-
+// Default quiz structure
 const INITIAL_QUIZ = Object.freeze({
-  // Keep only what your QuizEditor supports now
   shuffleQuestions: true,
   questions: [],
 });
 
+// Default form structure
 const INITIAL_FORM = () => ({
-  workType: "assignment", // "assignment" | "quiz"
+  workType: "assignment",
   title: "",
   description: "",
   maxScore: 100,
@@ -111,14 +99,8 @@ const INITIAL_FORM = () => ({
   attachment: null,
 });
 
-/**
- * AssignmentCard
- * - Does NOT require courseId
- * - Creates work items first
- * - Course/modules will reference via refId
- */
 const AssignmentCard = ({ onCreated }) => {
-  // ----- Form state -----
+  // Form state
   const [form, setForm] = useState(INITIAL_FORM);
   const [quizData, setQuizData] = useState(INITIAL_QUIZ);
 
@@ -132,12 +114,12 @@ const AssignmentCard = ({ onCreated }) => {
     attachment,
   } = form;
 
-  // ----- UI/Request state -----
+  // UI state
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // ----- Derived: total quiz points -----
+  // Total points for quiz mode
   const totalQuizPoints = useMemo(() => {
     if (workType !== "quiz") return 0;
     return (quizData.questions || []).reduce(
@@ -146,28 +128,26 @@ const AssignmentCard = ({ onCreated }) => {
     );
   }, [workType, quizData.questions]);
 
-  // Auto-sync maxScore to total quiz points when in quiz mode
+  // Sync quiz maxScore with total points
   useEffect(() => {
     if (workType !== "quiz") return;
 
     setForm((prev) => {
       const syncedMax = totalQuizPoints;
-
-      // Keep passingScore <= maxScore.
-      // If max is 0 (no questions), keep user's current value; validation will catch it.
       const prevPass = Number(prev.passingScore) || 0;
       const syncedPass = syncedMax > 0 ? Math.min(prevPass, syncedMax) : prevPass;
-
       return { ...prev, maxScore: syncedMax, passingScore: syncedPass };
     });
   }, [workType, totalQuizPoints]);
 
-  // ----- Helpers -----
+  // Generic field setter
   const setField = (key, value) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const setNum = (key) => (e) => setField(key, e.target.value); // keep as string; cast on submit
+  // Numeric field setter (keep string until submit)
+  const setNum = (key) => (e) => setField(key, e.target.value);
 
+  // Reset form + messages
   const resetForm = useCallback(() => {
     setForm(INITIAL_FORM());
     setQuizData(INITIAL_QUIZ);
@@ -175,11 +155,9 @@ const AssignmentCard = ({ onCreated }) => {
     setSuccessMsg("");
   }, []);
 
-  // ----- Validation -----
+  // Validate inputs
   const validate = () => {
     const errors = [];
-
-    // courseId intentionally NOT validated/required.
 
     if (!title.trim()) errors.push("Title is required.");
 
@@ -228,7 +206,7 @@ const AssignmentCard = ({ onCreated }) => {
     return errors;
   };
 
-  // ----- Submit -----
+  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -240,9 +218,8 @@ const AssignmentCard = ({ onCreated }) => {
       return;
     }
 
-    // Base structure shared by both assignment and quiz
     const base = {
-      type: workType, // "assignment" | "quiz"
+      type: workType,
       title: title.trim(),
       maxScore: Number(maxScore),
       passingScore: Number(passingScore),
@@ -254,7 +231,6 @@ const AssignmentCard = ({ onCreated }) => {
         ? { ...base, quiz: { ...quizData } }
         : { ...base, description: description.trim() };
 
-    // Optional attachment name (metadata only)
     const finalPayload =
       workType === "assignment" && attachment
         ? { ...payload, attachmentName: attachment.name }
@@ -262,16 +238,13 @@ const AssignmentCard = ({ onCreated }) => {
 
     setSubmitting(true);
     try {
-      // LocalStorage create (separate stores)
       const created =
         workType === "quiz"
           ? lsCreateQuiz(finalPayload)
           : lsCreateAssignment(finalPayload);
 
-      // Return lightweight object to parent
-      // Parent can store created.id as module.refId
       const lightweight = {
-        id: created.id,               // <-- use as refId
+        id: created.id,
         type: created.type,
         title: created.title,
         estimatedMinutes: Number(created.estimatedMinutes),
@@ -281,7 +254,6 @@ const AssignmentCard = ({ onCreated }) => {
       onCreated?.(lightweight);
 
       console.log("[AssignmentCard] Created (LocalStorage):", created);
-
       resetForm();
     } catch (err) {
       console.error(err);
@@ -304,7 +276,6 @@ const AssignmentCard = ({ onCreated }) => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="assignment-card__grid">
-            {/* Work Type -> Segmented control */}
             <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row">
               <span className="assignment-card__label">Work Type *</span>
               <div className="ac-segment" role="radiogroup" aria-label="Work Type">
@@ -334,7 +305,6 @@ const AssignmentCard = ({ onCreated }) => {
               </div>
             </div>
 
-            {/* Title */}
             <div className="assignment-card__group">
               <label htmlFor="title" className="assignment-card__label">
                 Title *
@@ -354,7 +324,6 @@ const AssignmentCard = ({ onCreated }) => {
               />
             </div>
 
-            {/* Max score */}
             <div className="assignment-card__group">
               <label htmlFor="maxScore" className="assignment-card__label">
                 Max Score{" "}
@@ -381,7 +350,6 @@ const AssignmentCard = ({ onCreated }) => {
               />
             </div>
 
-            {/* Passing Score */}
             <div className="assignment-card__group">
               <label htmlFor="passingScore" className="assignment-card__label">
                 Passing Score *
@@ -398,7 +366,6 @@ const AssignmentCard = ({ onCreated }) => {
               />
             </div>
 
-            {/* Estimated time */}
             <div className="assignment-card__group">
               <label htmlFor="estimatedMinutes" className="assignment-card__label">
                 Estimated Time (mins) *
@@ -415,10 +382,8 @@ const AssignmentCard = ({ onCreated }) => {
               />
             </div>
 
-            {/* Assignments-only fields */}
             {workType === "assignment" && (
               <>
-                {/* Description */}
                 <div className="assignment-card__group assignment-card__group--full">
                   <label htmlFor="description" className="assignment-card__label">
                     Description *
@@ -434,7 +399,6 @@ const AssignmentCard = ({ onCreated }) => {
                   />
                 </div>
 
-                {/* Attachment */}
                 <div className="assignment-card__group assignment-card__group--full">
                   <label htmlFor="attachment" className="assignment-card__label">
                     Attachment (optional)
@@ -457,12 +421,10 @@ const AssignmentCard = ({ onCreated }) => {
             )}
           </div>
 
-          {/* Quiz editor */}
           {workType === "quiz" && (
             <QuizEditor value={quizData} onChange={setQuizData} />
           )}
 
-          {/* Messages */}
           {errorMsg && (
             <div role="alert" className="assignment-card__msg-error">
               {errorMsg}
@@ -474,7 +436,6 @@ const AssignmentCard = ({ onCreated }) => {
             </div>
           )}
 
-          {/* Actions */}
           <div className="assignment-card__actions">
             <button
               type="submit"

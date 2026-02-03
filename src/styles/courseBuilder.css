@@ -920,3 +920,8 @@
   .ccs__itemRight{ width: 100%; justify-content: flex-start; margin-left: 0; }
 }
 
+.cb-desc-edit:empty:before {
+  content: "Add a short description for learners…";
+  color: #888;
+  pointer-events: none;
+}

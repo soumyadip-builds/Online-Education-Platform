@@ -517,10 +517,10 @@ html, body {
   box-shadow: 0 6px 18px var(--shadow);
 }
 
-/* Hover nudge on unselected */
+/* Hover nudge on unselected
 .ac-segment__option:hover .ac-segment__text {
   background: color-mix(in srgb, var(--bg) 20%, var(--bg-2) 80%);
-}
+} */
 
 /* Inline group: label + control on one line */
 .assignment-card__group--inline {
