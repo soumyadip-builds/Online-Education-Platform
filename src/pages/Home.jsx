@@ -56,16 +56,6 @@ const heroSlides = [
 	},
 ];
 
-const categories = [
-	{ key: 'genai', title: 'Generative AI', img: GenAI },
-	{ key: 'it-cert', title: 'IT Certifications', img: ITCert },
-	{ key: 'data', title: 'Data Science', img: DataScience },
-	{ key: 'chatgpt', title: 'ChatGPT', img: ChatGPT },
-	{ key: 'prompt', title: 'Prompt Engineering', img: PromptEng },
-	{ key: 'ml', title: 'Machine Learning', img: MachineLearning },
-	{ key: 'aiagents', title: 'AI Agents', img: AiAgents },
-];
-
 const logos = [
 	{ key: 'samsung', alt: 'Samsung', src: Samsung },
 	{ key: 'cisco', alt: 'Cisco', src: Cisco },
@@ -122,7 +112,6 @@ export default function Home() {
 
 	const navigate = useNavigate();
 
-	const catRef = useRef(null);
 	const courseRowRef = useRef(null);
 
 	const [courses, setcourses] = useState([]);

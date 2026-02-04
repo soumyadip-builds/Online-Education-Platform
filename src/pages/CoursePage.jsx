@@ -37,8 +37,6 @@ function mergeCourses(seedCourses, createdCourses) {
 }
 export default function CoursePage() {
     const [courses, setCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [loadErr, setLoadErr] = useState("");
     const [query, setQuery] = useState("");
     const [showBest, setShowBest] = useState(false);
 
@@ -64,8 +62,6 @@ export default function CoursePage() {
         let alive = true;
         (async () => {
             try {
-                setLoading(true);
-                setLoadErr("");
                 // Fetch from public/data
                 const res = await fetch("/data/courseDetails.json");
                 if (!res.ok) {
@@ -87,10 +83,8 @@ export default function CoursePage() {
                 const merged = mergeCourses(data, created);
                 if (alive) setCourses(merged);
             } catch (e) {
-                if (alive) setLoadErr(e.message || "Failed to load courses");
-            } finally {
-                if (alive) setLoading(false);
-            }
+                console.log("Failed to load courses");
+            } 
         })();
         const reload = () => {
         const createdNow = loadCreatedCourses();
@@ -163,14 +157,6 @@ export default function CoursePage() {
                 // ? "Courses"
                 : "Courses";
 
-    const emptyMsg =
-        scope === "enrolled"
-            ? "You haven't enrolled in any courses yet."
-            : scope === "created"
-              ? "You haven't created any courses yet."
-              : scope === "authored" // NEW
-                ? "No courses authored by you were found."
-                : "No courses found.";
 
     return (
         <div>
