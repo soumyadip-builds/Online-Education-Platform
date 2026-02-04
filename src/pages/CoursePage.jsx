@@ -160,7 +160,6 @@ export default function CoursePage() {
 
     return (
         <div>
-            {/* <NavbarComponent /> */}
             <section className="course-page">
                 <h3>{heading}</h3>
                 {/* Controls row */}
@@ -199,7 +198,6 @@ export default function CoursePage() {
                     </div>
                 )}
             </section>
-            {/* <Footer /> */}
         </div>
     );
 }
