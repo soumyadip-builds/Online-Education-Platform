@@ -22,7 +22,6 @@ import { getCurrentUser, isAuthenticated } from "./utils/session";
 import CourseCreator from "./components/CourseCreator";
 import InstructorDashboard from "./pages/InstructorDashboard";
 import StudentDashboard from "./pages/StudentMetrics";
-import InstructorStudentCourseProgress from "./pages/InstructorStudentCourseProgress";
 
 // --- Helpers ----------------------------------------------------------------
 function roleHomePath(user) {
