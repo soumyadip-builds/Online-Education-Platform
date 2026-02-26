@@ -30,7 +30,7 @@ const UserSchema = new Schema(
         },
         role: {
             type: String,
-            enum: ["learner", "instructor", "admin"],
+            enum: ["learner", "instructor"],
             default: "learner",
             index: true,
         },
@@ -60,11 +60,9 @@ const UserSchema = new Schema(
             enum: [
                 "male",
                 "female",
-                "non-binary",
-                "other",
-                "prefer_not_to_say",
+                "other"
             ],
-            default: "prefer_not_to_say",
+            default: "male",
         },
     },
     {

@@ -1,175 +1,179 @@
+// src/App.jsx
 import {
-    BrowserRouter,
-    Routes,
-    Route,
-    Navigate,
-    useLocation,
-    useNavigate,
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import CoursePage from "./pages/CoursePage";
 import CourseDetails from "./components/CourseDetails";
 import AssignmentPage from "./pages/AssignmentPage";
 import QuizPage from "./pages/QuizPage";
 import AuthPage from "./pages/AuthPage";
-import Home from "./pages/Home"; // used as Student Home
+import Home from "./pages/Home";
 import NavbarComponent from "./components/NavbarComponent";
 import Footer from "./components/FooterComponent";
 import ForumPage from "./pages/ForumPage";
 import EditProfile from "./components/EditProfile";
-import InstructorHome from "./pages/InstructorHomePage"; // Instructor Home
-import { getCurrentUser, isAuthenticated } from "./utils/session";
+import InstructorHome from "./pages/InstructorHomePage";
 import CourseCreator from "./components/CourseCreator";
 import InstructorDashboard from "./pages/InstructorDashboard";
 import StudentDashboard from "./pages/StudentMetrics";
+import { Toaster, toast } from "react-hot-toast";
 
-// --- Helpers ----------------------------------------------------------------
+// --- local auth helpers (see section 0) ---
+import {
+  getAuthUser,
+  isAuthed,
+  clearLocalSession,
+} from "./lib/authLocal"; // or paste helpers here
+
+// Helpers ----------------------------------------------------------------
 function roleHomePath(user) {
-    const roles = Array.isArray(user?.roles)
-        ? user.roles
-        : user?.role
-          ? [user.role]
-          : [];
-    if (roles.includes("instructor")) return "/instructor-home";
-    if (roles.includes("learner")) return "/student-home";
-    return "/not-authorized";
+  const roles = Array.isArray(user?.roles) ? user.roles : user?.role ? [user.role] : [];
+  if (roles.includes("instructor") || user?.role === "instructor") return "/instructor-home";
+  if (roles.includes("learner") || user?.role === "learner") return "/student-home";
+  return "/not-authorized";
 }
 
 function RequireRole({ role, children }) {
-    const location = useLocation();
-    const user = getCurrentUser();
-    if (!user) {
-        return <Navigate to="/auth" replace state={{ from: location }} />;
+  const location = useLocation();
+  const user = isAuthed() ? getAuthUser() : null;
+  if (!user) {
+    return <Navigate to="/auth" replace state={{ from: location }} />;
     }
-    const roles = Array.isArray(user.roles)
-        ? user.roles
-        : user.role
-          ? [user.role]
-          : [];
-    const allowed = roles.includes(role);
-    if (!allowed) {
-        return <Navigate to="/not-authorized" replace />;
-    }
-    return children;
+  const roles = Array.isArray(user.roles) ? user.roles : user.role ? [user.role] : [];
+  const allowed = roles.includes(role);
+  if (!allowed) {
+    return <Navigate to="/not-authorized" replace />;
+  }
+  return children;
 }
 
-// If a logged-in user visits /auth, send them to their role home
+// If a logged-in user visits /auth, send them to role home
 function AuthOrRedirect() {
-    const user = getCurrentUser();
-    return user ? <Navigate to={roleHomePath(user)} replace /> : <AuthPage />;
+  const user = isAuthed() ? getAuthUser() : null;
+  return user ? <Navigate to={roleHomePath(user)} replace /> : <AuthPage />;
 }
 
-// simple Not Authorized page
+// Root route: show Home or role home
+function RootOrRoleHome() {
+  const user = isAuthed() ? getAuthUser() : null;
+  return user ? <Navigate to={roleHomePath(user)} replace /> : <Home />;
+}
+
+// Simple Not Authorized
 function NotAuthorized() {
-    const navigate = useNavigate();
-    // Derive role once from session (null-safe)
-    const role = useMemo(() => {
-        if (!isAuthenticated()) return null;
-        const user = getCurrentUser();
-        // Normalize role to handle common label variants
-        const r = (user?.role || "").toLowerCase();
-        if (["learner", "student"].includes(r)) return "learner";
-        if (["instructor", "mentor", "teacher"].includes(r))
-            return "instructor";
-        return null;
-    }, []);
-
-    const handleGoHome = (e) => {
-        e.preventDefault();
-        if (role === "learner") {
-            navigate("/student-home", { replace: true });
-        } else if (role === "instructor") {
-            navigate("/instructor-home", { replace: true });
-        } else {
-            // Fallback if role is unknown or user not authed
-            navigate("/", { replace: true });
-        }
-    };
-
-    return (
-        <div className="container py-5">
-            <h2 className="mb-2">Not authorized</h2>
-            <p className="text-muted">
-                You don’t have permission to view this page.
-            </p>
-            <a href="/" onClick={handleGoHome}>
-                Go to Home
-            </a>
-        </div>
-    );
+  const navigate = useNavigate();
+  const role = useMemo(() => {
+    const u = isAuthed() ? getAuthUser() : null;
+    const r = (u?.role ?? "").toLowerCase();
+    if (["learner", "student"].includes(r)) return "learner";
+    if (["instructor", "mentor", "teacher"].includes(r)) return "instructor";
+    return null;
+  }, []);
+  const handleGoHome = (e) => {
+    e.preventDefault();
+    if (role === "learner") navigate("/student-home", { replace: true });
+    else if (role === "instructor") navigate("/instructor-home", { replace: true });
+    else navigate("/", { replace: true });
+  };
+  return (
+    <div className="container py-5">
+      <h2 className="mb-2">Not authorized</h2>
+      <p className="text-muted">You don’t have permission to view this page.</p>
+      <a href="#" onClick={handleGoHome} className="btn btn-primary">
+        Go to Home
+      </a>
+    </div>
+  );
 }
 
-// Optional shell wrapper
+// /logout route component (clears localStorage keys)
+function Logout() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    clearLocalSession();
+    // toast.success("You’ve been logged out.");
+    navigate("/auth", { replace: true });
+  }, [navigate]);
+  return null;
+}
+
+// Shell with global Toaster
 function AppShell({ children }) {
-    return (
-        <>
-            <NavbarComponent />
-            {children}
-            <Footer />
-        </>
-    );
+  return (
+    <>
+      <Toaster position="top-right" />
+      <NavbarComponent />
+      {children}
+      <Footer />
+    </>
+  );
 }
 
 export default function App() {
-    const StudentHome = Home;
-    return (
-        <BrowserRouter>
-            <AppShell>
-                <Routes>
-                    {/* Public routes */}
-                    <Route path="/" element={<Home />} />
-                    <Route path="/auth" element={<AuthOrRedirect />} />
-                    <Route path="/forum" element={<ForumPage />} />
-                    <Route path="/coursepage" element={<CoursePage />} />
-                    {/* <Route path="/courses?scope=enrolled" element={<CoursePage />}/>
-          <Route path="/courses?scope=created" element={<CoursePage />}/> */}
-                    <Route path="/courses/:id" element={<CourseDetails />} />
-                    <Route path="/quiz/:quizId" element={<QuizPage />} />
-                    <Route
-                        path="/assignment/:assignmentId"
-                        element={<AssignmentPage />}
-                    />
-                    <Route path="/course-creator" element={<CourseCreator />} />
-                    <Route path="/edit-profile" element={<EditProfile />} />
-                    <Route
-                        path="/performance-instructor"
-                        element={
-                            <RequireRole role="instructor">
-                                <InstructorDashboard />
-                            </RequireRole>
-                        }
-                    />
-                    <Route
-                        path="/performance-student"
-                        element={
-                            <RequireRole role="learner">
-                                <StudentDashboard />
-                            </RequireRole>
-                        }
-                    />
+  const StudentHome = Home; // swap if you have a dedicated student home
 
-                    {/* Role-guarded routes */}
-                    <Route
-                        path="/student-home"
-                        element={
-                            <RequireRole role="learner">
-                                <StudentHome />
-                            </RequireRole>
-                        }
-                    />
-                    <Route
-                        path="/instructor-home"
-                        element={
-                            <RequireRole role="instructor">
-                                <InstructorHome />
-                            </RequireRole>
-                        }
-                    />
-                    <Route path="/not-authorized" element={<NotAuthorized />} />
-                    {/* If the user navigates to any path that doesn’t match your other routes, redirect them to / (home), and don’t keep the invalid URL in browser history. */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-            </AppShell>
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <AppShell>
+        <Routes>
+          {/* Public or smart root */}
+          <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<AuthOrRedirect />} />
+          <Route path="/logout" element={<Logout />} />
+
+          {/* Public routes */}
+          <Route path="/forum" element={<ForumPage />} />
+          <Route path="/coursepage" element={<CoursePage />} />
+          <Route path="/courses/:id" element={<CourseDetails />} />
+          <Route path="/quiz/:quizId" element={<QuizPage />} />
+          <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
+          <Route path="/course-creator" element={<CourseCreator />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+
+          {/* Role-guarded */}
+          <Route
+            path="/performance-instructor"
+            element={
+              <RequireRole role="instructor">
+                <InstructorDashboard />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/performance-student"
+            element={
+              <RequireRole role="learner">
+                <StudentDashboard />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/student-home"
+            element={
+              <RequireRole role="learner">
+                <Home />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/instructor-home"
+            element={
+              <RequireRole role="instructor">
+                <InstructorHome />
+              </RequireRole>
+            }
+          />
+
+          <Route path="/not-authorized" element={<NotAuthorized />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AppShell>
+    </BrowserRouter>
+  );
 }

@@ -1,31 +1,40 @@
-const express = require('express');
+const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 // const router = require("./routes/userRoutes");
 const cors = require("cors");
 
-// Creating the express application
+const authRouter = require("./routes/authRouter");
+
 const app = express();
-// Creating the json parser middleware
-app.use(bodyParser.json());
-// Enabling CORS for all routes
-app.use(cors());
-// Loading the environment variables from the .env file
+
+// Middlewares
+app.use(express.json());
+
+// CORS (adjust origins for your client)
+app.use(
+    cors({
+        origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", // Vite default
+        credentials: true,
+    }),
+);
+
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
-const MONGOURL = process.env.MONGO_URL;
-
+// MongoDB connect
+const MONGO_URI = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/online_education_platform";
 mongoose
-    .connect(MONGOURL)
-    .then(() => {
-        console.log("DB Connected Successfully");
-        // Starting the server
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.log(err);
-    });
+    .connect(MONGO_URI)
+    .then(() => console.log("MongoDB connected"))
+    .catch((e) => console.error("MongoDB connection error", e));
+
+// Routes
+app.use("/edstream/auth", authRouter);
+
+// Health
+app.get("/health", (req, res) => res.json({ ok: true }));
+
+// Start
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
