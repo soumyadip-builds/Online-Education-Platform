@@ -265,20 +265,24 @@ const AssignmentCard = ({ onCreated }) => {
   };
 
   return (
-    <div className="assignment-card-page">
-      <div className="assignment-card">
+    //<div className="assignment-card-page container my-4">
+      <div className="assignment-card card shadow-sm">
         <div className="assignment-card__stripe" />
 
-        <div className="assignment-card__header">
-          <h1 className="assignment-card__title">
+        <div className="assignment-card__header card-header bg-white">
+          <h1 className="assignment-card__title h4 mb-0">
             Add {workType === "quiz" ? "Quiz" : "Assignment"}
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="assignment-card__grid">
-            <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row">
-              <span className="assignment-card__label">Work Type *</span>
+        <form onSubmit={handleSubmit} noValidate className="p-3 p-md-4">
+          <div className="assignment-card__grid row g-3">
+            <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row col-12">
+              <span className="assignment-card__label d-block mb-2 fw-semibold">
+                Work Type *
+              </span>
+
+              {/* KEEP TOGGLE DESIGN INTACT — no Bootstrap classes here */}
               <div className="ac-segment" role="radiogroup" aria-label="Work Type">
                 <label className="ac-segment__option">
                   <input
@@ -304,10 +308,11 @@ const AssignmentCard = ({ onCreated }) => {
                   <span className="ac-segment__text">Quiz</span>
                 </label>
               </div>
+              {/* END TOGGLE BLOCK */}
             </div>
 
-            <div className="assignment-card__group">
-              <label htmlFor="title" className="assignment-card__label">
+            <div className="assignment-card__group col-12 col-md-6">
+              <label htmlFor="title" className="assignment-card__label form-label">
                 Title *
               </label>
               <input
@@ -320,16 +325,16 @@ const AssignmentCard = ({ onCreated }) => {
                 }
                 value={title}
                 onChange={(e) => setField("title", e.target.value)}
-                className="assignment-card-input"
+                className="assignment-card-input form-control"
                 required
               />
             </div>
 
-            <div className="assignment-card__group">
-              <label htmlFor="maxScore" className="assignment-card__label">
+            <div className="assignment-card__group col-12 col-md-4 col-lg-3">
+              <label htmlFor="maxScore" className="assignment-card__label form-label">
                 Max Score{" "}
                 {workType === "quiz" && (
-                  <span className="assignment-card__subtle">(auto)</span>
+                  <span className="assignment-card__subtle text-muted">(auto)</span>
                 )}
               </label>
               <input
@@ -339,7 +344,7 @@ const AssignmentCard = ({ onCreated }) => {
                 step="1"
                 value={maxScore}
                 onChange={setNum("maxScore")}
-                className="assignment-card-input"
+                className="assignment-card-input form-control"
                 required
                 readOnly={workType === "quiz"}
                 aria-readonly={workType === "quiz"}
@@ -351,8 +356,8 @@ const AssignmentCard = ({ onCreated }) => {
               />
             </div>
 
-            <div className="assignment-card__group">
-              <label htmlFor="passingScore" className="assignment-card__label">
+            <div className="assignment-card__group col-12 col-md-4 col-lg-3">
+              <label htmlFor="passingScore" className="assignment-card__label form-label">
                 Passing Score *
               </label>
               <input
@@ -362,13 +367,16 @@ const AssignmentCard = ({ onCreated }) => {
                 step="1"
                 value={passingScore}
                 onChange={setNum("passingScore")}
-                className="assignment-card-input"
+                className="assignment-card-input form-control"
                 required
               />
             </div>
 
-            <div className="assignment-card__group">
-              <label htmlFor="estimatedMinutes" className="assignment-card__label">
+            <div className="assignment-card__group col-12 col-md-4 col-lg-3">
+              <label
+                htmlFor="estimatedMinutes"
+                className="assignment-card__label form-label"
+              >
                 Estimated Time (mins) *
               </label>
               <input
@@ -378,15 +386,15 @@ const AssignmentCard = ({ onCreated }) => {
                 step="1"
                 value={estimatedMinutes}
                 onChange={setNum("estimatedMinutes")}
-                className="assignment-card-input"
+                className="assignment-card-input form-control"
                 required
               />
             </div>
 
             {workType === "assignment" && (
               <>
-                <div className="assignment-card__group assignment-card__group--full">
-                  <label htmlFor="description" className="assignment-card__label">
+                <div className="assignment-card__group assignment-card__group--full col-12">
+                  <label htmlFor="description" className="assignment-card__label form-label">
                     Description *
                   </label>
                   <textarea
@@ -395,13 +403,13 @@ const AssignmentCard = ({ onCreated }) => {
                     value={description}
                     onChange={(e) => setField("description", e.target.value)}
                     rows={6}
-                    className="assignment-card-textarea"
+                    className="assignment-card-textarea form-control"
                     required
                   />
                 </div>
 
-                <div className="assignment-card__group assignment-card__group--full">
-                  <label htmlFor="attachment" className="assignment-card__label">
+                <div className="assignment-card__group assignment-card__group--full col-12">
+                  <label htmlFor="attachment" className="assignment-card__label form-label">
                     Attachment (optional)
                   </label>
                   <input
@@ -410,10 +418,10 @@ const AssignmentCard = ({ onCreated }) => {
                     onChange={(e) =>
                       setField("attachment", e.target.files?.[0] || null)
                     }
-                    className="assignment-card-file"
+                    className="assignment-card-file form-control"
                   />
                   {attachment && (
-                    <span className="assignment-card__subtle">
+                    <span className="assignment-card__subtle text-muted d-inline-block mt-1">
                       Selected: {attachment.name}
                     </span>
                   )}
@@ -423,25 +431,27 @@ const AssignmentCard = ({ onCreated }) => {
           </div>
 
           {workType === "quiz" && (
-            <QuizEditor value={quizData} onChange={setQuizData} />
+            <div className="mt-3">
+              <QuizEditor value={quizData} onChange={setQuizData} />
+            </div>
           )}
 
           {errorMsg && (
-            <div role="alert" className="assignment-card__msg-error">
+            <div role="alert" className="assignment-card__msg-error alert alert-danger mt-3">
               {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div role="status" className="assignment-card__msg-success">
+            <div role="status" className="assignment-card__msg-success alert alert-success mt-3">
               {successMsg}
             </div>
           )}
 
-          <div className="assignment-card__actions">
+          <div className="assignment-card__actions d-flex gap-2 mt-3">
             <button
               type="submit"
               disabled={submitting}
-              className="assignment-card__btn-primary"
+              className="assignment-card__btn-primary btn btn-primary"
             >
               {submitting ? "Saving..." : "Save"}
             </button>
@@ -449,14 +459,14 @@ const AssignmentCard = ({ onCreated }) => {
               type="button"
               disabled={submitting}
               onClick={resetForm}
-              className="assignment-card__btn-secondary"
+              className="assignment-card__btn-secondary btn btn-outline-secondary"
             >
               Reset
             </button>
           </div>
         </form>
       </div>
-    </div>
+    //</div>
   );
 };
 

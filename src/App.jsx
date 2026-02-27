@@ -24,7 +24,7 @@ import InstructorDashboard from "./pages/InstructorDashboard";
 import StudentDashboard from "./pages/StudentMetrics";
 import InstructorStudentCourseProgress from "./pages/InstructorStudentCourseProgress";
 
-// --- Helpers ----------------------------------------------------------------
+// --- Helpers ---
 function roleHomePath(user) {
   const roles = Array.isArray(user?.roles)
     ? user.roles
@@ -106,7 +106,7 @@ function NotAuthorized() {
   );
 }
 
-// Optional shell wrapper
+//shell wrapper
 function AppShell({ children }) {
   return (
     <>

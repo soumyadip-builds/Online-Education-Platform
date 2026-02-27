@@ -86,19 +86,19 @@ export default function QuizEditor({ value, onChange }) {
   };
 
   return (
-    <div className="quiz-editor">
+    <div className="quiz-editor mt-3">
       {/* Header */}
-      <div className="quiz-editor__header">
-        <h2 className="quiz-editor__title">Quiz Settings</h2>
+      <div className="quiz-editor__header mb-2">
+        <h2 className="quiz-editor__title mb-0">Quiz Settings</h2>
 
         <label className="quiz-editor__toggle">
           <input
             type="checkbox"
             checked={!!quiz.shuffleQuestions}
             onChange={(e) => update({ shuffleQuestions: e.target.checked })}
-            className="quiz-editor__checkbox"
+            className="quiz-editor__checkbox form-check-input"
           />
-          Shuffle questions
+          <span className="ms-2">Shuffle questions</span>
         </label>
 
         <div className="quiz-editor__totals">
@@ -107,18 +107,14 @@ export default function QuizEditor({ value, onChange }) {
         </div>
       </div>
 
-      {/* Settings*/}
-      <div className="quiz-editor__settings">
-      </div>
-
       {/* QUESTIONS (scrollable) */}
-      <div className="quiz-editor__questions">
+      <div className="quiz-editor__questions p-3">
         {/* Header */}
-        <div className="quiz-editor__qheader">
-          <h3 className="quiz-editor__subtitle">Questions</h3>
+        <div className="quiz-options__header">
+          <h3 className="quiz-editor__subtitle h6 mb-0">Questions</h3>
           <button
             type="button"
-            className="assignment-card__btn-primary"
+            className="assignment-card__btn-primary btn btn-primary"
             onClick={addQ}
           >
             + Add Question
@@ -126,7 +122,7 @@ export default function QuizEditor({ value, onChange }) {
         </div>
 
         {quiz.questions.length === 0 && (
-          <p className="assignment-card__subtle">No questions added.</p>
+          <p className="assignment-card__subtle mb-0">No questions added.</p>
         )}
 
         {quiz.questions.map((q, i) => (
@@ -137,7 +133,7 @@ export default function QuizEditor({ value, onChange }) {
 
               <button
                 type="button"
-                className="quiz-question__remove"
+                className="quiz-question__remove btn btn-outline-danger"
                 onClick={() => rmQ(q.id)}
               >
                 Remove
@@ -145,27 +141,28 @@ export default function QuizEditor({ value, onChange }) {
             </div>
 
             {/* Fields */}
-            <div className="quiz-question__grid">
+            <div className="row g-3 quiz-question__grid">
               {/* Title */}
-              <div className="quiz-editor__group">
-                <label className="assignment-card__label">Question *</label>
+              <div className="quiz-editor__group col-12 col-md-6">
+                <label className="assignment-card__label form-label">
+                  Question *
+                </label>
                 <input
                   type="text"
                   value={q.title}
                   onChange={(e) => patchQ(q.id, { title: e.target.value })}
-                  className="assignment-card-input"
+                  className="assignment-card-input form-control"
                   placeholder="Enter the question text"
-                
                 />
               </div>
 
               {/* Type */}
-              <div className="quiz-editor__group">
-                <label className="assignment-card__label">Type *</label>
+              <div className="quiz-editor__group col-12 col-md-3">
+                <label className="assignment-card__label form-label">Type *</label>
                 <select
                   value={q.type}
                   onChange={(e) => patchQ(q.id, { type: e.target.value })}
-                  className="assignment-card-select"
+                  className="assignment-card-select form-select"
                 >
                   <option value="single">Single correct</option>
                   <option value="multiple">Multiple correct</option>
@@ -173,8 +170,8 @@ export default function QuizEditor({ value, onChange }) {
               </div>
 
               {/* Points */}
-              <div className="quiz-editor__group">
-                <label className="assignment-card__label">Points *</label>
+              <div className="quiz-editor__group col-12 col-md-3">
+                <label className="assignment-card__label form-label">Points *</label>
                 <input
                   type="number"
                   min="1"
@@ -184,18 +181,18 @@ export default function QuizEditor({ value, onChange }) {
                       points: Math.max(1, Number(e.target.value || 1)),
                     })
                   }
-                  className="assignment-card-input"
+                  className="assignment-card-input form-control"
                 />
               </div>
             </div>
 
             {/* Options */}
-            <div className="quiz-options">
+            <div className="quiz-options mt-3">
               <div className="quiz-options__header">
                 <span className="assignment-card__label">Options</span>
                 <button
                   type="button"
-                  className="assignment-card__btn-secondary"
+                  className="assignment-card__btn-secondary btn btn-outline-secondary"
                   onClick={() => addOpt(q.id)}
                 >
                   + Add Option
@@ -209,21 +206,18 @@ export default function QuizEditor({ value, onChange }) {
                     name={`correct-${q.id}`}
                     checked={o.isCorrect}
                     onChange={(e) => setCorrect(q.id, o.id, e.target.checked)}
-                    className="quiz-option__mark"
+                    className="quiz-option__mark form-check-input"
                   />
                   <input
                     type="text"
                     value={o.text}
-                    onChange={(e) =>
-                      patchOpt(q.id, o.id, { text: e.target.value })
-                    }
-                   
-                    className="assignment-card-input quiz-option__text"
+                    onChange={(e) => patchOpt(q.id, o.id, { text: e.target.value })}
+                    className="assignment-card-input form-control quiz-option__text"
                     placeholder="Option text"
                   />
                   <button
                     type="button"
-                    className="quiz-option__remove"
+                    className="quiz-option__remove btn btn-outline-secondary"
                     onClick={() => rmOpt(q.id, o.id)}
                   >
                     ✕
@@ -233,18 +227,16 @@ export default function QuizEditor({ value, onChange }) {
             </div>
 
             {/* Explanation (optional) */}
-            <div className="quiz-editor__group">
-              <label className="assignment-card__label">
+            <div className="quiz-editor__group mt-3">
+              <label className="assignment-card__label form-label">
                 Explanation (optional)
               </label>
               <textarea
                 rows="2"
                 value={q.explanation}
-                onChange={(e) =>
-                  patchQ(q.id, { explanation: e.target.value })
-                }
-               
-                className="assignment-card-textarea"
+                onChange={(e) => patchQ(q.id, { explanation: e.target.value })}
+                className="assignment-card-textarea form-control"
+                placeholder="Add a short explanation for the correct answer (optional)"
               />
             </div>
           </div>
@@ -253,4 +245,4 @@ export default function QuizEditor({ value, onChange }) {
     </div>
   );
 }
-
+``

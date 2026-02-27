@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /** Time helpers */
 export const toMinutes = (hours = 0, minutes = 0) => {
   const h = Number(hours) || 0;
