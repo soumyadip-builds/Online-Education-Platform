@@ -4,61 +4,54 @@ import "../styles/auth.css";
 import { useNavigate } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
-import { addUser, findUser } from "../utils/userStorage";
-import { createSession, getCurrentUser } from "../utils/session";
+import { Toaster, toast } from "react-hot-toast";
+
+// --- local auth helpers (see section 0) ---
+import { getAuthUser, isAuthed, createLocalSession } from "../lib/authLocal"; // or paste helpers here
 
 const STUDENT_HOME_PATH = "/student-home";
 const INSTRUCTOR_HOME_PATH = "/instructor-home";
 
+// Resolve API base from env or fallback
+const API_BASE = "http://localhost:8000/edstream";
+
 const AuthPage = () => {
     const navigate = useNavigate();
 
-    // Always start on Login
-    const [activeTab, setActiveTab] = useState("login"); // 'login' | 'register'
+    // Tabs
+    const [activeTab, setActiveTab] = useState("login");
 
-    // ---- LOGIN STATE ----
+    // ---- LOGIN ----
     const [loginData, setLoginData] = useState({
         email: "",
         password: "",
         remember: false,
     });
     const [loginErrors, setLoginErrors] = useState({});
-    const [loginStatus, setLoginStatus] = useState(null); // { type: 'success'|'error', message: string }
+    const [loginStatus, setLoginStatus] = useState(null);
 
-    // ---- REGISTER STATE ----
+    // ---- REGISTER ----
     const [registerData, setRegisterData] = useState({
-        role: "", // 'instructor' | 'learner'
+        role: "",
         name: "",
         email: "",
         password: "",
         confirmPassword: "",
         dob: "",
-        gender: "", // 'male' | 'female' | 'other'
-        // instructor-only
-        experience: "",
-        skills: [],
-        currentSkill: "",
-        // learner-only
-        domainInterests: [],
-        currentInterest: "",
-        occupation: "", // 'student' | 'working'
+        gender: "",
     });
     const [registerErrors, setRegisterErrors] = useState({});
-    const [registerStatus, setRegisterStatus] = useState(null); // { type: 'success'|'error', message: string }
+    const [registerStatus, setRegisterStatus] = useState(null);
 
     // If already authenticated, redirect to role home
     useEffect(() => {
-        const u = getCurrentUser();
-        const roles = Array.isArray(u?.roles)
-            ? u.roles
-            : u?.role
-              ? [u.role]
-              : [];
-        if (roles.includes("instructor")) {
+        if (!isAuthed()) return;
+        const u = getAuthUser();
+        const role = u?.role;
+        if (role === "instructor")
             navigate(INSTRUCTOR_HOME_PATH, { replace: true });
-        } else if (roles.includes("learner")) {
+        else if (role === "learner")
             navigate(STUDENT_HOME_PATH, { replace: true });
-        }
     }, [navigate]);
 
     // ---- VALIDATION ----
@@ -90,114 +83,133 @@ const AuthPage = () => {
         else if (data.password !== data.confirmPassword)
             errs.confirmPassword = "Passwords do not match.";
         if (!data.gender) errs.gender = "Please select gender.";
-
-        // 🚫 Removed:
-        // - instructor: experience/skills requirements
-        // - learner: occupation/domainInterests requirements
-
         return errs;
     };
 
     const navigateToUserHome = (user) => {
-        const roles = Array.isArray(user?.roles)
-            ? user.roles
-            : user?.role
-              ? [user.role]
-              : [];
-        if (roles.includes("learner")) {
+        if (user?.role === "learner")
             navigate(STUDENT_HOME_PATH, { replace: true });
-        } else if (roles.includes("instructor")) {
+        else if (user?.role === "instructor")
             navigate(INSTRUCTOR_HOME_PATH, { replace: true });
-        } else {
-            navigate("/not-authorized", { replace: true });
-        }
+        else navigate("/not-authorized", { replace: true });
     };
 
-    // ---- SUBMIT: LOGIN ----
-    const handleLoginSubmit = (e) => {
+    // ---- SUBMIT: LOGIN (creates localStorage keys) ----
+    const handleLoginSubmit = async (e) => {
         e.preventDefault();
+
+        // validate first
         const errs = validateLogin(loginData);
         setLoginErrors(errs);
         setLoginStatus(null);
-        if (Object.keys(errs).length !== 0) {
+        if (Object.keys(errs).length) {
             setActiveTab("login");
             return;
         }
 
-        const user = findUser(loginData.email);
-        if (!user) {
-            setRegisterData((prev) => ({ ...prev, email: loginData.email }));
-            setRegisterStatus({
-                type: "error",
-                message:
-                    "No account found with this email. Please register to continue.",
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    email: loginData.email,
+                    password: loginData.password,
+                }),
             });
-            setActiveTab("register");
-            return;
-        }
 
-        if (user.password !== loginData.password) {
+            const data = await res.json();
+            if (!res.ok || !data?.ok) {
+                throw new Error(data?.error || "Login failed");
+            }
+
+            // ✅ Save ONLY to localStorage (consistent key names)
+            // localStorage.setItem("auth-token", data.token); // <-- hyphen
+            // localStorage.setItem("auth_user", JSON.stringify(data.user)); // <-- underscore
+
+            createLocalSession({ user: data.user, token: data.token });
+
+            // ✅ Role-based redirect from the stored user (auth_user)
+            const storedUserRaw = localStorage.getItem("auth_user");
+            const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
+            const role = storedUser?.role;
+            toast.success("Login successful! ");
+
+            if (role === "learner") {
+                navigate("/student-home", { replace: true });
+            } else if (role === "instructor") {
+                navigate("/instructor-home", { replace: true });
+            } else {
+                // Unknown/unsupported role
+                navigate("/not-authorized", { replace: true });
+            }
+        } catch (err) {
             setLoginStatus({
                 type: "error",
-                message: "Invalid password. Please try again.",
+                message: err.message || "Login failed.",
             });
             setActiveTab("login");
-            return;
+            toast.error(err.message || "Login failed.");
         }
-
-        // Create session on login, then redirect to role-based home
-        const sessionRes = createSession(user);
-        if (!sessionRes.ok) {
-            setLoginStatus({
-                type: "error",
-                message: "Could not start a session. Please try again.",
-            });
-            setActiveTab("login");
-            return;
-        }
-
-        navigateToUserHome(user);
     };
 
-    // ---- SUBMIT: REGISTER ----
-    const handleRegisterSubmit = (e) => {
+    // ---- SUBMIT: REGISTER (NO session creation) ----
+    const handleRegisterSubmit = async (e) => {
         e.preventDefault();
         const errs = validateRegister(registerData);
         setRegisterErrors(errs);
         setRegisterStatus(null);
-
-        if (Object.keys(errs).length !== 0) {
+        if (Object.keys(errs).length) {
             setActiveTab("register");
             return;
         }
 
-        const { ok, error, user: createdUser } = addUser(registerData);
-        if (!ok) {
-            // Stay on Register and show the error (e.g., duplicate email)
+        try {
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    name: registerData.name,
+                    email: registerData.email,
+                    password: registerData.password,
+                    role: registerData.role,
+                    dob: registerData.dob || undefined,
+                    gender: registerData.gender || undefined,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                throw new Error(data?.error || "Registration failed");
+            }
+
+            // ❗ Do NOT create local session here.
+            // Switch to Login, prefill email, and toast success.
+            setLoginData((prev) => ({
+                ...prev,
+                email: registerData.email,
+                password: "",
+            }));
+            setActiveTab("login");
+            toast.success(
+                "Registration successful! Please sign in to continue.",
+            );
+        } catch (err) {
             setRegisterStatus({
                 type: "error",
-                message: error ?? "Registration failed. Try again.",
+                message: err.message || "Registration failed.",
             });
             setActiveTab("register");
-            return;
+            toast.error(err.message || "Registration failed.");
         }
-
-        // ✅ Do NOT create a session here.
-        // ✅ Switch to Login tab, prefill email, and show success message
-        setLoginData((prev) => ({
-            ...prev,
-            email: createdUser.email,
-            password: "", // never prefill password
-        }));
-        setLoginStatus({
-            type: "success",
-            message: "Registration successful! Please sign in to continue.",
-        });
-        setActiveTab("login");
     };
 
     return (
         <div className="auth-wrapper d-flex align-items-center justify-content-center">
+            {/* 🔔 React Hot Toast Toaster */}
+            <Toaster position="top-right" />
+
             <div className="auth-card container">
                 <div className="row justify-content-center">
                     <div className="col-12 col-lg-10">

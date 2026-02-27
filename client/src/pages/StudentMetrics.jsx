@@ -22,8 +22,7 @@ import { getCurrentUser, getUserByEmail } from "../utils/session";
  *  assignmentResult:<email>:<assignmentId>
  *  assignmentAttemptFile:<email>:<assignmentId>   (JSON document string, fetched via data URL)
  *
- * Your earlier code tracked assignments using assignmentSubmission:<id> (global),
- * but AssignmentPage didn’t actually write that key, so completion never synced. [2](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/StudentMetrics.jsx)[1](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/AssignmentPage.jsx)
+ * Note: uses email as user identifier for per-user data storage
  */
 
 function safeJSONParse(raw) {
@@ -69,13 +68,13 @@ function readQuizResult(quizId, email) {
 }
 
 /* ------------------- ASSIGNMENT READERS (per-user) ------------------- */
-function readAssignmentAttempt(assignmentId, email) {
-  const who = getWho(email);
-  return (
-    safeJSONParse(localStorage.getItem(`assignmentAttempt:${who}:${assignmentId}`)) ||
-    null
-  );
-}
+// function readAssignmentAttempt(assignmentId, email) {
+//   const who = getWho(email);
+//   return (
+//     safeJSONParse(localStorage.getItem(`assignmentAttempt:${who}:${assignmentId}`)) ||
+//     null
+//   );
+// }
 
 function readAssignmentResult(assignmentId, email) {
   const who = getWho(email);

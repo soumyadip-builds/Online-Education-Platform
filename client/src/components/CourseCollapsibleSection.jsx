@@ -201,7 +201,6 @@ export default function CourseCollapsibleSection({
                           <Link
                             className="ccs__itemLink"
                             to={it.to}
-                            target={itemLinkTarget}
                             rel="noopener noreferrer"
                           >
                             {ItemInner}
