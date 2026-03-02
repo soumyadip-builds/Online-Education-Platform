@@ -6,6 +6,8 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 
 const authRouter = require("./routes/authRouter");
+const editProfileRouter = require("./routes/editProfile");
+const authenticate = require("./middleware/authenticate");
 
 const app = express();
 
@@ -31,9 +33,15 @@ mongoose
 
 // Routes
 app.use("/edstream/auth", authRouter);
+app.get("/health", (req, res) => res.json({ ok: true }));
+
+
+// ----- Common auth middleware for everything below -----
+// app.use(authenticate);
+
+app.use("/edstream/editProfile", editProfileRouter);
 
 // Health
-app.get("/health", (req, res) => res.json({ ok: true }));
 
 // Start
 const PORT = process.env.PORT || 5000;
