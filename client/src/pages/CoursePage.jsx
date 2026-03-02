@@ -18,22 +18,22 @@ import { useLocation } from "react-router-dom";
 const LS_KEY_COURSES = "cb_courses_v1";
 
 function loadCreatedCourses() {
-  try {
-    const raw = localStorage.getItem(LS_KEY_COURSES) || "[]";
-    const list = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
-  }
+    try {
+        const raw = localStorage.getItem(LS_KEY_COURSES) || "[]";
+        const list = JSON.parse(raw);
+        return Array.isArray(list) ? list : [];
+    } catch {
+        return [];
+    }
 }
 
 function mergeCourses(seedCourses, createdCourses) {
-  // Avoid duplicates by id; created items override seed with same id
-  const map = new Map();
-  [...(seedCourses || []), ...(createdCourses || [])].forEach((c) => {
-    if (c && c.id) map.set(c.id, c);
-  });
-  return Array.from(map.values());
+    // Avoid duplicates by id; created items override seed with same id
+    const map = new Map();
+    [...(seedCourses || []), ...(createdCourses || [])].forEach((c) => {
+        if (c && c.id) map.set(c.id, c);
+    });
+    return Array.from(map.values());
 }
 export default function CoursePage() {
     const [courses, setCourses] = useState([]);
@@ -44,6 +44,7 @@ export default function CoursePage() {
     const location = useLocation();
     const scopeFromState = location.state?.scope;
     const scopeFromQuery = new URLSearchParams(location.search).get("scope");
+    // /coursepage?scope=enrolled
     const scope = scopeFromState || scopeFromQuery || null; // 'enrolled' | 'created' | null
 
     // NEW: keep a copy of the current, fully-populated user from storage
@@ -54,7 +55,9 @@ export default function CoursePage() {
             setUser(cu?.email ? findUser(cu.email) : null);
         };
         pull();
+        // update course page filters if user changes without refreshing page.
         window.addEventListener("session-changed", pull);
+        //  remove listener on component unmount.
         return () => window.removeEventListener("session-changed", pull);
     }, []);
 
@@ -87,8 +90,8 @@ export default function CoursePage() {
             } 
         })();
         const reload = () => {
-        const createdNow = loadCreatedCourses();
-        setCourses((prev) => mergeCourses(prev, createdNow));
+            const createdNow = loadCreatedCourses();
+            setCourses((prev) => mergeCourses(prev, createdNow));
         };
         window.addEventListener("courses-changed", reload);
         return () => {
@@ -97,7 +100,7 @@ export default function CoursePage() {
         };
     }, []);
 
-    // NEW: build a Set of IDs to keep, based on scope + role
+    // NEW: build a Set of Courses to keep, based on scope + role
     const scopedIdSet = useMemo(() => {
         if (!user || !scope) return null;
         if (scope === "enrolled" && user.role === "learner") {
@@ -154,8 +157,8 @@ export default function CoursePage() {
               ? "My Courses"
               : scope === "authored" // NEW
                 ? "Courses Authored by You"
-                // ? "Courses"
-                : "Courses";
+                : // ? "Courses"
+                  "Courses";
 
 
     return (
