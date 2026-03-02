@@ -2,108 +2,45 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import "../styles/assignmentCard.css";
 import QuizEditor from "./QuizEditor";
+import { getAuthToken } from "../utils/authToken";
 
-// LocalStorage keys
-const LS_ASSIGNMENTS = "cb_assignments";
-const LS_QUIZZES = "cb_quiz";
+/**
+ * AssignmentCard (Option-A)
+ * - Assignments:
+ *     1) POST /api/assignments (standalone create)
+ *     2) Optional attach: POST /api/courses/:courseId/modules/:moduleIndex/items { type:'assignment', refId }
+ * - Quizzes:
+ *     Uses existing create-and-attach path:
+ *     POST /api/courses/:courseId/modules/:moduleIndex/quizzes
+ *
+ * onCreated: ({ id, type, title, estimatedMinutes }) => void
+ */
+const AssignmentCard = ({
+  courseId,
+  moduleIndex,
+  onCreated,
+  apiBaseUrl = "http://localhost:8000/api",
+  tokenProvider,
+}) => {
+  // ------- Defaults -------
+  const DEFAULT_QUIZ = Object.freeze({
+    shuffleQuestions: true,
+    questions: [],
+  });
 
-// Safe JSON parse helper
-function safeJsonParse(raw, fallback) {
-  try {
-    return JSON.parse(raw ?? "");
-  } catch {
-    return fallback;
-  }
-}
+  const INITIAL_FORM = () => ({
+    workType: "assignment", // 'assignment' | 'quiz'
+    title: "",
+    description: "",
+    maxScore: 100,
+    passingScore: 1,
+    estimatedMinutes: 60,
+    attachment: null, // File | null (only name is sent)
+  });
 
-// Load list from LocalStorage
-function lsLoad(key) {
-  return safeJsonParse(localStorage.getItem(key), []);
-}
-
-// Save list to LocalStorage
-function lsSave(key, list) {
-  localStorage.setItem(key, JSON.stringify(list));
-}
-
-// Generate lightweight id
-function uid(prefix = "a_") {
-  return prefix + Math.random().toString(36).slice(2, 10);
-}
-
-// Create record in a specific store
-function lsCreate(key, payload) {
-  const list = lsLoad(key);
-  const id = uid("w_");
-  const now = new Date().toISOString();
-  const created = { id, createdAt: now, updatedAt: now, ...payload };
-  list.push(created);
-  lsSave(key, list);
-  return created;
-}
-
-// Update record by id
-export function lsUpdate(key, id, patch) {
-  const list = lsLoad(key);
-  const idx = list.findIndex((x) => x.id === id);
-  if (idx === -1) return null;
-
-  const updated = {
-    ...list[idx],
-    ...patch,
-    updatedAt: new Date().toISOString(),
-  };
-
-  list[idx] = updated;
-  lsSave(key, list);
-  return updated;
-}
-
-// Delete record by id
-export function lsDelete(key, id) {
-  const list = lsLoad(key);
-  const next = list.filter((x) => x.id !== id);
-  lsSave(key, next);
-  return next.length !== list.length;
-}
-
-// Convenience loaders
-export const lsLoadAssignments = () => lsLoad(LS_ASSIGNMENTS);
-export const lsLoadQuizzes = () => lsLoad(LS_QUIZZES);
-
-// Convenience creators
-export const lsCreateAssignment = (payload) => lsCreate(LS_ASSIGNMENTS, payload);
-export const lsCreateQuiz = (payload) => lsCreate(LS_QUIZZES, payload);
-
-// Lookup by id across both stores
-export function lsGetById(refId) {
-  const a = lsLoadAssignments().find((x) => x.id === refId);
-  if (a) return a;
-  const q = lsLoadQuizzes().find((x) => x.id === refId);
-  return q || null;
-}
-
-// Default quiz structure
-const INITIAL_QUIZ = Object.freeze({
-  shuffleQuestions: true,
-  questions: [],
-});
-
-// Default form structure
-const INITIAL_FORM = () => ({
-  workType: "assignment",
-  title: "",
-  description: "",
-  maxScore: 100,
-  passingScore: 0,
-  estimatedMinutes: 60,
-  attachment: null,
-});
-
-const AssignmentCard = ({ onCreated }) => {
-  // Form state
+  // ------- Local State -------
   const [form, setForm] = useState(INITIAL_FORM);
-  const [quizData, setQuizData] = useState(INITIAL_QUIZ);
+  const [quizData, setQuizData] = useState(DEFAULT_QUIZ);
 
   const {
     workType,
@@ -115,48 +52,39 @@ const AssignmentCard = ({ onCreated }) => {
     attachment,
   } = form;
 
-  // UI state
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Total points for quiz mode
+  // ------- Derived -------
   const totalQuizPoints = useMemo(() => {
     if (workType !== "quiz") return 0;
-    return (quizData.questions || []).reduce(
-      (sum, q) => sum + (Number(q.points) || 0),
-      0
-    );
+    const qs = Array.isArray(quizData.questions) ? quizData.questions : [];
+    return qs.reduce((sum, q) => sum + (Number(q.points) || 0), 0);
   }, [workType, quizData.questions]);
 
-  // Sync quiz maxScore with total points
+  // Keep quiz maxScore synced
   useEffect(() => {
     if (workType !== "quiz") return;
-
     setForm((prev) => {
       const syncedMax = totalQuizPoints;
       const prevPass = Number(prev.passingScore) || 0;
-      const syncedPass = syncedMax > 0 ? Math.min(prevPass, syncedMax) : prevPass;
+      const syncedPass = syncedMax > 0 ? Math.min(prevPass, syncedMax) : 0;
       return { ...prev, maxScore: syncedMax, passingScore: syncedPass };
     });
   }, [workType, totalQuizPoints]);
 
-  // Generic field setter
-  const setField = (key, value) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
-
-  // Numeric field setter (keep string until submit)
+  // ------- Helpers -------
+  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
   const setNum = (key) => (e) => setField(key, e.target.value);
 
-  // Reset form + messages
   const resetForm = useCallback(() => {
     setForm(INITIAL_FORM());
-    setQuizData(INITIAL_QUIZ);
+    setQuizData(DEFAULT_QUIZ);
     setErrorMsg("");
     setSuccessMsg("");
   }, []);
 
-  // Validate inputs
   const validate = () => {
     const errors = [];
 
@@ -178,8 +106,9 @@ const AssignmentCard = ({ onCreated }) => {
       errors.push("Estimated time must be a positive number (minutes).");
 
     if (workType === "assignment") {
-      if (!description.trim())
+      if (!description.trim()) {
         errors.push("Description is required for assignments.");
+      }
     }
 
     if (workType === "quiz") {
@@ -189,284 +118,399 @@ const AssignmentCard = ({ onCreated }) => {
       q.forEach((qi, idx) => {
         if (!qi.title?.trim())
           errors.push(`Question ${idx + 1}: title is required.`);
-
         const opts = qi.options || [];
         if (opts.length < 2)
           errors.push(`Question ${idx + 1}: needs at least 2 options.`);
-
         const hasCorrect = opts.some((o) => o.isCorrect);
         if (!hasCorrect)
           errors.push(`Question ${idx + 1}: mark at least one correct option.`);
-
         const pts = Number(qi.points);
         if (!Number.isFinite(pts) || pts <= 0)
           errors.push(`Question ${idx + 1}: points must be > 0.`);
       });
     }
 
-    return errors;
+    // If we want to attach immediately, we need both courseId & a valid moduleIndex
+    const wantsAttach =
+      courseId !== undefined && moduleIndex !== undefined && moduleIndex !== null;
+
+    if (wantsAttach) {
+      const idx = Number(moduleIndex);
+      if (!courseId || !Number.isInteger(idx) || idx < 0) {
+        errors.push("Missing course/module target. Provide both courseId and a valid moduleIndex.");
+      }
+    }
+
+    // For quizzes (with no standalone quiz endpoint), require course/module for now
+    // if (workType === "quiz" && !wantsAttach) {
+    //   errors.push("Please select a course and module to create a quiz.");
+    // }
+
+     return errors;
   };
 
-  // Submit handler
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
+  const getToken = () =>
+    typeof tokenProvider === "function" ? tokenProvider() : getAuthToken();
 
-    const errors = validate();
-    if (errors.length) {
-      setErrorMsg(errors.join(" "));
+  const apiPostJson = async (url, token, body) => {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const errJson = await resp.json().catch(() => ({}));
+      const msg = errJson?.message || `HTTP ${resp.status}`;
+      const error = new Error(msg);
+      error.status = resp.status;
+      throw error;
+    }
+    return resp.json();
+  };
+
+  // ------- Submit -------
+ // ------- Submit -------
+const handleSubmit = async () => {
+  setErrorMsg("");
+  setSuccessMsg("");
+
+  const errors = validate();
+  if (errors.length) {
+    setErrorMsg(errors.join(" "));
+    return;
+  }
+
+  const token = getToken();
+  if (!token) {
+    setErrorMsg("You are not authenticated. Please log in again.");
+    return;
+  }
+
+  const base = {
+    title: title.trim(),
+    estimatedMinutes: Number(estimatedMinutes),
+    maxScore: Number(maxScore),
+    passingScore: Number(passingScore),
+  };
+
+  // For assignment: include description + attachmentName
+  // For quiz: include quiz payload
+  const payload =
+    workType === "quiz"
+      ? {
+          ...base,
+          // quiz builder data
+          quiz: {
+            shuffleQuestions: !!quizData?.shuffleQuestions,
+            questions: Array.isArray(quizData?.questions)
+              ? quizData.questions
+              : [],
+          },
+          // (optional) description field for quizzes if your schema supports it
+          description: (description || "").trim(),
+        }
+      : {
+          ...base,
+          description: (description || "").trim(),
+          attachmentName: attachment?.name || "",
+        };
+
+  setSubmitting(true);
+  try {
+    if (workType === "assignment") {
+      // Standalone create
+      const createUrl = `${apiBaseUrl}/assignments`;
+      const created = await apiPostJson(createUrl, token, payload); // { ok, assignment, item }
+
+      const createdId =
+        created?.item?.id ||
+        created?.assignment?.id ||
+        created?.assignment?._id;
+      const createdTitle =
+        created?.item?.title || created?.assignment?.title || title.trim();
+      const createdEstimated =
+        Number(
+          created?.item?.estimatedMinutes ??
+            created?.assignment?.estimatedMinutes ??
+            estimatedMinutes
+        ) || 0;
+
+      if (!createdId) {
+        throw new Error("Malformed response from /assignments: missing id.");
+      }
+
+      onCreated?.({
+        id: createdId,
+        type: "assignment",
+        title: createdTitle,
+        estimatedMinutes: createdEstimated,
+      });
+
+      setSuccessMsg("Assignment saved.");
+      resetForm();
       return;
     }
 
-    const base = {
-      type: workType,
-      title: title.trim(),
-      maxScore: Number(maxScore),
-      passingScore: Number(passingScore),
-      estimatedMinutes: Number(estimatedMinutes),
-    };
+    // QUIZ — Standalone create (no attach; course may not exist yet)
+    const createUrl = `${apiBaseUrl}/quizzes`;
+    const created = await apiPostJson(createUrl, token, payload); // { ok, quiz, item }
 
-    const payload =
-      workType === "quiz"
-        ? { ...base, quiz: { ...quizData } }
-        : { ...base, description: description.trim() };
+    const createdId = created?.item?.id || created?.quiz?.id || created?.quiz?._id;
+    const createdTitle =
+      created?.item?.title || created?.quiz?.title || title.trim();
+    const createdEstimated =
+      Number(
+        created?.item?.estimatedMinutes ??
+          created?.quiz?.estimatedMinutes ??
+          estimatedMinutes
+      ) || 0;
 
-    const finalPayload =
-      workType === "assignment" && attachment
-        ? { ...payload, attachmentName: attachment.name }
-        : payload;
-
-    setSubmitting(true);
-    try {
-      const created =
-        workType === "quiz"
-          ? lsCreateQuiz(finalPayload)
-          : lsCreateAssignment(finalPayload);
-
-      const lightweight = {
-        id: created.id,
-        type: created.type,
-        title: created.title,
-        estimatedMinutes: Number(created.estimatedMinutes),
-      };
-
-      setSuccessMsg(`${workType === "quiz" ? "Quiz" : "Assignment"} saved.`);
-      onCreated?.(lightweight);
-
-      console.log("[AssignmentCard] Created (LocalStorage):", created);
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      setErrorMsg(err?.message || "Failed to save. Please try again.");
-    } finally {
-      setSubmitting(false);
+    if (!createdId) {
+      throw new Error("Malformed response from /quizzes: missing id.");
     }
-  };
 
+    onCreated?.({
+      id: createdId,
+      type: "quiz",
+      title: createdTitle,
+      estimatedMinutes: createdEstimated,
+    });
+
+    setSuccessMsg("Quiz saved.");
+    resetForm();
+  } catch (err) {
+    console.error("[AssignmentCard] create error:", err);
+    setErrorMsg(err?.message || "Failed to save. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+
+  // ------- Render -------
   return (
-    //<div className="assignment-card-page container my-4">
-      <div className="assignment-card card shadow-sm">
-        <div className="assignment-card__stripe" />
+    <div className="assignment-card card shadow-sm">
+      <div className="assignment-card__stripe" />
 
-        <div className="assignment-card__header card-header bg-white">
-          <h1 className="assignment-card__title h4 mb-0">
-            Add {workType === "quiz" ? "Quiz" : "Assignment"}
-          </h1>
+      <div className="assignment-card__header card-header bg-white">
+        <h1 className="assignment-card__title h4 mb-0">
+          Add {workType === "quiz" ? "Quiz" : "Assignment"}
+        </h1>
+      </div>
+
+      {/* No <form> here — this avoids nested form submission */}
+      <div role="form" className="p-3 p-md-4">
+        <div className="assignment-card__grid row g-3">
+          {/* Work Type toggle */}
+          <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row col-12">
+            <span className="assignment-card__label d-block mb-2 fw-semibold">
+              Work Type *
+            </span>
+            <div className="ac-segment" role="radiogroup" aria-label="Work Type">
+              <label className="ac-segment__option">
+                <input
+                  type="radio"
+                  name="workType"
+                  value="assignment"
+                  checked={workType === "assignment"}
+                  onChange={(e) => setField("workType", e.target.value)}
+                  className="ac-segment__input"
+                />
+                <span className="ac-segment__text">Assignment</span>
+              </label>
+              <label className="ac-segment__option">
+                <input
+                  type="radio"
+                  name="workType"
+                  value="quiz"
+                  checked={workType === "quiz"}
+                  onChange={(e) => setField("workType", e.target.value)}
+                  className="ac-segment__input"
+                />
+                <span className="ac-segment__text">Quiz</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="assignment-card__group col-12 col-md-6">
+            <label htmlFor="title" className="assignment-card__label form-label">
+              Title *
+            </label>
+            <input
+              id="title"
+              type="text"
+              placeholder={
+                workType === "quiz"
+                  ? "e.g., JavaScript Basics Quiz"
+                  : "e.g., Arrays & Loops Practice"
+              }
+              value={title}
+              onChange={(e) => setField("title", e.target.value)}
+              className="assignment-card-input form-control"
+              required
+            />
+          </div>
+
+          {/* Max Score */}
+          <div className="assignment-card__group col-12 col-md-4 col-lg-3">
+            <label htmlFor="maxScore" className="assignment-card__label form-label">
+              Max Score{" "}
+              {workType === "quiz" && (
+                <span className="assignment-card__subtle text-muted">(auto)</span>
+              )}
+            </label>
+            <input
+              id="maxScore"
+              type="number"
+              min="1"
+              step="1"
+              value={maxScore}
+              onChange={setNum("maxScore")}
+              className="assignment-card-input form-control"
+              required
+              readOnly={workType === "quiz"}
+              aria-readonly={workType === "quiz"}
+              title={
+                workType === "quiz"
+                  ? "Auto-calculated from total quiz points"
+                  : "Max possible score"
+              }
+            />
+          </div>
+
+          {/* Passing Score */}
+          <div className="assignment-card__group col-12 col-md-4 col-lg-3">
+            <label htmlFor="passingScore" className="assignment-card__label form-label">
+              Passing Score *
+            </label>
+            <input
+              id="passingScore"
+              type="number"
+              min="1"
+              step="1"
+              value={passingScore}
+              onChange={setNum("passingScore")}
+              className="assignment-card-input form-control"
+              required
+            />
+          </div>
+
+          {/* Estimated Time */}
+          <div className="assignment-card__group col-12 col-md-4 col-lg-3">
+            <label
+              htmlFor="estimatedMinutes"
+              className="assignment-card__label form-label"
+            >
+              Estimated Time (mins) *
+            </label>
+            <input
+              id="estimatedMinutes"
+              type="number"
+              min="1"
+              step="1"
+              value={estimatedMinutes}
+              onChange={setNum("estimatedMinutes")}
+              className="assignment-card-input form-control"
+              required
+            />
+          </div>
+
+          {/* Assignment-specific fields */}
+          {workType === "assignment" && (
+            <>
+              <div className="assignment-card__group assignment-card__group--full col-12">
+                <label
+                  htmlFor="description"
+                  className="assignment-card__label form-label"
+                >
+                  Description *
+                </label>
+                <textarea
+                  id="description"
+                  placeholder="Describe the assignment, instructions, and rubric…"
+                  value={description}
+                  onChange={(e) => setField("description", e.target.value)}
+                  rows={6}
+                  className="assignment-card-textarea form-control"
+                  required
+                />
+              </div>
+
+              <div className="assignment-card__group assignment-card__group--full col-12">
+                <label
+                  htmlFor="attachment"
+                  className="assignment-card__label form-label"
+                >
+                  Attachment (optional)
+                </label>
+                <input
+                  id="attachment"
+                  type="file"
+                  onChange={(e) =>
+                    setField("attachment", e.target.files?.[0] || null)
+                  }
+                  className="assignment-card-file form-control"
+                />
+                {attachment && (
+                  <span className="assignment-card__subtle text-muted d-inline-block mt-1">
+                    Selected: {attachment.name}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="p-3 p-md-4">
-          <div className="assignment-card__grid row g-3">
-            <div className="assignment-card__group assignment-card__group--full assignment-card__worktype-row col-12">
-              <span className="assignment-card__label d-block mb-2 fw-semibold">
-                Work Type *
-              </span>
-
-              {/* KEEP TOGGLE DESIGN INTACT — no Bootstrap classes here */}
-              <div className="ac-segment" role="radiogroup" aria-label="Work Type">
-                <label className="ac-segment__option">
-                  <input
-                    type="radio"
-                    name="workType"
-                    value="assignment"
-                    checked={workType === "assignment"}
-                    onChange={(e) => setField("workType", e.target.value)}
-                    className="ac-segment__input"
-                  />
-                  <span className="ac-segment__text">Assignment</span>
-                </label>
-
-                <label className="ac-segment__option">
-                  <input
-                    type="radio"
-                    name="workType"
-                    value="quiz"
-                    checked={workType === "quiz"}
-                    onChange={(e) => setField("workType", e.target.value)}
-                    className="ac-segment__input"
-                  />
-                  <span className="ac-segment__text">Quiz</span>
-                </label>
-              </div>
-              {/* END TOGGLE BLOCK */}
-            </div>
-
-            <div className="assignment-card__group col-12 col-md-6">
-              <label htmlFor="title" className="assignment-card__label form-label">
-                Title *
-              </label>
-              <input
-                id="title"
-                type="text"
-                placeholder={
-                  workType === "quiz"
-                    ? "e.g., JavaScript Basics Quiz"
-                    : "e.g., Arrays & Loops Practice"
-                }
-                value={title}
-                onChange={(e) => setField("title", e.target.value)}
-                className="assignment-card-input form-control"
-                required
-              />
-            </div>
-
-            <div className="assignment-card__group col-12 col-md-4 col-lg-3">
-              <label htmlFor="maxScore" className="assignment-card__label form-label">
-                Max Score{" "}
-                {workType === "quiz" && (
-                  <span className="assignment-card__subtle text-muted">(auto)</span>
-                )}
-              </label>
-              <input
-                id="maxScore"
-                type="number"
-                min="1"
-                step="1"
-                value={maxScore}
-                onChange={setNum("maxScore")}
-                className="assignment-card-input form-control"
-                required
-                readOnly={workType === "quiz"}
-                aria-readonly={workType === "quiz"}
-                title={
-                  workType === "quiz"
-                    ? "Auto-calculated from total quiz points"
-                    : "Max possible score"
-                }
-              />
-            </div>
-
-            <div className="assignment-card__group col-12 col-md-4 col-lg-3">
-              <label htmlFor="passingScore" className="assignment-card__label form-label">
-                Passing Score *
-              </label>
-              <input
-                id="passingScore"
-                type="number"
-                min="1"
-                step="1"
-                value={passingScore}
-                onChange={setNum("passingScore")}
-                className="assignment-card-input form-control"
-                required
-              />
-            </div>
-
-            <div className="assignment-card__group col-12 col-md-4 col-lg-3">
-              <label
-                htmlFor="estimatedMinutes"
-                className="assignment-card__label form-label"
-              >
-                Estimated Time (mins) *
-              </label>
-              <input
-                id="estimatedMinutes"
-                type="number"
-                min="1"
-                step="1"
-                value={estimatedMinutes}
-                onChange={setNum("estimatedMinutes")}
-                className="assignment-card-input form-control"
-                required
-              />
-            </div>
-
-            {workType === "assignment" && (
-              <>
-                <div className="assignment-card__group assignment-card__group--full col-12">
-                  <label htmlFor="description" className="assignment-card__label form-label">
-                    Description *
-                  </label>
-                  <textarea
-                    id="description"
-                    placeholder="Describe the assignment, instructions, and rubric…"
-                    value={description}
-                    onChange={(e) => setField("description", e.target.value)}
-                    rows={6}
-                    className="assignment-card-textarea form-control"
-                    required
-                  />
-                </div>
-
-                <div className="assignment-card__group assignment-card__group--full col-12">
-                  <label htmlFor="attachment" className="assignment-card__label form-label">
-                    Attachment (optional)
-                  </label>
-                  <input
-                    id="attachment"
-                    type="file"
-                    onChange={(e) =>
-                      setField("attachment", e.target.files?.[0] || null)
-                    }
-                    className="assignment-card-file form-control"
-                  />
-                  {attachment && (
-                    <span className="assignment-card__subtle text-muted d-inline-block mt-1">
-                      Selected: {attachment.name}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
+        {/* Quiz builder */}
+        {workType === "quiz" && (
+          <div className="mt-3">
+            <QuizEditor value={quizData} onChange={setQuizData} />
           </div>
+        )}
 
-          {workType === "quiz" && (
-            <div className="mt-3">
-              <QuizEditor value={quizData} onChange={setQuizData} />
-            </div>
-          )}
-
-          {errorMsg && (
-            <div role="alert" className="assignment-card__msg-error alert alert-danger mt-3">
-              {errorMsg}
-            </div>
-          )}
-          {successMsg && (
-            <div role="status" className="assignment-card__msg-success alert alert-success mt-3">
-              {successMsg}
-            </div>
-          )}
-
-          <div className="assignment-card__actions d-flex gap-2 mt-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="assignment-card__btn-primary btn btn-primary"
-            >
-              {submitting ? "Saving..." : "Save"}
-            </button>
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={resetForm}
-              className="assignment-card__btn-secondary btn btn-outline-secondary"
-            >
-              Reset
-            </button>
+        {/* Messages */}
+        {errorMsg && (
+          <div
+            role="alert"
+            className="assignment-card__msg-error alert alert-danger mt-3"
+          >
+            {errorMsg}
           </div>
-        </form>
+        )}
+        {successMsg && (
+          <div
+            role="status"
+            className="assignment-card__msg-success alert alert-success mt-3"
+          >
+            {successMsg}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="assignment-card__actions d-flex gap-2 mt-3">
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={handleSubmit}
+            className="assignment-card__btn-primary btn btn-primary"
+          >
+            {submitting ? "Saving..." : "Save"}
+          </button>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={resetForm}
+            className="assignment-card__btn-secondary btn btn-outline-secondary"
+          >
+            Reset
+          </button>
+        </div>
       </div>
-    //</div>
+    </div>
   );
 };
 

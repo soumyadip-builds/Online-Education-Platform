@@ -1,599 +1,469 @@
-import { useMemo, useState, useRef } from 'react';
-import '../styles/assignmentCard.css';
-import '../styles/courseBuilder.css';
+import { useMemo, useRef, useState, useEffect } from "react";
+import "../styles/coursebuilder.css";
 
-import CourseModulesBuilder from './CourseModulesBuilder';
-import { ICONS, emptyModule, formatDuration } from './courseBuilderShared';
-import { getCurrentUser } from '../utils/session';
-import { recordCourseCreated } from '../utils/userStorage';
+import CourseModulesBuilder from "./CourseModulesBuilder";
+import { ICONS, emptyModule, formatDuration } from "./courseBuilderShared";
+import { getCurrentUser } from "../utils/session";
+import { recordCourseCreated } from "../utils/userStorage";
+import { useNavigate } from "react-router-dom";
+import { createCourse } from "../api/courses";
 
-/** Local Storage helpers */
-const LS_KEY_COURSES = 'cb_courses_v1';
-
-const loadCourses = () => {
-	try {
-		return JSON.parse(localStorage.getItem(LS_KEY_COURSES) || '[]');
-	} catch {
-		return [];
-	}
-};
-
-const saveCourses = (list) => localStorage.setItem(LS_KEY_COURSES, JSON.stringify(list));
-
-const lsCreateCourse = (payload) => {
-	const id = 'c_' + Math.random().toString(36).slice(2, 10);
-	const now = new Date().toISOString();
-	const created = { id, createdAt: now, updatedAt: now, ...payload };
-	const list = loadCourses();
-	list.push(created);
-	saveCourses(list);
-	return created;
-};
-
-function Toast({ message, type }) {
-	return (
-		<div
-			className={`cb-toast cb-toast--${type}`}
-			style={{
-				position: 'fixed',
-				bottom: 20,
-				right: 20,
-				background: type === 'success' ? '#28a745' : '#d9534f',
-				color: '#fff',
-				padding: '10px 16px',
-				borderRadius: 6,
-				boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-				zIndex: 10000,
-			}}
-			role="status"
-			aria-live="polite"
-		>
-			{message}
-		</div>
-	);
+/* ===========================
+   Small Floating Toast
+   (auto hides; accessible)
+=========================== */
+function FloatingToast({ message, type = "success", onClose }) {
+  if (!message) return null;
+  const isError = type === "error";
+  return (
+    <div
+      className={`cb-toast ${isError ? "cb-toast--error" : "cb-toast--success"}`}
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
+      aria-atomic="true"
+    >
+      <div className="cb-toast__icon">{isError ? "⚠️" : "✅"}</div>
+      <div className="cb-toast__text">{message}</div>
+      <button
+        type="button"
+        className="cb-toast__close"
+        aria-label="Close"
+        onClick={onClose}
+        title="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  );
 }
 
-export default function CourseCreation({ assignmentService, onCreated }) {
-	const [title, setTitle] = useState('New Course');
-	const [description, setDescription] = useState('');
-	const [courseId, setCourseId] = useState(null);
+export default function CourseCreation() {
+  const navigate = useNavigate();
 
-	// Udemy-style metadata
-	const [level, setLevel] = useState('Beginner'); // Beginner | Intermediate | Advanced
-	const [tagsText, setTagsText] = useState(''); // comma separated tags
-  
+  // 🔹 FORM REFS (uncontrolled inputs for course details)
+  const formRef = useRef(null);
+  const titleRef = useRef(null);
+  const descRef = useRef(null);
+  const thumbLinkRef = useRef(null);
 
-	// Optional ratings (you can also auto-default these)
-	// const [learners, setLearners] = useState(0);
+  // 🔹 Minimal UI state
+  const [modules, setModules] = useState(() => [emptyModule()]);
+  const [outcomeKeys, setOutcomeKeys] = useState([Date.now()]);
+  const [saving, setSaving] = useState(false);
 
-	/** Default one module */
-	const [modules, setModules] = useState(() => [emptyModule()]);
+  // ✅ Floating toast state
+  const [toast, setToast] = useState({ msg: "", type: "success" });
 
-	// bullet points
-	const [learningOutcomes, setLearningOutcomes] = useState(['']);
-	const addOutcome = () => setLearningOutcomes((prev) => [...prev, '']);
-	const rmOutcome = (idx) =>
-		setLearningOutcomes((prev) => prev.filter((_, i) => i !== idx));
-	const patchOutcome = (idx, value) =>
-		setLearningOutcomes((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  // ✅ Segmented toggle UI state
+  const [publishSelected, setPublishSelected] = useState("draft");
 
-	// thumbnail
-	const [thumbnailMode, setThumbnailMode] = useState('link'); // 'upload' | 'link'
-	const [thumbnailLink, setThumbnailLink] = useState('');
+  const showToast = (msg, type = "success", duration = 1600) => {
+    setToast({ msg, type });
+    if (duration > 0) {
+      window.clearTimeout(showToast._t);
+      showToast._t = window.setTimeout(
+        () => setToast({ msg: "", type: "success" }),
+        duration,
+      );
+    }
+  };
 
-	// toast
-	const [toast, setToast] = useState(null);
-	const showToast = (msg, type = 'success') => {
-		setToast({ msg, type });
-		setTimeout(() => setToast(null), 1500);
-	};
+  useEffect(() => {
+    const handler = (e) => {
+      const { msg, type = "success", duration = 1600 } = e.detail || {};
+      if (msg) showToast(msg, type, duration);
+    };
+    window.addEventListener("cb:notify", handler);
+    return () => {
+      window.removeEventListener("cb:notify", handler);
+      window.clearTimeout(showToast._t);
+    };
+  }, []);
 
-	// status message + save
-	const [saving, setSaving] = useState(false);
-	const [msg, setMsg] = useState({ type: '', text: '' });
-	const [publishMode, setPublishMode] = useState('draft'); // 'draft' | 'publish'
+  const addOutcome = () => setOutcomeKeys((prev) => [...prev, Date.now()]);
+  const rmOutcome = (idx) =>
+    setOutcomeKeys((prev) => prev.filter((_, i) => i !== idx));
 
-	/** totals + grouped */
-	const totalMinutes = useMemo(
-		() =>
-			modules.reduce(
-				(sum, m) =>
-					sum +
-					m.items.reduce((s, it) => s + (Number(it.estimatedMinutes) || 0), 0),
-				0,
-			),
-		[modules],
-	);
-	/** Auto-calc "This course includes" **/
-	const includesAuto = useMemo(() => {
-		let videoMinutes = 0;
-		let articles = 0;
-		let downloads = 0;
+  // Derived: total duration
+  const totalMinutes = useMemo(
+    () =>
+      modules.reduce(
+        (sum, m) =>
+          sum +
+          m.items.reduce((s, it) => s + (Number(it.estimatedMinutes) || 0), 0),
+        0,
+      ),
+    [modules],
+  );
 
-		modules.forEach((m) => {
-		m.items.forEach((it) => {
-			const mins = Number(it.estimatedMinutes) || 0;
+  // Derived: counts by item type
+  const grouped = useMemo(() => {
+    const out = { Videos: [], Documentation: [], Assignments: [], Quizzes: [] };
+    modules.forEach((m) =>
+      m.items.forEach((it) => {
+        if (it.type === "video") out.Videos.push(it);
+        else if (it.type === "reading") out.Documentation.push(it);
+        else if (it.type === "assignment") out.Assignments.push(it);
+        else if (it.type === "quiz") out.Quizzes.push(it);
+      }),
+    );
+    return out;
+  }, [modules]);
 
-			if (it.type === 'video') videoMinutes += mins;
-			if (it.type === 'reading') articles += 1;
+  // Validate course (reads from uncontrolled form inputs + modules)
+  const validate = (fd) => {
+    const errors = [];
+    const title = (fd.get("title") || "").trim();
+    if (!title) errors.push("Course title is required.");
 
-			// If later you add a downloads/attachments field, update this rule:
-			// Example options:
-			// downloads += Number(it.downloadCount) || 0;
-			// downloads += Array.isArray(it.attachments) ? it.attachments.length : 0;
-		});
-		});
+    modules.forEach((m, mi) => {
+      if (!m.title.trim()) errors.push(`Module ${mi + 1}: title is required.`);
+      m.items.forEach((it, ii) => {
+        if (!it.title.trim())
+          errors.push(`Module ${mi + 1}, item ${ii + 1}: title is required.`);
 
-		const hoursOnDemandVideo = Math.round((videoMinutes / 60) * 10) / 10; // 1 decimal
-		return {
-		hoursOnDemandVideo,
-		articles,
-		downloadableResources: downloads,
-		accessOnMobile: true,
-		certificate: true,
-		};
-	}, [modules]);
+        const mins = Number(it.estimatedMinutes);
+        if (!Number.isFinite(mins) || mins <= 0)
+          errors.push(
+            `Module ${mi + 1}, item ${ii + 1}: duration must be > 0 minutes.`,
+          );
 
-	const grouped = useMemo(() => {
-		const out = { Videos: [], Documentation: [], Assignments: [], Quizzes: [] };
-		modules.forEach((m) =>
-			m.items.forEach((it) => {
-				if (it.type === 'video') out.Videos.push(it);
-				else if (it.type === 'reading') out.Documentation.push(it);
-				else if (it.type === 'assignment') out.Assignments.push(it);
-				else if (it.type === 'quiz') out.Quizzes.push(it);
-			}),
-		);
-		return out;
-	}, [modules]);
+        if ((it.type === "video" || it.type === "reading") && !it.url?.trim())
+          errors.push(
+            `Module ${mi + 1}, item ${ii + 1}: URL is required for link items.`,
+          );
+      });
+    });
 
-	const validate = () => {
-		const errors = [];
-		if (!title.trim()) errors.push('Course title is required.');
+    return errors;
+  };
 
-		modules.forEach((m, mi) => {
-			if (!m.title.trim()) errors.push(`Module ${mi + 1}: title is required.`);
-			m.items.forEach((it, ii) => {
-				if (!it.title.trim())
-					errors.push(`Module ${mi + 1}, item ${ii + 1}: title is required.`);
-				const mins = Number(it.estimatedMinutes);
-				if (!Number.isFinite(mins) || mins <= 0)
-					errors.push(
-						`Module ${mi + 1}, item ${ii + 1}: duration must be > 0 minutes.`,
-					);
-				if ((it.type === 'video' || it.type === 'reading') && !it.url?.trim())
-					errors.push(
-						`Module ${mi + 1}, item ${ii + 1}: URL is required for link items.`,
-					);
-			});
-		});
-		if (thumbnailMode === 'link' && !thumbnailLink.trim()) {
-			errors.push('Course thumbnail link is required.');
-		}
-		if (!level.trim()) errors.push('Level is required.');
+  // Save course
+  const handleSave = async (e) => {
+    e.preventDefault();
 
-		const tags = tagsText
-			.split(',')
-			.map((s) => s.trim())
-			.filter(Boolean);
-		if (tags.length === 0) errors.push('At least one tag is required.');
+    const fd = new FormData(formRef.current);
+    const errors = validate(fd);
+    if (errors.length) {
+      showToast(errors[0], "error", 2400); // show just first error for brevity
+      return;
+    }
 
-		return errors;
-	};
+    const title = (fd.get("title") || "").trim();
+    const description = (fd.get("description") || "").trim();
+    const publishMode = fd.get("publishMode") || "draft";
+    const thumbnailMode = "link"; // upload disabled per requirement
+    const thumbnailLink = (fd.get("thumbnailLink") || "").trim();
+    const learningOutcomes = (fd.getAll("outcomes[]") || [])
+      .map((s) => (s || "").trim())
+      .filter(Boolean);
 
-	//  LOCAL STORAGE SAVING
-	const handleSave = async () => {
-		setMsg({ type: '', text: '' });
+    const status = publishMode === "publish" ? "published" : "draft";
+    const me = getCurrentUser();
 
-		const errors = validate();
-		if (errors.length) {
-			setMsg({ type: 'error', text: errors.join(' ') });
-			return;
-		}
+    const courseToSave = {
+      title,
+      description,
+      learningOutcomes,
+      thumbnail: {
+        mode: thumbnailMode,
+        link: thumbnailMode === "link" ? thumbnailLink : "",
+      },
+      // IMPORTANT: modules array also carries { type, title, estimatedMinutes, refId } for works
+      modules: modules.map((m) => ({
+        ...m,
+        title: m.title.trim(),
+        description: (m.description ?? "").trim(),
+        items: m.items.map((it) => ({
+          ...it,
+          title: it.title.trim(),
+          url: it.url?.trim() || "",
+          estimatedMinutes: Number(it.estimatedMinutes) || 0,
+          refId: it.refId ?? null,
+        })),
+      })),
+      totalEstimatedMinutes: totalMinutes,
+      counts: {
+        videos: grouped.Videos.length,
+        documentation: grouped.Documentation.length,
+        assignments: grouped.Assignments.length,
+        quizzes: grouped.Quizzes.length,
+      },
+      status,
+    };
 
-		//normalization
+    setSaving(true);
+    try {
+      // createCourse reads the JWT from localStorage key 'auth_token'
+      const created = await createCourse(courseToSave);
 
-		const status = 'published';
+      if (me?.email) {
+        recordCourseCreated(me.email, created.id);
+      }
 
-		const me = getCurrentUser();
-		const tags = tagsText
-			.split(',')
-			.map((s) => s.trim())
-			.filter(Boolean);
+      window.dispatchEvent(new Event("courses-changed"));
+      showToast(
+        status === "published" ? "Course published" : "Course saved",
+        "success",
+      );
+      navigate("/instructor-home");
+    } catch (err) {
+      console.error(err);
+      const text = err?.message || "Failed to save course.";
+      showToast(text, "error", 2600);
+    } finally {
+      setSaving(false);
+    }
+  };
 
-		const courseToSave = {
-			title: title.trim(),
-			author: (me?.name ?? '').trim(),
-			description: description.trim(),
-			level,
-			tags,
-			includes: includesAuto,
+  return (
+    <div className="container my-4">
+      {/* ONE SINGLE FORM for everything */}
+      <form ref={formRef} onSubmit={handleSave}>
+        {/* Card header */}
+        <div className="card shadow-sm border-0">
+          <div className="card-header bg-white d-flex align-items-center gap-2">
+            <h1 className="h4 mb-0 d-flex align-items-center gap-2">
+              <span className="text-secondary">{ICONS.book ?? "📘"}</span>
+              <span>Create Course</span>
+            </h1>
+          </div>
 
-			// Use a simple string thumbnail for compatibility
-			thumbnail: thumbnailMode === 'link' ? thumbnailLink.trim() : '',
+          {/* Card body – all course fields */}
+          <div className="card-body">
+            {/* Title */}
+            <div className="mb-3">
+              <label htmlFor="title" className="form-label">
+                Course Title
+              </label>
+              <input
+                ref={titleRef}
+                type="text"
+                id="title"
+                name="title"
+                className="form-control"
+                placeholder="New Course"
+                required
+              />
+            </div>
 
-			// Keep your builder modules (CourseDetails can still read sections/videos separately)
-			modules: modules.map((m) => ({
-				...m,
-				title: m.title.trim(),
-				description: (m.description ?? '').trim(),
-				items: m.items.map((it) => ({
-					...it,
-					title: it.title.trim(),
-					url: it.url?.trim() || '',
-					estimatedMinutes: Number(it.estimatedMinutes) || 0,
-					refId: it.refId ?? null,
-				})),
-			})),
+            {/* Description */}
+            <div className="mb-3">
+              <label htmlFor="description" className="form-label">
+                Course Description
+              </label>
+              <textarea
+                ref={descRef}
+                id="description"
+                name="description"
+                className="form-control"
+                placeholder="Describe what this course covers..."
+                rows={4}
+                defaultValue=""
+              />
+              <div className="form-text">Tip: Be clear and concise.</div>
+            </div>
 
-			totalEstimatedMinutes: totalMinutes,
-			counts: {
-				videos: grouped.Videos.length,
-				documentation: grouped.Documentation.length,
-				assignments: grouped.Assignments.length,
-				quizzes: grouped.Quizzes.length,
-			},
+            {/* What you'll learn */}
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                  <h3 className="h6 mb-0">What you’ll learn</h3>
+                  <small className="text-muted">
+                    Add bullet points that will be shown to students.
+                  </small>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => {
+                    addOutcome();
+                    showToast("Added learning outcome");
+                  }}
+                >
+                  {ICONS.plus} Add bullet
+                </button>
+              </div>
+              <div className="card-body">
+                {outcomeKeys.length === 0 && (
+                  <div className="text-muted mb-2">No outcomes yet.</div>
+                )}
+                <ul className="list-group">
+                  {outcomeKeys.map((key, idx) => (
+                    <li
+                      key={key}
+                      className="list-group-item d-flex align-items-center gap-2"
+                    >
+                      <span className="text-muted">•</span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="outcomes[]"
+                        placeholder={`Outcome ${idx + 1}`}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => {
+                          rmOutcome(idx);
+                          showToast("Removed learning outcome");
+                        }}
+                        disabled={outcomeKeys.length === 1}
+                        title="Remove"
+                      >
+                        {ICONS.delete}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="form-text mt-2">
+                  Tip: Press Enter to quickly add a new bullet.
+                </div>
+              </div>
+            </div>
 
-			lastUpdated: new Date().toISOString(), 
-			status,
-		};
+            {/* Thumbnail */}
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-header bg-white">
+                <h3 className="h6 mb-0">Course Thumbnail</h3>
+              </div>
+              <div className="card-body">
+                <div className="mb-3">
+                  <label htmlFor="thumbnailLink" className="form-label">
+                    Thumbnail Link
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text">URL</span>
+                    <input
+                      ref={thumbLinkRef}
+                      type="url"
+                      id="thumbnailLink"
+                      name="thumbnailLink"
+                      className="form-control"
+                      placeholder="https://example.com/thumbnail.jpg"
+                    />
+                  </div>
+                  <div className="form-text">
+                    Paste an image URL to preview it.
+                  </div>
+                </div>
 
-		setSaving(true);
-		try {
-			// Local-Saving
-			const created = lsCreateCourse(courseToSave);
-			setCourseId(created.id);
-			// ✅ Add this course into instructor's "coursesCreated" list
-			if (me?.email) {
-				recordCourseCreated(me.email, created.id);
-			}
+                {!!thumbLinkRef?.current?.value && (
+                  <div className="border rounded p-2 cc-thumb-preview">
+                    <img
+                      src={thumbLinkRef.current.value}
+                      alt="Thumbnail preview"
+                      className="img-fluid rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <div className="form-text mt-2">
+                      Preview (if the link is valid)
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-			// ✅ Tell CoursePage to refresh the list
-			window.dispatchEvent(new Event('courses-changed'));
+            {/* --------------------------- */}
+            {/* 🔻 MODULES BUILDER MOVED UP INTO SAME FORM 🔻 */}
+            {/* --------------------------- */}
+            <div className="mb-4 course-modules-scope">
+              <CourseModulesBuilder
+                modules={modules}
+                setModules={setModules}
+                showToast={showToast}
+              />
+            </div>
 
-			setMsg({ type: 'success', text: 'Course saved successfully.' });
-			showToast(status === 'published' ? 'Course published' : 'Course saved');
+            {/* --------------------------- */}
+            {/* 🔻 TOTAL COURSE TIME (now ABOVE save buttons) 🔻 */}
+            {/* --------------------------- */}
+            <div className="d-flex align-items-center justify-content-between p-3 cc-total-bar mb-3">
+              <div>
+                <div className="text-muted small">Total Course Time</div>
+                <div className="fw-semibold">
+                  {formatDuration(totalMinutes)}
+                </div>
+              </div>
+              <div className="text-muted small">Based on item durations</div>
+            </div>
 
-			// Bubble up, if needed (e.g., navigate away)
-			onCreated?.(created);
-		} catch (err) {
-			console.error(err);
-			const text = err?.message || 'Failed to save course.';
-			setMsg({ type: 'error', text });
-			showToast(text, 'error');
-		} finally {
-			setSaving(false);
-		}
-	};
-
-	return (
-		<div className="course-creator">
-			<div className="assignment-card-page">
-				<div className="assignment-card">
-					<div className="assignment-card__stripe" />
-
-					{/* Header */}
-					<div
-						className="assignment-card__header"
-						style={{
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'space-between',
-							gap: 12,
-						}}
-					>
-						<div className="cb-field">
-							<label className="cb-meta-title">
-								Course Title *
-							</label>
-							<input
-								className="cb-input"
-								type="text"
-								value={title}
-								onChange={(e) => setTitle(e.target.value)}
-								placeholder="Enter course title"
-								required
-								maxLength={80}
-							/>
-						</div>
-					</div>
-
-					{/* Description */}
-					<div className="cb-meta-card">
-						{/* <label className="assignment-card__label">Course Description</label>
+            {/* Bottom Action Bar */}
             <div
-              ref={courseDescRef}
-              className="cb-desc-edit"
-              contentEditable
-              role="textbox"
-              aria-label="Course description"
-              suppressContentEditableWarning
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  e.currentTarget.blur();
-                  setDescription(e.currentTarget.textContent || "");
-                  showToast("Course description saved");
-                }
-              }}
-              onBlur={(e) => {
-                const val = e.currentTarget.textContent || "";
-                setDescription(val);
-                showToast("Course description saved");
-              }}
+              className="d-flex align-items-center justify-content-between mt-4 p-3 border-top"
+              style={{ gap: "1rem" }}
             >
-              {description || "Add a short description for learners…"}
-            </div> */}
-						<div className="cb-field">
-							<label className="assignment-card__group assignment-card__group--full">
-								Course Description *
-							</label>
-							<textarea
-								className="cb-textarea"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								placeholder="Add a short description for learners…"
-								required
-								rows={4}
-								maxLength={300}
-							/>
-						</div>
-						{/* Udemy-style metadata */}
-						<div className="cb-grid">
-							<div className="cb-field">
-								<label className="assignment-card__group assignment-card__group--full">
-									Level *
-								</label>
-								<select
-									className="cb-input"
-									value={level}
-									onChange={(e) => setLevel(e.target.value)}
-									required
-								>
-									<option value="Beginner">Beginner</option>
-									<option value="Intermediate">Intermediate</option>
-									<option value="Advanced">Advanced</option>
-								</select>
-							</div>
+              {/* Publish / Draft Toggle */}
+              <div
+                className="seg-toggle"
+                role="radiogroup"
+                aria-label="Publish mode"
+              >
+                <input
+                  type="radio"
+                  id="mode-publish"
+                  name="publishMode"
+                  value="publish"
+                  className="seg-toggle__input"
+                  onChange={() => setPublishSelected("publish")}
+                />
+                <label
+                  htmlFor="mode-publish"
+                  className={
+                    "seg-toggle__btn" +
+                    (publishSelected === "publish" ? " is-active" : "")
+                  }
+                >
+                  Publish
+                </label>
 
-							<div className="cb-field">
-								<label className="assignment-card__group assignment-card__group--full">
-									Tags *
-								</label>
-								<input
-									className="cb-input"
-									value={tagsText}
-									onChange={(e) => setTagsText(e.target.value)}
-									placeholder="react, javascript, frontend"
-									required
-								/>
-								<small className="cb-hint">
-									Comma separated (min 1 tag)
-								</small>
-							</div>
-						</div>
+                <input
+                  type="radio"
+                  id="mode-draft"
+                  name="publishMode"
+                  value="draft"
+                  className="seg-toggle__input"
+                  defaultChecked
+                  onChange={() => setPublishSelected("draft")}
+                />
+                <label
+                  htmlFor="mode-draft"
+                  className={
+                    "seg-toggle__btn" +
+                    (publishSelected === "draft" ? " is-active" : "")
+                  }
+                >
+                  Save as Draft
+                </label>
+              </div>
 
-					</div>
-					<div className='bg-light my-2 p-3 border rounded-4'>
-						<p>{includesAuto.hoursOnDemandVideo} hours on-demand video</p>
-						<p>{includesAuto.articles} articles</p>
-						<p>{includesAuto.downloadableResources} downloadable resources</p>
-					</div>
-					{/* What you'll learn */}
-					<div className="cb-meta-card">
-						<div className="cb-meta-header">
-							<div>
-								<h3 className="cb-meta-title">What you’ll learn</h3>
-								<p className="cb-meta-subtitle">
-									Add bullet points that will be shown to students.
-								</p>
-							</div>
+              {/* Save Button */}
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-primary"
+              >
+                {saving
+                  ? publishSelected === "publish"
+                    ? "Publishing..."
+                    : "Saving..."
+                  : publishSelected === "publish"
+                    ? "Publish Course"
+                    : "Save as Draft"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
 
-							<button
-								type="button"
-								className="cb-link"
-								onClick={() => {
-									addOutcome();
-									showToast('Added learning outcome');
-									requestAnimationFrame(() => {
-										const el =
-											document.getElementById('cb-outcomes-scroll');
-										if (el) el.scrollLeft = el.scrollWidth;
-									});
-								}}
-							>
-								{ICONS.plus} Add bullet
-							</button>
-						</div>
-
-						<div
-							className="cb-outcomes-scroll"
-							id="cb-outcomes-scroll"
-							role="list"
-							aria-label="Learning outcomes"
-						>
-							{learningOutcomes.map((val, idx) => (
-								<div
-									className="cb-outcome-pill"
-									role="listitem"
-									key={`outcome-${idx}`}
-								>
-									<span className="cb-outcome-dot" aria-hidden="true">
-										•
-									</span>
-
-									<input
-										className="assignment-card-input cb-outcome-input"
-										value={val}
-										placeholder={`Outcome ${idx + 1}`}
-										onChange={(e) =>
-											patchOutcome(idx, e.target.value)
-										}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addOutcome();
-												showToast('Added learning outcome');
-											}
-										}}
-									/>
-
-									<button
-										type="button"
-										className="icon-btn danger"
-										title="Remove"
-										onClick={() => {
-											rmOutcome(idx);
-											showToast('Removed learning outcome');
-										}}
-										disabled={learningOutcomes.length === 1}
-									>
-										{ICONS.delete}
-									</button>
-								</div>
-							))}
-						</div>
-
-						<div className="cb-meta-hint">
-							Tip: Press <b>Enter</b> to add a new bullet quickly.
-						</div>
-					</div>
-
-					{/* Thumbnail */}
-					<div className="cb-meta-card">
-						<div className="cb-meta-header">
-							<div>
-								<h3 className="cb-meta-title">Course Thumbnail</h3>
-								<p className="cb-meta-subtitle">
-									For now, only the link option works. Upload will be
-									enabled later.
-								</p>
-							</div>
-						</div>
-
-						<div
-							className="cb-radio-row"
-							role="radiogroup"
-							aria-label="Thumbnail mode"
-						>
-							<label
-								className={`cb-radio ${thumbnailMode === 'link' ? 'is-active' : ''}`}
-							>
-								<input
-									type="radio"
-									name="thumbnailMode"
-									value="link"
-									checked={thumbnailMode === 'link'}
-									onChange={() => setThumbnailMode('link')}
-								/>
-								<span>Link</span>
-							</label>
-
-							<label
-								className={`cb-radio is-disabled ${thumbnailMode === 'upload' ? 'is-active' : ''}`}
-							>
-								<input
-									type="radio"
-									name="thumbnailMode"
-									value="upload"
-									checked={thumbnailMode === 'upload'}
-									onChange={() => setThumbnailMode('upload')}
-								/>
-								<span>Upload (coming soon)</span>
-							</label>
-						</div>
-
-						{thumbnailMode === 'link' ? (
-							<div className="cb-thumb-link">
-								<input
-									className="assignment-card-input cb-thumb-input"
-									placeholder="https://example.com/thumbnail.jpg"
-									value={thumbnailLink}
-									onChange={(e) => setThumbnailLink(e.target.value)}
-								/>
-
-								{thumbnailLink.trim() ? (
-									<div className="cb-thumb-preview">
-										<img
-											src={thumbnailLink}
-											alt="Thumbnail preview"
-											className="cb-thumb-img"
-											onError={(e) => {
-												e.currentTarget.style.display = 'none';
-											}}
-										/>
-										<div className="cb-meta-hint">
-											Preview (if the link is valid)
-										</div>
-									</div>
-								) : (
-									<div className="cb-meta-hint">
-										Paste an image URL to preview it.
-									</div>
-								)}
-							</div>
-						) : (
-							<div className="cb-thumb-upload">
-								<input type="file" accept="image/*" disabled />
-								<div className="cb-meta-hint" style={{ marginTop: 8 }}>
-									Upload is disabled for now. Please use a link.
-								</div>
-							</div>
-						)}
-					</div>
-
-					{/* Modules Builder */}
-					<CourseModulesBuilder
-						modules={modules}
-						setModules={setModules}
-						assignmentService={assignmentService}
-						showToast={showToast}
-						courseId={courseId}
-					/>
-
-					{/* Status message */}
-					{msg.text && (
-						<div
-							className={
-								msg.type === 'error'
-									? 'assignment-card__msg-error'
-									: 'assignment-card__msg-success'
-							}
-							role={msg.type === 'error' ? 'alert' : 'status'}
-							style={{ marginTop: 12 }}
-						>
-							{msg.text}
-						</div>
-					)}
-
-					{/* Total Time Bar */}
-					<div className="cb-total-bar">
-						<div>
-							<div className="cb-total-bar__label">Total Course Time</div>
-							<div className="cb-total-bar__value">
-								{formatDuration(totalMinutes)}
-							</div>
-						</div>
-						<div className="cb-total-bar__hint">Based on item durations</div>
-					</div>
-
-					{/* Actions */}
-					<div className="assignment-card__actions">
-						<button
-							type="button"
-							disabled={saving}
-							className="assignment-card__btn-primary"
-							onClick={handleSave}
-						>
-							{saving
-									? 'Publishing...'
-									: 'Publish Course'}
-						</button>
-					</div>
-				</div>
-
-				{toast && <Toast message={toast.msg} type={toast.type} />}
-			</div>
-		</div>
-	);
+      {/* Floating Toast */}
+      <FloatingToast
+        message={toast.msg}
+        type={toast.type}
+        onClose={() => setToast({ msg: "", type: "success" })}
+      />
+    </div>
+  );
 }
