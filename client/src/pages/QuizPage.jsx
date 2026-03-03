@@ -1,636 +1,611 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getCurrentUser } from '../utils/session';
+import { getAuthUser, getAuthHeader } from '../lib/authLocal';
 
 /**
- * QuizPage.jsx — self-scoped, student-facing quiz page
- * - Theme: Purple (#6C4BF4) + Cyan (#22D3EE)
- * - All CSS scoped under `.ap-quiz-page` to avoid clashes
- * - Data sources:
- *   GET /data/quizData.json (no answers)
- *   GET /data/quizAnswers.json (answers fetched only on submit)
- *
- * ✅ Persistence (localStorage) — per-user:
- *   quizAttempt:<email>:<quizId>  (full attempt with per-question review)
- *   quizResult:<email>:<quizId>   (lightweight summary for dashboards)
+ * QuizPage.jsx — DB powered
+ * - GET /api/quizzes/:id
+ * - Grades locally using `isCorrect` flags in quiz document
+ * - Keeps your original UI/UX and styles (scoped under `.ap-quiz-page`)
  */
 
 export default function QuizPage() {
-  const { quizId } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState(null);
+	const { quizId } = useParams();
+	const [loading, setLoading] = useState(true);
+	const [err, setErr] = useState(null);
 
-  const [quiz, setQuiz] = useState(null);
+	const [quizDoc, setQuizDoc] = useState(null);
+	const [renderQuestions, setRenderQuestions] = useState([]); // shuffled working copy
 
-  // Working copy after shuffling (questions & options)
-  const [renderQuestions, setRenderQuestions] = useState([]);
+	const [answers, setAnswers] = useState({}); // { Q1: ["A"], Q2: ["B","C"], ... }
+	const [submitted, setSubmitted] = useState(false);
+	const [score, setScore] = useState(null);
+	const [maxScore, setMaxScore] = useState(0);
+	const [passed, setPassed] = useState(false);
+	const [gradingError, setGradingError] = useState('');
 
-  // Attempt state
-  const [answers, setAnswers] = useState({}); // { Q1: ["A"], Q2: ["B","C"], ... }
-  const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState(null);
-  const [maxScore, setMaxScore] = useState(0);
-  const [passed, setPassed] = useState(false);
-  const [gradingError, setGradingError] = useState('');
+	// (Timer is optional; if you add timeLimitMins later, page will respect it)
+	const [timeLeftSec, setTimeLeftSec] = useState(null);
+	const timerRef = useRef(null);
 
-  // Timer
-  const [timeLeftSec, setTimeLeftSec] = useState(null);
-  const timerRef = useRef(null);
+	const me = getAuthUser();
+	const backPath = me?.role === 'learner' ? '/student-home' : '/';
 
-  // BackPath for the dedicated user roles
-  const currentUser = getCurrentUser();
-  const backPath = currentUser?.role === "learner" ? "/student-home" : "/";
+	// Fetch quiz from API
+	useEffect(() => {
+		let alive = true;
+		(async () => {
+			try {
+				setLoading(true);
+				setErr(null);
+				const API_BASE =
+					import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+				const res = await fetch(`${API_BASE}/quizzes/${quizId}`, {
+					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+					credentials: 'include',
+				});
+				const payload = await res.json();
+				if (!res.ok || payload?.ok === false) {
+					throw new Error(payload?.error || 'Failed to load quiz');
+				}
+				const doc = payload.data || payload;
 
-  // Load the quiz (no answers inside)
-  useEffect(() => {
-    let alive = true;
+				// Normalize to expected structure
+				const qz = {
+					id: doc._id || doc.id || quizId,
+					title: doc.title || 'Untitled Quiz',
+					description: doc.description || '',
+					estimatedMinutes: doc.estimatedMinutes ?? null,
+					maxScore: doc.maxScore ?? null,
+					passingScore: doc.passingScore ?? null,
+					status: doc.status || 'published',
+					settings: {
+						shuffleQuestions: !!doc?.quiz?.shuffleQuestions,
+						// if you later store timeLimitMins/showAnswersAfterSubmit in DB, add here
+						timeLimitMins: doc.settings?.timeLimitMins ?? null,
+						showAnswersAfterSubmit:
+							doc.settings?.showAnswersAfterSubmit ?? true,
+					},
+					// questions with options
+					questions: Array.isArray(doc?.quiz?.questions)
+						? doc.quiz.questions.map((q, qi) => ({
+								qid: `Q${qi + 1}`,
+								text: q.title ?? `Question ${qi + 1}`,
+								type:
+									Array.isArray(q.options) &&
+									q.options.filter((x) => x?.isCorrect).length > 1
+										? 'multi'
+										: 'single',
+								points: Number(q.points ?? 1),
+								options: (Array.isArray(q.options) ? q.options : []).map(
+									(o, oi) => ({
+										oid: String.fromCharCode(65 + oi), // A, B, C...
+										text: o.text ?? '',
+										isCorrect: !!o.isCorrect,
+									}),
+								),
+							}))
+						: [],
+				};
 
-    (async () => {
-      try {
-        setLoading(true);
-        setErr(null);
+				// Prepare shuffled copies for rendering
+				const prepared = prepareQuestionsForRender(qz);
+				const computedMax = prepared.reduce((s, q) => s + (q.points || 0), 0);
 
-        const res = await fetch('/data/quizData.json');
-        if (!res.ok) throw new Error('Failed to fetch quizData.json');
+				if (!alive) return;
+				setQuizDoc(qz);
+				setRenderQuestions(prepared);
+				setMaxScore(qz.maxScore ?? computedMax);
 
-        const all = await res.json();
-        const found = all.find((q) => q.id === quizId) || null;
-        if (!found) throw new Error('Quiz not found');
+				// Optional timer support (if you add it later to DB)
+				const limitMin = qz?.settings?.timeLimitMins;
+				if (limitMin && Number.isFinite(Number(limitMin))) {
+					setTimeLeftSec(Number(limitMin) * 60);
+				} else {
+					setTimeLeftSec(null);
+				}
+			} catch (e) {
+				if (!alive) return;
+				setErr(e.message || 'Something went wrong');
+			} finally {
+				if (alive) setLoading(false);
+			}
+		})();
 
-        // Prepare shuffled copies
-        const qCopy = JSON.parse(JSON.stringify(found));
-        const prepared = prepareQuestionsForRender(qCopy);
+		return () => {
+			alive = false;
+			if (timerRef.current) clearInterval(timerRef.current);
+		};
+	}, [quizId]);
 
-        if (alive) {
-          setQuiz(qCopy);
-          setRenderQuestions(prepared);
+	// Start countdown when timeLeftSec is set the first time
+	useEffect(() => {
+		if (timeLeftSec == null || submitted) return;
+		if (timerRef.current) clearInterval(timerRef.current);
+		timerRef.current = setInterval(() => {
+			setTimeLeftSec((t) => {
+				if (t == null) return t;
+				if (t <= 1) {
+					clearInterval(timerRef.current);
+					handleSubmit(true); // auto-submit on time up
+					return 0;
+				}
+				return t - 1;
+			});
+		}, 1000);
+		return () => {
+			if (timerRef.current) clearInterval(timerRef.current);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [timeLeftSec, submitted]);
 
-          const computedMax = prepared.reduce((s, q) => s + (q.points || 0), 0);
-          setMaxScore(computedMax);
+	function prepareQuestionsForRender(qz) {
+		const shuffleQ = !!qz?.settings?.shuffleQuestions;
+		const qs = (qz.questions || []).map((q) => {
+			const options = [...(q.options || [])];
+			// Always shuffle options for fairness
+			shuffleInPlace(options);
+			return { ...q, options };
+		});
+		if (shuffleQ) shuffleInPlace(qs);
+		return qs;
+	}
+	function shuffleInPlace(arr) {
+		for (let i = arr.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[arr[i], arr[j]] = [arr[j], arr[i]];
+		}
+		return arr;
+	}
 
-          // Timer
-          const limitMin = qCopy?.settings?.timeLimitMins;
-          if (limitMin && Number.isFinite(Number(limitMin))) {
-            setTimeLeftSec(Number(limitMin) * 60);
-          } else {
-            setTimeLeftSec(null);
-          }
-        }
-      } catch (e) {
-        if (alive) setErr(e.message || 'Something went wrong');
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
+	const remainingClock = useMemo(() => {
+		if (timeLeftSec == null) return null;
+		const m = Math.floor(timeLeftSec / 60);
+		const s = timeLeftSec % 60;
+		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+	}, [timeLeftSec]);
 
-    return () => {
-      alive = false;
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [quizId]);
+	const passingMarks = useMemo(() => {
+		if (Number.isFinite(Number(quizDoc?.passingScore)))
+			return Number(quizDoc.passingScore);
+		const max =
+			Number.isFinite(Number(maxScore)) && maxScore > 0 ? Number(maxScore) : 100;
+		return Math.round(max * 0.6);
+	}, [quizDoc, maxScore]);
 
-  // Start countdown when timeLeftSec is set the first time
-  useEffect(() => {
-    if (timeLeftSec == null || submitted) return;
+	const selectSingle = (qid, oid) => setAnswers((prev) => ({ ...prev, [qid]: [oid] }));
+	const toggleMulti = (qid, oid) => {
+		setAnswers((prev) => {
+			const cur = new Set(prev[qid] || []);
+			if (cur.has(oid)) cur.delete(oid);
+			else cur.add(oid);
+			return { ...prev, [qid]: Array.from(cur) };
+		});
+	};
 
-    if (timerRef.current) clearInterval(timerRef.current);
+	// Per-user persistence
+	function getWho() {
+		return me?.email || 'anonymous';
+	}
+	function persistQuizAttempt(payload) {
+		try {
+			const who = getWho();
+			localStorage.setItem(`quizAttempt:${who}:${quizId}`, JSON.stringify(payload));
+			localStorage.setItem(
+				`quizResult:${who}:${quizId}`,
+				JSON.stringify({
+					score: payload.score,
+					maxScore: payload.maxScore,
+					submittedAt: payload.submittedAt,
+					passed: payload.passed,
+				}),
+			);
+			window.dispatchEvent(new Event('metrics-changed'));
+		} catch (e) {
+			console.warn('Failed to persist quiz attempt', e);
+		}
+	}
 
-    timerRef.current = setInterval(() => {
-      setTimeLeftSec((t) => {
-        if (t == null) return t;
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          handleSubmit(true); // auto-submit on time up
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
+	const handleSubmit = async (auto = false) => {
+		if (submitted) return;
+		setGradingError('');
+		try {
+			// Build correct answer map from DB document itself
+			const correctMap = new Map(); // qid -> array of correct oids
+			renderQuestions.forEach((q) => {
+				const correctOids = (q.options || [])
+					.filter((o) => o.isCorrect)
+					.map((o) => o.oid);
+				correctMap.set(q.qid, correctOids);
+			});
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeftSec, submitted]);
+			// Grade
+			let s = 0;
+			renderQuestions.forEach((q) => {
+				const picked = new Set(answers[q.qid] || []);
+				const correct = new Set(correctMap.get(q.qid) || []);
+				if (q.type === 'multi') {
+					if (eqSet(picked, correct)) s += q.points || 0; // exact match for full marks
+				} else {
+					if (picked.size === 1 && eqSet(picked, correct)) s += q.points || 0;
+				}
+			});
 
-  function prepareQuestionsForRender(qz) {
-    const shuffleQ = !!qz?.settings?.shuffleQuestions;
-    const shuffleO = !!qz?.settings?.shuffleOptions;
+			const submittedAt = new Date().toISOString();
+			const passedNow = s >= passingMarks;
+			const attemptPayload = {
+				quizId,
+				courseId: quizDoc?.courseId ?? null,
+				title: quizDoc?.title ?? null,
+				status: quizDoc?.status ?? null,
+				score: s,
+				maxScore,
+				passingMarks,
+				passed: passedNow,
+				autoSubmitted: !!auto,
+				submittedAt,
+				answers,
+				questions: renderQuestions.map((q) => ({
+					qid: q.qid,
+					type: q.type,
+					text: q.text,
+					points: q.points ?? 0,
+					options: (q.options || []).map((o) => ({ oid: o.oid, text: o.text })),
+					selectedOptionIds: answers[q.qid] || [],
+					correctOptionIds: correctMap.get(q.qid) || [],
+				})),
+			};
+			persistQuizAttempt(attemptPayload);
+			setScore(s);
+			setSubmitted(true);
+			setPassed(passedNow);
+			if (timerRef.current) clearInterval(timerRef.current);
+		} catch (e) {
+			setGradingError(e.message || 'Grading failed');
+		}
+	};
 
-    const qs = (qz.questions || []).map((q) => {
-      const options = [...(q.options || [])];
-      if (shuffleO) shuffleInPlace(options);
-      return { ...q, options };
-    });
+	function eqSet(a, b) {
+		if (a.size !== b.size) return false;
+		for (const v of a) if (!b.has(v)) return false;
+		return true;
+	}
 
-    if (shuffleQ) shuffleInPlace(qs);
-    return qs;
-  }
+	if (loading) {
+		return (
+			<Page>
+				<Style />
+				<Card>
+					<TopAccent />
+					<div className="apq-pad">
+						<p>Loading…</p>
+					</div>
+				</Card>
+			</Page>
+		);
+	}
+	if (err || !quizDoc) {
+		return (
+			<Page>
+				<Style />
+				<Card>
+					<TopAccent />
+					<div className="apq-pad">
+						<h2 className="apq-title">Quiz</h2>
+						<p className="apq-muted">{err || 'Not found'}</p>
+						<div style={{ marginTop: 16 }}>
+							<Link className="apq-link" to="/">
+								← Back
+							</Link>
+						</div>
+					</div>
+				</Card>
+			</Page>
+		);
+	}
 
-  function shuffleInPlace(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
+	const showAnswersAfterSubmit = quizDoc?.settings?.showAnswersAfterSubmit !== false;
 
-  const remainingClock = useMemo(() => {
-    if (timeLeftSec == null) return null;
-    const m = Math.floor(timeLeftSec / 60);
-    const s = timeLeftSec % 60;
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  }, [timeLeftSec]);
+	return (
+		<Page>
+			<Style />
+			<Card>
+				<TopAccent />
+				<div className="apq-header">
+					<h1 className="apq-title">{quizDoc.title}</h1>
+					<div className="apq-rightMeta">
+						<span
+							className={`apq-badge ${quizDoc.status === 'published' ? 'ok' : ''}`}
+						>
+							<span className="apq-dot" />{' '}
+							{quizDoc.status?.[0]?.toUpperCase() +
+								quizDoc.status?.slice(1)}
+						</span>
+					</div>
+				</div>
 
-  // Passing Marks
-  const passingMarks = useMemo(() => {
-    if (Number.isFinite(Number(quiz?.passingScore))) return Number(quiz.passingScore);
+				<div className="apq-metaRow apq-pad">
+					<Meta
+						label="Course"
+						value={quizDoc.courseId?.replace?.(/-/g, ' ') || '—'}
+					/>
+					<Meta label="Max Score" value={maxScore} />
+					<Meta label="Passing Marks" value={passingMarks} />
+					<Meta
+						label="Time Limit"
+						value={`${quizDoc.settings?.timeLimitMins ?? '—'} mins`}
+					/>
+				</div>
 
-    // 60% of computed max score
-    const max = Number.isFinite(Number(maxScore)) && maxScore > 0 ? Number(maxScore) : 100;
-    return Math.round(max * 0.6);
-  }, [quiz, maxScore]);
+				{quizDoc.description && (
+					<div className="apq-section apq-pad">
+						<SectionTitle>Description</SectionTitle>
+						<p className="apq-desc">{quizDoc.description}</p>
+					</div>
+				)}
 
-  const selectSingle = (qid, oid) => {
-    setAnswers((prev) => ({ ...prev, [qid]: [oid] }));
-  };
+				{!!quizDoc.settings?.timeLimitMins && (
+					<div className="apq-timerBar" role="timer" aria-live="polite">
+						<div className="apq-pad apq-timerRow">
+							<span>Time Left</span>
+							<span
+								className={`apq-timer ${timeLeftSec !== null && timeLeftSec <= 30 ? 'danger' : ''}`}
+							>
+								{remainingClock}
+							</span>
+						</div>
+					</div>
+				)}
 
-  const toggleMulti = (qid, oid) => {
-    setAnswers((prev) => {
-      const cur = new Set(prev[qid] || []);
-      if (cur.has(oid)) cur.delete(oid);
-      else cur.add(oid);
-      return { ...prev, [qid]: Array.from(cur) };
-    });
-  };
+				<div className="apq-section apq-pad">
+					<SectionTitle>Questions</SectionTitle>
+					{renderQuestions.map((q, idx) => (
+						<div key={q.qid} className="apq-question">
+							<div className="apq-qHeader">
+								<span className="apq-qNum">Q{idx + 1}</span>
+								<span className="apq-qPts">
+									{q.points} pt{q.points !== 1 ? 's' : ''}
+								</span>
+							</div>
+							<div className="apq-qText">{q.text}</div>
+							<div className="apq-options">
+								{q.options.map((opt) => {
+									const isChecked = (answers[q.qid] || []).includes(
+										opt.oid,
+									);
+									const inputType =
+										q.type === 'multi' ? 'checkbox' : 'radio';
+									return (
+										<label className="apq-option" key={opt.oid}>
+											<input
+												type={inputType}
+												name={q.qid}
+												value={opt.oid}
+												checked={isChecked}
+												disabled={submitted}
+												onChange={() => {
+													if (q.type === 'multi')
+														toggleMulti(q.qid, opt.oid);
+													else selectSingle(q.qid, opt.oid);
+												}}
+											/>
+											<span className="apq-optionText">
+												<b>{opt.oid}.</b> {opt.text}
+											</span>
+										</label>
+									);
+								})}
+							</div>
 
-  // ✅ Per-user persistence helpers
-  function getWho() {
-    const me = getCurrentUser();
-    return me?.email || 'anonymous';
-  }
+							{submitted && showAnswersAfterSubmit && (
+								<AnswerInline question={q} />
+							)}
+						</div>
+					))}
 
-  function persistQuizAttempt(payload) {
-    try {
-      const who = getWho();
+					{gradingError && <div className="apq-alert err">{gradingError}</div>}
 
-      // Full attempt (for review)
-      localStorage.setItem(`quizAttempt:${who}:${quizId}`, JSON.stringify(payload));
-
-      // Lightweight result (for dashboards)
-      localStorage.setItem(
-        `quizResult:${who}:${quizId}`,
-        JSON.stringify({
-          score: payload.score,
-          maxScore: payload.maxScore,
-          submittedAt: payload.submittedAt,
-          passed: payload.passed,
-        })
-      );
-
-      // Notify same-tab listeners (StudentMetrics etc.)
-      window.dispatchEvent(new Event('metrics-changed'));
-    } catch (e) {
-      console.warn('Failed to persist quiz attempt', e);
-    }
-  }
-
-  const handleSubmit = async (auto = false) => {
-    if (submitted) return;
-
-    setGradingError('');
-
-    try {
-      // Fetch answers for this quizId
-      const res = await fetch('/data/quizAnswers.json');
-      if (!res.ok) throw new Error('Failed to fetch quizAnswers.json');
-
-      const all = await res.json();
-      const entry = all.find((x) => x.quizId === quizId);
-      if (!entry) throw new Error('Answers not found for this quiz');
-
-      // Build a quick lookup for correct answers
-      const correctMap = new Map(); // qid -> [A,C]
-      (entry.answers || []).forEach((a) => correctMap.set(a.qid, a.correctOptionIds || []));
-
-      // Grade
-      let s = 0;
-
-      renderQuestions.forEach((q) => {
-        const picked = new Set(answers[q.qid] || []);
-        const correct = new Set(correctMap.get(q.qid) || []);
-
-        if (q.type === 'multi') {
-          // full marks only when set matches exactly
-          if (eqSet(picked, correct)) s += q.points || 0;
-        } else {
-          // single correct
-          if (picked.size === 1 && eqSet(picked, correct)) s += q.points || 0;
-        }
-      });
-
-      const submittedAt = new Date().toISOString();
-      const passedNow = s >= passingMarks;
-
-      const attemptPayload = {
-        quizId,
-        courseId: quiz?.courseId ?? null,
-        title: quiz?.title ?? null,
-        status: quiz?.status ?? null,
-        score: s,
-        maxScore,
-        passingMarks,
-        passed: passedNow,
-        autoSubmitted: !!auto,
-        submittedAt,
-        answers,
-        questions: renderQuestions.map((q) => {
-          const picked = answers[q.qid] || [];
-          const correct = correctMap.get(q.qid) || [];
-          return {
-            qid: q.qid,
-            type: q.type,
-            text: q.text,
-            points: q.points ?? 0,
-            options: (q.options || []).map((o) => ({ oid: o.oid, text: o.text })),
-            selectedOptionIds: picked,
-            correctOptionIds: correct,
-          };
-        }),
-      };
-
-      persistQuizAttempt(attemptPayload);
-
-      setScore(s);
-      setSubmitted(true);
-      setPassed(passedNow);
-      if (timerRef.current) clearInterval(timerRef.current);
-    } catch (e) {
-      setGradingError(e.message || 'Grading failed');
-    }
-  };
-
-  function eqSet(a, b) {
-    if (a.size !== b.size) return false;
-    for (const v of a) if (!b.has(v)) return false;
-    return true;
-  }
-
-  if (loading) {
-    return (
-      <Page>
-        <Style />
-        <Card>
-          <TopAccent />
-          <div className="apq-pad">
-            <p>Loading…</p>
-          </div>
-        </Card>
-      </Page>
-    );
-  }
-
-  if (err || !quiz) {
-    return (
-      <Page>
-        <Style />
-        <Card>
-          <TopAccent />
-          <div className="apq-pad">
-            <h2 className="apq-title">Quiz</h2>
-            <p className="apq-muted">{err || 'Not found'}</p>
-            <div style={{ marginTop: 16 }}>
-              <Link className="apq-link" to="/">
-                ← Back
-              </Link>
-            </div>
-          </div>
-        </Card>
-      </Page>
-    );
-  }
-
-  const showAnswersAfterSubmit = !!quiz?.settings?.showAnswersAfterSubmit;
-
-  return (
-    <Page>
-      <Style />
-      <Card>
-        <TopAccent />
-
-        <div className="apq-header">
-          <h1 className="apq-title">{quiz.title}</h1>
-          <div className="apq-rightMeta">
-            <span className={`apq-badge ${quiz.status === 'published' ? 'ok' : ''}`}>
-              <span className="apq-dot" />{' '}
-              {quiz.status?.[0]?.toUpperCase() + quiz.status?.slice(1)}
-            </span>
-          </div>
-        </div>
-
-        <div className="apq-metaRow apq-pad">
-          <Meta label="Course" value={quiz.courseId.replace(/-/g, ' ')} />
-          <Meta label="Max Score" value={maxScore} />
-          <Meta label="Passing Marks" value={passingMarks} />
-          <Meta label="Time Limit" value={`${quiz.settings?.timeLimitMins ?? '—'} mins`} />
-        </div>
-
-        {quiz.description && (
-          <div className="apq-section apq-pad">
-            <SectionTitle>Description</SectionTitle>
-            <p className="apq-desc">{quiz.description}</p>
-          </div>
-        )}
-
-        {/* ✅ FIX: show timer only when time limit exists */}
-        {!!quiz.settings?.timeLimitMins && (
-          <div className="apq-timerBar" role="timer" aria-live="polite">
-            <div className="apq-pad apq-timerRow">
-              <span>Time Left</span>
-              <span
-                className={`apq-timer ${
-                  timeLeftSec !== null && timeLeftSec <= 30 ? 'danger' : ''
-                }`}
-              >
-                {remainingClock}
-              </span>
-            </div>
-          </div>
-        )}
-
-        <div className="apq-section apq-pad">
-          <SectionTitle>Questions</SectionTitle>
-
-          {renderQuestions.map((q, idx) => (
-            <div key={q.qid} className="apq-question">
-              <div className="apq-qHeader">
-                <span className="apq-qNum">Q{idx + 1}</span>
-                <span className="apq-qPts">
-                  {q.points} pt{q.points !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              <div className="apq-qText">{q.text}</div>
-
-              <div className="apq-options">
-                {q.options.map((opt) => {
-                  const isChecked = (answers[q.qid] || []).includes(opt.oid);
-                  const inputType = q.type === 'multi' ? 'checkbox' : 'radio';
-
-                  return (
-                    <label className="apq-option" key={opt.oid}>
-                      <input
-                        type={inputType}
-                        name={q.qid}
-                        value={opt.oid}
-                        checked={isChecked}
-                        disabled={submitted}
-                        onChange={() => {
-                          if (q.type === 'multi') toggleMulti(q.qid, opt.oid);
-                          else selectSingle(q.qid, opt.oid);
-                        }}
-                      />
-                      <span className="apq-optionText">
-                        <b>{opt.oid}.</b> {opt.text}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-
-              {submitted && showAnswersAfterSubmit && (
-                <AnswerReveal quizId={quiz.id} qid={q.qid} />
-              )}
-            </div>
-          ))}
-
-          {gradingError && <div className="apq-alert err">{gradingError}</div>}
-
-          <div className="apq-actions">
-            {!submitted ? (
-              <>
-                <button type="button" className="apq-btn" onClick={() => handleSubmit(false)}>
-                  Submit Quiz
-                </button>
-                <Link to="/" className="apq-btn ghost">
-                  Cancel
-                </Link>
-              </>
-            ) : (
-              <>
-                <div className={`apq-result ${passed ? 'ok' : 'warn'}`}>
-                  <div className="apq-resultTitle">{passed ? 'Passed' : 'Not Passed'}</div>
-                  <div className="apq-resultScore">
-                    Score: {score} / {maxScore} (Passing: {passingMarks})
-                  </div>
-                </div>
-                <Link to={backPath} className="apq-btn ghost">
-                  Back
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </Card>
-    </Page>
-  );
+					<div className="apq-actions">
+						{!submitted ? (
+							<>
+								<button
+									type="button"
+									className="apq-btn"
+									onClick={() => handleSubmit(false)}
+								>
+									Submit Quiz
+								</button>
+								<Link to="/" className="apq-btn ghost">
+									Cancel
+								</Link>
+							</>
+						) : (
+							<>
+								<div className={`apq-result ${passed ? 'ok' : 'warn'}`}>
+									<div className="apq-resultTitle">
+										{passed ? 'Passed' : 'Not Passed'}
+									</div>
+									<div className="apq-resultScore">
+										Score: {score} / {maxScore} (Passing:{' '}
+										{passingMarks})
+									</div>
+								</div>
+								<Link to={backPath} className="apq-btn ghost">
+									Back
+								</Link>
+							</>
+						)}
+					</div>
+				</div>
+			</Card>
+		</Page>
+	);
 }
 
-/* ---------- AnswerReveal (reads from quizAnswers.json once submitted) ---------- */
-function AnswerReveal({ quizId, qid }) {
-  const [correct, setCorrect] = useState([]);
-  const [err, setErr] = useState(null);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const res = await fetch('/data/quizAnswers.json');
-        if (!res.ok) throw new Error('Failed to fetch quizAnswers.json');
-        const all = await res.json();
-        const entry = all.find((x) => x.quizId === quizId);
-        const q = entry?.answers?.find((a) => a.qid === qid);
-        if (!q) throw new Error('Answer not found');
-        if (alive) setCorrect(q.correctOptionIds || []);
-      } catch (e) {
-        if (alive) setErr(e.message || 'Failed to load answers');
-      }
-    })();
-    return () => (alive = false);
-  }, [quizId, qid]);
-
-  if (err) return <div className="apq-alert err">{err}</div>;
-  if (!correct.length) return null;
-  return <div className="apq-answer">Correct: {correct.join(', ')}</div>;
+/** Inline answer reveal using the data we already have (no extra fetch) */
+function AnswerInline({ question }) {
+	const correct = (question.options || []).filter((o) => o.isCorrect).map((o) => o.oid);
+	if (!correct.length) return null;
+	return <div className="apq-answer">Correct: {correct.join(', ')}</div>;
 }
 
 /* ---------- small building blocks ---------- */
 function Page({ children }) {
-  return <div className="ap-quiz-page">{children}</div>;
+	return <div className="ap-quiz-page">{children}</div>;
 }
 function Card({ children }) {
-  return <div className="apq-card">{children}</div>;
+	return <div className="apq-card">{children}</div>;
 }
 function TopAccent() {
-  return <div className="apq-topAccent" aria-hidden="true" />;
+	return <div className="apq-topAccent" aria-hidden="true" />;
 }
 function Meta({ label, value }) {
-  return (
-    <div className="apq-meta">
-      <div className="apq-metaLabel">{label}</div>
-      <div className="apq-metaValue">{value}</div>
-    </div>
-  );
+	return (
+		<div className="apq-meta">
+			<div className="apq-metaLabel">{label}</div>
+			<div className="apq-metaValue">{value}</div>
+		</div>
+	);
 }
 function SectionTitle({ children }) {
-  return <h3 className="apq-sectionTitle">{children}</h3>;
+	return <h3 className="apq-sectionTitle">{children}</h3>;
 }
 
-/* ---------- Scoped Styles ---------- */
+/* ---------- Scoped Styles (unchanged from your file) ---------- */
 function Style() {
-  return (
-    <style>{`
-      .ap-quiz-page{
-        --bg: #f7f7fb;
-        --surface: #ffffff;
-        --border: #e9e9ef;
-        --text: #1f2937;
-        --muted: #6b7280;
-        --primary: #6C4BF4;
-        --primary-600: #5b3df0;
-        --primary-100: #efeafe;
-        --accent: #22D3EE;
-        --shadow: 0 8px 24px rgba(20, 20, 43, 0.06);
-        --radius: 14px;
-        min-height: 100vh;
-        background: var(--bg);
-        padding: 24px;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-      }
-      .ap-quiz-page .apq-card{
-        width: 100%;
-        max-width: 980px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        overflow: hidden;
-      }
-      .ap-quiz-page .apq-topAccent{
-        height: 6px;
-        background: linear-gradient(90deg, var(--primary), var(--accent));
-      }
-      .ap-quiz-page .apq-pad{ padding: 20px 24px; }
-      .ap-quiz-page .apq-header{
-        display:flex; align-items:center; justify-content:space-between;
-        padding: 18px 24px 8px 24px;
-      }
-      .ap-quiz-page .apq-title{
-        font-size: 22px; font-weight: 700; color: var(--text); margin: 0;
-      }
-      .ap-quiz-page .apq-rightMeta{ display:flex; gap:12px; align-items:center; }
-      .ap-quiz-page .apq-badge{
-        display:inline-flex; align-items:center; gap:6px;
-        padding: 6px 10px; border-radius: 999px; font-size: 12px;
-        color: var(--muted); background:#f2f2f8; border:1px solid var(--border);
-      }
-      .ap-quiz-page .apq-badge.ok{ color: var(--primary-600); background: #f4f1ff; border-color: #e7e1fe; }
-      .ap-quiz-page .apq-dot{ width:8px; height:8px; border-radius:50%; background: var(--primary); display:inline-block; }
-
-      .ap-quiz-page .apq-metaRow{
-        display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px;
-      }
-      .ap-quiz-page .apq-meta{
-        border:1px solid var(--border); border-radius:10px; padding:12px 14px; background:#fff;
-      }
-      .ap-quiz-page .apq-metaLabel{ font-size:12px; color: var(--muted); margin-bottom:4px; }
-      .ap-quiz-page .apq-metaValue{ font-weight:600; color: var(--text); }
-
-      .ap-quiz-page .apq-section{ border-top:1px solid var(--border); }
-      .ap-quiz-page .apq-sectionTitle{
-        font-size:16px; font-weight:700; color: var(--text); margin: 0 0 12px 0;
-      }
-      .ap-quiz-page .apq-desc{ color: var(--text); line-height:1.6; }
-
-      .ap-quiz-page .apq-timerBar{
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-        background: #fbfbfe;
-      }
-      .ap-quiz-page .apq-timerRow{
-        display:flex; align-items:center; justify-content:space-between;
-        font-weight:600; color: var(--text);
-      }
-      .ap-quiz-page .apq-timer{
-        font-feature-settings: "tnum";
-        font-variant-numeric: tabular-nums;
-        padding: 6px 10px; border-radius: 8px;
-        background: #f1efff; color: var(--primary-600);
-      }
-      .ap-quiz-page .apq-timer.danger{ background: #fff1f1; color: #9b1c1c; }
-
-      .ap-quiz-page .apq-question{
-        border:1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;
-      }
-      .ap-quiz-page .apq-qHeader{
-        display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px;
-      }
-      .ap-quiz-page .apq-qNum{
-        display:inline-flex; align-items:center; justify-content:center;
-        min-width: 32px; height: 32px; border-radius: 999px;
-        background: var(--primary-100); color: var(--primary-600); font-weight: 700;
-      }
-      .ap-quiz-page .apq-qPts{ font-size:12px; color: var(--muted); }
-      .ap-quiz-page .apq-qText{ font-weight:600; color: var(--text); margin: 6px 0 12px; }
-      .ap-quiz-page .apq-options{ display:flex; flex-direction:column; gap:8px; }
-      .ap-quiz-page .apq-option{
-        display:flex; gap:10px; align-items:center; padding: 10px 12px; border-radius: 10px;
-        border:1px solid var(--border); background:#fff; cursor:pointer;
-      }
-      .ap-quiz-page .apq-option input{ transform: scale(1.1); }
-      .ap-quiz-page .apq-optionText{ color: var(--text); }
-
-      .ap-quiz-page .apq-answer{
-        margin-top: 8px; color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0;
-        padding:8px 10px; border-radius:8px; display:inline-block;
-      }
-
-      .ap-quiz-page .apq-alert{
-        margin-top:14px; border-radius: 10px; padding: 10px 12px; font-size:14px; border:1px solid;
-      }
-      .ap-quiz-page .apq-alert.err{ color:#9b1c1c; background:#fff1f1; border-color:#ffd2d2; }
-
-      .ap-quiz-page .apq-actions{ display:flex; gap:10px; align-items:center; margin-top:18px; }
-      .ap-quiz-page .apq-btn{
-        height: 40px; padding: 0 16px; border-radius: 10px; border: 0;
-        background: var(--primary); color: white; font-weight:600; cursor:pointer;
-        box-shadow: 0 8px 20px rgba(108,75,244,0.25);
-        text-decoration: none; display:inline-flex; align-items:center; justify-content:center;
-      }
-      .ap-quiz-page .apq-btn:hover{ background: var(--primary-600); }
-      .ap-quiz-page .apq-btn.ghost{
-        background: #fff; color: var(--text); border:1px solid var(--border);
-        box-shadow:none;
-      }
-      .ap-quiz-page .apq-link{ color: var(--primary-600); text-decoration: none; }
-      .ap-quiz-page .apq-link:hover{ text-decoration: underline; }
-
-      .ap-quiz-page .apq-result{
-        flex: 1;
-        border-radius: 12px; padding: 12px; border: 1px solid;
-      }
-      .ap-quiz-page .apq-result.ok{ color:#065f46; background:#ecfdf5; border-color:#a7f3d0; }
-      .ap-quiz-page .apq-result.warn{ color:#92400e; background:#fffbeb; border-color:#fde68a; }
-      .ap-quiz-page .apq-resultTitle{ font-weight: 700; margin-bottom: 6px; }
-      .ap-quiz-page .apq-resultScore{ font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
-
-      @media (max-width: 820px){
-        .ap-quiz-page .apq-metaRow{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-        .ap-quiz-page .apq-header{ align-items:flex-start; gap:10px; flex-direction:column; }
-      }
-    `}</style>
-  );
+	return (
+		<style>{`
+.ap-quiz-page{
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --border: #e9e9ef;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #6C4BF4;
+  --primary-600: #5b3df0;
+  --primary-100: #efeafe;
+  --accent: #22D3EE;
+  --shadow: 0 8px 24px rgba(20, 20, 43, 0.06);
+  --radius: 14px;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
-``
+.ap-quiz-page .apq-card{
+  width: 100%;
+  max-width: 980px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.ap-quiz-page .apq-topAccent{
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+.ap-quiz-page .apq-pad{ padding: 20px 24px; }
+.ap-quiz-page .apq-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 18px 24px 8px 24px;
+}
+.ap-quiz-page .apq-title{
+  font-size: 22px; font-weight: 700; color: var(--text); margin: 0;
+}
+.ap-quiz-page .apq-rightMeta{ display:flex; gap:12px; align-items:center; }
+.ap-quiz-page .apq-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 6px 10px; border-radius: 999px; font-size: 12px;
+  color: var(--muted); background:#f2f2f8; border:1px solid var(--border);
+}
+.ap-quiz-page .apq-badge.ok{ color: var(--primary-600); background: #f4f1ff; border-color: #e7e1fe; }
+.ap-quiz-page .apq-dot{ width:8px; height:8px; border-radius:50%; background: var(--primary); display:inline-block; }
+.ap-quiz-page .apq-metaRow{
+  display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px;
+}
+.ap-quiz-page .apq-meta{
+  border:1px solid var(--border); border-radius:10px; padding:12px 14px; background:#fff;
+}
+.ap-quiz-page .apq-metaLabel{ font-size:12px; color: var(--muted); margin-bottom:4px; }
+.ap-quiz-page .apq-metaValue{ font-weight:600; color: var(--text); }
+.ap-quiz-page .apq-section{ border-top:1px solid var(--border); }
+.ap-quiz-page .apq-sectionTitle{
+  font-size:16px; font-weight:700; color: var(--text); margin: 0 0 12px 0;
+}
+.ap-quiz-page .apq-desc{ color: var(--text); line-height:1.6; }
+.ap-quiz-page .apq-timerBar{
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: #fbfbfe;
+}
+.ap-quiz-page .apq-timerRow{
+  display:flex; align-items:center; justify-content:space-between;
+  font-weight:600; color: var(--text);
+}
+.ap-quiz-page .apq-timer{
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  padding: 6px 10px; border-radius: 8px;
+  background: #f1efff; color: var(--primary-600);
+}
+.ap-quiz-page .apq-timer.danger{ background: #fff1f1; color: #9b1c1c; }
+.ap-quiz-page .apq-question{
+  border:1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;
+}
+.ap-quiz-page .apq-qHeader{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px;
+}
+.ap-quiz-page .apq-qNum{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width: 32px; height: 32px; border-radius: 999px;
+  background: var(--primary-100); color: var(--primary-600); font-weight: 700;
+}
+.ap-quiz-page .apq-qPts{ font-size:12px; color: var(--muted); }
+.ap-quiz-page .apq-qText{ font-weight:600; color: var(--text); margin: 6px 0 12px; }
+.ap-quiz-page .apq-options{ display:flex; flex-direction:column; gap:8px; }
+.ap-quiz-page .apq-option{
+  display:flex; gap:10px; align-items:center; padding: 10px 12px; border-radius: 10px;
+  border:1px solid var(--border); background:#fff; cursor:pointer;
+}
+.ap-quiz-page .apq-option input{ transform: scale(1.1); }
+.ap-quiz-page .apq-optionText{ color: var(--text); }
+.ap-quiz-page .apq-answer{
+  margin-top: 8px; color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0;
+  padding:8px 10px; border-radius:8px; display:inline-block;
+}
+.ap-quiz-page .apq-alert{
+  margin-top:14px; border-radius: 10px; padding: 10px 12px; font-size:14px; border:1px solid;
+}
+.ap-quiz-page .apq-alert.err{ color:#9b1c1c; background:#fff1f1; border-color:#ffd2d2; }
+.ap-quiz-page .apq-actions{ display:flex; gap:10px; align-items:center; margin-top:18px; }
+.ap-quiz-page .apq-btn{
+  height: 40px; padding: 0 16px; border-radius: 10px; border: 0;
+  background: var(--primary); color: white; font-weight:600; cursor:pointer;
+  box-shadow: 0 8px 20px rgba(108,75,244,0.25);
+  text-decoration: none; display:inline-flex; align-items:center; justify-content:center;
+}
+.ap-quiz-page .apq-btn:hover{ background: var(--primary-600); }
+.ap-quiz-page .apq-btn.ghost{
+  background: #fff; color: var(--text); border:1px solid var(--border);
+  box-shadow:none;
+}
+.ap-quiz-page .apq-link{ color: var(--primary-600); text-decoration: none; }
+.ap-quiz-page .apq-link:hover{ text-decoration: underline; }
+.ap-quiz-page .apq-result{
+  flex: 1;
+  border-radius: 12px; padding: 12px; border: 1px solid;
+}
+.ap-quiz-page .apq-result.ok{ color:#065f46; background:#ecfdf5; border-color:#a7f3d0; }
+.ap-quiz-page .apq-result.warn{ color:#92400e; background:#fffbeb; border-color:#fde68a; }
+.ap-quiz-page .apq-resultTitle{ font-weight: 700; margin-bottom: 6px; }
+.ap-quiz-page .apq-resultScore{ font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+@media (max-width: 820px){
+  .ap-quiz-page .apq-metaRow{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .ap-quiz-page .apq-header{ align-items:flex-start; gap:10px; flex-direction:column; }
+}
+`}</style>
+	);
+}
