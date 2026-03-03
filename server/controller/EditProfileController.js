@@ -4,14 +4,53 @@ const Learner = require('../model/LearnerModel');
 const Instructor = require('../model/InstructorModel');
 
 /**
- * PUT /api/profile
+ * GET /editProfile/profile
+ * Query/body: { email }
+ * Returns the user and the role-specific profile so the UI can pre-fill existing values.
+ */
+exports.getProfile = async function getProfile(req, res) {
+  try {
+    const email = (req.query.email ?? req.body?.email ?? '').trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ ok: false, error: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    let profileDoc = null;
+    if (user.role === 'learner') {
+      profileDoc = await Learner.findOne({ userId: user._id });
+    } else if (user.role === 'instructor') {
+      profileDoc = await Instructor.findOne({ userId: user._id });
+    }
+
+    // Return even if profileDoc is null (first-time edit still needs prefill from user)
+    return res.json({
+      ok: true,
+      data: {
+        user,
+        profile: profileDoc,
+      },
+    });
+  } catch (err) {
+    console.error('getProfile error:', err);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * PUT /editProfile/profile
  * Body: {
- *   email, name?, dob?, occupation?, experience?, skills?[], domainInterests?[]
+ *  email, name?, dob?, occupation?, experience?, skills?[], domainInterests?[], education?[]
  * }
  * Notes:
- *  - Learner:  domainInterest[] (model)  <= skills[] (UI) OR domainInterests[] (fallback)
- *  - Instructor: skills[] (model)        <= domainInterests[] (UI) OR skills[] (fallback)
- *  - Instructor: experienceYears (model) <= experience (UI)
+ * - Learner: domainInterest[] (model) <= skills[] (UI) OR domainInterests[] (fallback)
+ * - Instructor: skills[] (model) <= domainInterests[] (UI) OR skills[] (fallback)
+ * - Instructor: experienceYears (model) <= experience (UI)
+ * - Instructor: qualifications[] (model) <= education[] (UI: { degree, institution, year })
  */
 exports.updateProfile = async function updateProfile(req, res) {
   try {
@@ -21,24 +60,23 @@ exports.updateProfile = async function updateProfile(req, res) {
       dob,
       // learner-oriented from UI
       occupation,
-      skills,              // UI "skills" (used by learner UI)
-      domainInterests,     // UI "domainInterests" (used by instructor UI)
-      experience,          // UI "experience" (string/number)
-    } = req.body || {};
+      skills,           // UI "skills" (used by learner UI)
+      domainInterests,  // UI "domainInterests" (used by instructor UI)
+      experience,       // UI "experience" (string/number)
+      education,        // UI "education" (array of { degree, institution, year })
+    } = req.body ?? {};
 
     if (!email) {
       return res.status(400).json({ ok: false, error: 'Email is required' });
     }
 
     // Find user by email
-    const user = await User.findOne({ email: (email || '').trim().toLowerCase() });
+    const user = await User.findOne({ email: (email ?? '').trim().toLowerCase() });
     if (!user) {
       return res.status(404).json({ ok: false, error: 'User not found' });
     }
 
-    // Update top-level user fields (name, dob) according to User model
-    // (User model supports name, dob; gender exists but not on UI)  // refs:
-    // userModel.js: name, email, role, dob, gender                // [3](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/userModel.js)
+    // Update top-level user fields (name, dob)
     if (typeof name === 'string') user.name = name;
     if (dob) {
       const parsed = new Date(dob);
@@ -49,14 +87,16 @@ exports.updateProfile = async function updateProfile(req, res) {
     let profileDoc = null;
 
     if (user.role === 'learner') {
-      // LearnerModel supports: occupation (string), domainInterest (string[])  // [1](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/LearnerModel.js)
+      // LearnerModel supports: occupation (string), domainInterest (string[])
       const learnerUpdate = {};
       if (typeof occupation === 'string') learnerUpdate.occupation = occupation;
 
       // Map UI "skills" -> model "domainInterest"
-      const learnerInterests = Array.isArray(skills) ? skills
-                           : Array.isArray(domainInterests) ? domainInterests
-                           : undefined;
+      const learnerInterests = Array.isArray(skills)
+        ? skills
+        : Array.isArray(domainInterests)
+        ? domainInterests
+        : undefined;
       if (learnerInterests) learnerUpdate.domainInterest = learnerInterests;
 
       profileDoc = await Learner.findOneAndUpdate(
@@ -65,7 +105,7 @@ exports.updateProfile = async function updateProfile(req, res) {
         { new: true, upsert: true }
       );
     } else if (user.role === 'instructor') {
-      // InstructorModel supports: experienceYears (number), skills (string[])  // [2](https://cognizantonline-my.sharepoint.com/personal/2463364_cognizant_com/Documents/Microsoft%20Copilot%20Chat%20Files/InstructorModel.js)
+      // InstructorModel supports: experienceYears (number), skills (string[])
       const instructorUpdate = {};
 
       if (experience !== undefined) {
@@ -74,10 +114,26 @@ exports.updateProfile = async function updateProfile(req, res) {
       }
 
       // Map UI "domainInterests" -> model "skills"
-      const instructorSkills = Array.isArray(domainInterests) ? domainInterests
-                            : Array.isArray(skills) ? skills
-                            : undefined;
+      const instructorSkills = Array.isArray(domainInterests)
+        ? domainInterests
+        : Array.isArray(skills)
+        ? skills
+        : undefined;
       if (instructorSkills) instructorUpdate.skills = instructorSkills;
+
+      // Map UI "education" -> model "qualifications"
+      if (Array.isArray(education)) {
+        const sanitized = education
+          .filter((q) => q && typeof q === 'object')
+          .map((q) => ({
+            degree: (q.degree ?? '').toString().trim(),
+            institution: (q.institution ?? '').toString().trim(),
+            year: (q.year ?? '').toString().trim(),
+          }))
+          // keep only entries where at least one field is present
+          .filter((q) => q.degree || q.institution || q.year);
+        instructorUpdate.qualifications = sanitized;
+      }
 
       profileDoc = await Instructor.findOneAndUpdate(
         { userId: user._id },
@@ -89,7 +145,6 @@ exports.updateProfile = async function updateProfile(req, res) {
     // Shape response for the frontend
     const safeUser = user.toObject();
     const payload = { user: safeUser, profile: profileDoc };
-
     return res.json({ ok: true, data: payload });
   } catch (err) {
     console.error('updateProfile error:', err);

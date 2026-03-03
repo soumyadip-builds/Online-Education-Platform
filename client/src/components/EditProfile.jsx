@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/editProfile.css";
 
-// ⬅ NEW: import from authLocal.js
+// Auth helpers
 import {
     getAuthUser,
     createLocalSession,
@@ -80,26 +80,26 @@ function SkillsInput({
     onChange,
 }) {
     const [input, setInput] = useState("");
-
+ 
     function addSkill() {
         const skill = input.trim();
         if (!skill) return;
-
+ 
         // prevent duplicates
         const next = Array.from(new Set([...(value || []), skill]));
         onChange?.(next);
         setInput("");
     }
-
+ 
     function removeSkill(skill) {
         const next = (value || []).filter((s) => s !== skill);
         onChange?.(next);
     }
-
+ 
     return (
         <div className="form-group">
             <label className="label">{label}</label>
-
+ 
             <div className="skill-add-row" style={{ display: "flex", gap: 8 }}>
                 <input
                     type="text"
@@ -123,7 +123,7 @@ function SkillsInput({
                     Add Skill
                 </button>
             </div>
-
+ 
             <div
                 className="chip-input"
                 style={{ marginTop: 10 }}
@@ -140,7 +140,7 @@ function SkillsInput({
                     </span>
                 ))}
             </div>
-
+ 
             <small className="hint">
                 Type a skill and click “Add Skill”. Click a chip to remove.
             </small>
@@ -151,9 +151,9 @@ function SkillsInput({
 /** Repeater for Education entries */
 function EducationRepeater({ value = [], onChange }) {
     const [items, setItems] = useState(value);
-
+ 
     useEffect(() => setItems(value || []), [value]);
-
+ 
     function update(idx, field, val) {
         const next = items.map((it, i) =>
             i === idx ? { ...it, [field]: val } : it,
@@ -161,28 +161,28 @@ function EducationRepeater({ value = [], onChange }) {
         setItems(next);
         onChange?.(next);
     }
-
+ 
     function add() {
         const next = [...items, { degree: "", institution: "", year: "" }];
         setItems(next);
         onChange?.(next);
     }
-
+ 
     function remove(idx) {
         const next = items.filter((_, i) => i !== idx);
         setItems(next);
         onChange?.(next);
     }
-
+ 
     return (
         <div className="form-group">
             <label className="label">Educational Qualifications</label>
-
+ 
             <div className="edu-list">
                 {items.length === 0 && (
                     <div className="muted">No entries yet (optional).</div>
                 )}
-
+ 
                 {items.map((row, idx) => (
                     <div className="edu-row" key={idx}>
                         <input
@@ -219,7 +219,7 @@ function EducationRepeater({ value = [], onChange }) {
                     </div>
                 ))}
             </div>
-
+ 
             <button type="button" className="btn ghost" onClick={add}>
                 + Add Qualification
             </button>
@@ -228,8 +228,8 @@ function EducationRepeater({ value = [], onChange }) {
 }
 
 /** ===========================
- *     MAIN COMPONENT
- * ========================== **/
+ * MAIN COMPONENT
+ * ========================== */
 export default function EditProfile() {
     const [loading, setLoading] = useState(true);
     const [initial, setInitial] = useState(null);
@@ -246,36 +246,122 @@ export default function EditProfile() {
     });
 
     /** ---------------------------
-     *    Load the logged-in user
-     * -------------------------- **/
+     * Load the logged-in user and fetch latest profile from server
+     * -------------------------- */
     useEffect(() => {
-        const authed = isAuthed();
-        if (!authed) {
-            setLoading(false);
-            return;
-        }
+        (async () => {
+            try {
+                if (!isAuthed()) {
+                    setLoading(false);
+                    return;
+                }
+                const localUser = getAuthUser();
 
-        const user = getAuthUser();
+                // Base object from local session (fallbacks if server has nothing yet)
+                const baseStart = {
+                    role: localUser.role,
+                    email: localUser.email,
+                    name: localUser.name ?? "",
+                    dob: localUser.dob ?? "",
+                    skills: Array.isArray(localUser.skills)
+                        ? localUser.skills
+                        : [],
+                    occupation: localUser.occupation ?? "",
+                    experience: localUser.experience ?? "",
+                    education: Array.isArray(localUser.education)
+                        ? localUser.education
+                        : [],
+                    domainInterests: Array.isArray(localUser.domainInterests)
+                        ? localUser.domainInterests
+                        : [],
+                };
 
-        // Build starting editable fields
-        const start = {
-            role: user.role,
-            email: user.email,
-            name: user.name || "",
-            dob: user.dob || "",
-            skills: Array.isArray(user.skills) ? user.skills : [],
-            occupation: user.occupation || "",
-            experience: user.experience ?? "",
-            education: Array.isArray(user.education) ? user.education : [],
-            domainInterests: Array.isArray(user.domainInterests)
-                ? user.domainInterests
-                : [],
-        };
+                // Fetch latest from server to prefill with existing data
+                const res = await fetch(
+                    `${API_BASE}/editProfile/profile?email=${encodeURIComponent(localUser.email)}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(getAuthToken()
+                                ? { Authorization: `Bearer ${getAuthToken()}` }
+                                : {}),
+                        },
+                    },
+                );
+                const body = await res.json().catch(() => ({}));
+                // If server returns ok, map fields to UI shape
+                if (res.ok && body?.ok) {
+                    const { user: serverUser, profile } = body.data ?? {};
+                    const role = serverUser?.role ?? baseStart.role;
 
-        setInitial(start);
-        setForm(start);
-        setLoading(false);
-    }, []);
+                    const mappedBack =
+                        role === "learner"
+                            ? {
+                                  // server: profile.domainInterest[] -> UI: skills[]
+                                  occupation:
+                                      profile?.occupation ??
+                                      baseStart.occupation,
+                                  skills: Array.isArray(profile?.domainInterest)
+                                      ? profile.domainInterest
+                                      : baseStart.skills,
+                              }
+                            : {
+                                  // server: profile.experienceYears -> UI: experience (string)
+                                  experience:
+                                      (profile?.experienceYears ??
+                                          baseStart.experience ??
+                                          "") + "",
+                                  // server: profile.skills -> UI: domainInterests[] (mirrored for display)
+                                  skills: Array.isArray(profile?.skills)
+                                      ? profile.skills
+                                      : baseStart.skills,
+                                  domainInterests: Array.isArray(
+                                      profile?.skills,
+                                  )
+                                      ? profile.skills
+                                      : baseStart.domainInterests,
+                                  // server: profile.qualifications -> UI: education[]
+                                  education: Array.isArray(
+                                      profile?.qualifications,
+                                  )
+                                      ? profile.qualifications
+                                      : baseStart.education,
+                              };
+
+                    const merged = {
+                        ...baseStart,
+                        ...mappedBack,
+                        name: serverUser?.name ?? baseStart.name,
+                        dob: serverUser?.dob
+                            ? new Date(serverUser.dob)
+                                  .toISOString()
+                                  .slice(0, 10)
+                            : baseStart.dob,
+                        role,
+                        email: baseStart.email,
+                    };
+
+                    setInitial(merged);
+                    setForm(merged);
+
+                    // Keep local session in sync with server prefill so other screens are consistent
+                    createLocalSession({
+                        user: merged,
+                        token: getAuthToken() ?? "valid",
+                    });
+                } else {
+                    // Fall back to local session only
+                    setInitial(baseStart);
+                    setForm(baseStart);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const role = useMemo(() => initial?.role ?? "learner", [initial]);
 
@@ -286,7 +372,7 @@ export default function EditProfile() {
     function diff(original, current) {
         const out = {};
         Object.keys(current).forEach((k) => {
-            if (k === "role" || k === "email") return; // immutable fields
+            if (k === "role" || k === "email") return; // immutable for this form
             const a = original?.[k];
             const b = current?.[k];
             const changed =
@@ -299,12 +385,11 @@ export default function EditProfile() {
     }
 
     /** ---------------------------
-     *      SAVE PROFILE
-     * -------------------------- **/
+     * SAVE PROFILE
+     * -------------------------- */
     async function save(e) {
         e.preventDefault();
         setAlertState(null);
-
         if (!initial?.email) return;
 
         const changes = diff(initial, form);
@@ -316,21 +401,20 @@ export default function EditProfile() {
         // Build API payload based on current form + role
         const payload = {
             email: initial.email,
-            name: form.name || undefined,
-            dob: form.dob || undefined,
-            // Keep UI names; server will map to model fields by role:
+            name: form.name ?? undefined,
+            dob: form.dob ?? undefined,
             ...(role === "learner"
                 ? {
                       occupation: form.occupation ?? "",
-                      // UI "skills" -> Learner.domainInterest
                       skills: Array.isArray(form.skills) ? form.skills : [],
                   }
                 : {
-                      // UI "experience" -> Instructor.experienceYears
                       experience: form.experience ?? "",
-                      // UI "domainInterests" -> Instructor.skills
                       domainInterests: Array.isArray(form.domainInterests)
                           ? form.domainInterests
+                          : [],
+                      education: Array.isArray(form.education)
+                          ? form.education
                           : [],
                   }),
         };
@@ -349,16 +433,14 @@ export default function EditProfile() {
 
             const body = await res.json().catch(() => ({}));
             if (!res.ok || !body?.ok) {
-                throw new Error(body?.error || "Failed to update profile.");
+                throw new Error(body?.error ?? "Failed to update profile.");
             }
 
-            // Normalize the server response back into the UI shape
-            const { user: serverUser, profile } = body.data || {};
-
+            // Normalize server response back into UI shape
+            const { user: serverUser, profile } = body.data ?? {};
             const mappedBack =
                 role === "learner"
                     ? {
-                          // Server model has domainInterest[]; UI expects domainInterests/skills used in Learner UI
                           occupation:
                               profile?.occupation ?? form.occupation ?? "",
                           skills: Array.isArray(profile?.domainInterest)
@@ -373,29 +455,30 @@ export default function EditProfile() {
                           skills: Array.isArray(profile?.skills)
                               ? profile.skills
                               : [],
-                          // UI has domainInterests under instructor; we map from skills so the chips stay visible
                           domainInterests: Array.isArray(profile?.skills)
                               ? profile.skills
                               : (form.domainInterests ?? []),
+                          education: Array.isArray(profile?.qualifications)
+                              ? profile.qualifications
+                              : (form.education ?? []),
                       };
 
             const updatedUserForLocal = {
-                // Keep the UI’s combined object, driven by your component
                 ...initial,
                 ...form,
                 ...mappedBack,
                 name: serverUser?.name ?? form.name,
                 dob: serverUser?.dob
                     ? new Date(serverUser.dob).toISOString().slice(0, 10)
-                    : form.dob || "",
-                role, // unchanged
+                    : (form.dob ?? ""),
+                role,
                 email: initial.email,
             };
 
             // Persist to local auth store to keep the app state in sync
             createLocalSession({
                 user: updatedUserForLocal,
-                token: getAuthToken() || "valid",
+                token: getAuthToken() ?? "valid",
             });
 
             setInitial(updatedUserForLocal);
@@ -408,17 +491,17 @@ export default function EditProfile() {
             console.error(err);
             setAlertState({
                 type: "danger",
-                message: err.message || "Failed to update profile.",
+                message: err.message ?? "Failed to update profile.",
             });
         }
     }
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return <div>Loading...</div>;
 
     if (!initial) {
         return (
-            <div>
-                <h3>Edit Profile</h3>
+            <div className="container py-4">
+                <h4 className="mb-3">Edit Profile</h4>
                 <p>
                     You’re not signed in. Please sign in to edit your profile.
                 </p>
@@ -426,145 +509,128 @@ export default function EditProfile() {
         );
     }
 
-    if (!initial) {
-        return (
-            <div className="edit-profile-layout">
-                <div className="editcard">
-                    <h2 className="title">Edit Profile</h2>
-                    <p className="muted">
-                        You’re not signed in. Please sign in to edit your
-                        profile.
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="edit-profile-layout">
-            <div className="aurora-bg" />
+        <form
+            className="container py-4"
+            onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
+            }}
+            onSubmit={save}
+        >
+            <h3 className="mb-4">Edit Profile {role}</h3>
 
-            <form
-                className="editcard"
-                onSubmit={save}
-                onKeyDown={(e) => {
-                    // Only Save Changes should submit the form
-                    if (e.key === "Enter") e.preventDefault();
-                }}
-            >
-                <h2 className="title">
-                    Edit Profile <span className="role-pill">{role}</span>
-                </h2>
-
-                {/* Bootstrap Alert */}
-                {alertState && (
-                    <div
-                        className={`alert alert-${alertState.type} alert-dismissible fade show`}
-                        role="alert"
-                        style={{ marginTop: 12 }}
-                    >
-                        {alertState.message}
-                        <button
-                            type="button"
-                            className="btn-close"
-                            aria-label="Close"
-                            onClick={() => setAlertState(null)}
-                        />
-                    </div>
-                )}
-
-                {/* Common fields */}
-                <div className="form-group">
-                    <label className="label">Name (optional)</label>
-                    <input
-                        type="text"
-                        value={form.name}
-                        onChange={(e) => patch("name", e.target.value)}
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label className="label">Date of Birth (optional)</label>
-                    <input
-                        type="date"
-                        value={form.dob || ""}
-                        onChange={(e) => patch("dob", e.target.value)}
-                    />
-                </div>
-
-                {/* Learner */}
-                {role === "learner" && (
-                    <>
-                        <SkillsInput
-                            label="Skills (optional)"
-                            value={form.skills}
-                            onChange={(v) => patch("skills", v)}
-                        />
-
-                        <div className="form-group">
-                            <label className="label">
-                                Occupation (optional)
-                            </label>
-                            <input
-                                type="text"
-                                value={form.occupation}
-                                onChange={(e) =>
-                                    patch("occupation", e.target.value)
-                                }
-                            />
-                        </div>
-                    </>
-                )}
-
-                {/* Instructor */}
-                {role === "instructor" && (
-                    <>
-                        <div className="form-group">
-                            <label className="label">
-                                Experience (years, optional)
-                            </label>
-                            <input
-                                type="number"
-                                value={form.experience}
-                                onChange={(e) =>
-                                    patch("experience", e.target.value)
-                                }
-                            />
-                        </div>
-
-                        <EducationRepeater
-                            value={form.education}
-                            onChange={(v) => patch("education", v)}
-                        />
-
-                        <TagInput
-                            label="Domain Interests (optional)"
-                            value={form.domainInterests}
-                            onChange={(v) => patch("domainInterests", v)}
-                        />
-                    </>
-                )}
-
-                <div className="actions">
-                    <button type="submit" className="btn primary">
-                        Save Changes
-                    </button>
+            {/* Alert */}
+            {alertState && (
+                <div
+                    className={`alert alert-${alertState.type} d-flex justify-content-between align-items-center`}
+                    role="alert"
+                >
+                    <span>{alertState.message}</span>
                     <button
                         type="button"
-                        className="btn ghost"
-                        onClick={() => {
-                            setForm(initial);
-                            setAlertState(null);
-                        }}
-                    >
-                        Reset
-                    </button>
+                        className="btn-close"
+                        aria-label="Close"
+                        onClick={() => setAlertState(null)}
+                    />
                 </div>
+            )}
 
-                <p className="footnote muted">
-                    All fields are optional — update only what you want.
-                </p>
-            </form>
-        </div>
+            {/* Common fields */}
+            <div className="mb-3">
+                <label className="form-label fw-semibold">
+                    Name (optional)
+                </label>
+                <input
+                    className="form-control"
+                    value={form.name}
+                    onChange={(e) => patch("name", e.target.value)}
+                />
+            </div>
+
+            <div className="mb-3">
+                <label className="form-label fw-semibold">
+                    Date of Birth (optional)
+                </label>
+                <input
+                    type="date"
+                    className="form-control"
+                    value={form.dob}
+                    onChange={(e) => patch("dob", e.target.value)}
+                />
+            </div>
+
+            {/* Learner */}
+            {role === "learner" && (
+                <>
+                    <SkillsInput
+                        label="Skills (optional)"
+                        value={form.skills}
+                        onChange={(v) => patch("skills", v)}
+                    />
+                    <div className="mb-3">
+                        <label className="form-label fw-semibold">
+                            Occupation (optional)
+                        </label>
+                        <input
+                            className="form-control"
+                            value={form.occupation}
+                            onChange={(e) =>
+                                patch("occupation", e.target.value)
+                            }
+                        />
+                    </div>
+                </>
+            )}
+
+            {/* Instructor */}
+            {role === "instructor" && (
+                <>
+                    <div className="mb-3">
+                        <label className="form-label fw-semibold">
+                            Experience (years, optional)
+                        </label>
+                        <input
+                            className="form-control"
+                            value={form.experience}
+                            onChange={(e) =>
+                                patch("experience", e.target.value)
+                            }
+                        />
+                    </div>
+
+                    {/* Existing qualifications will appear here and can be edited/added/removed */}
+                    <EducationRepeater
+                        value={form.education}
+                        onChange={(v) => patch("education", v)}
+                    />
+
+                    <TagInput
+                        label="Domain Interests (optional)"
+                        value={form.domainInterests}
+                        onChange={(v) => patch("domainInterests", v)}
+                    />
+                </>
+            )}
+
+            <div className="d-flex gap-2">
+                <button type="submit" className="btn btn-primary">
+                    Save Changes
+                </button>
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => {
+                        setForm(initial);
+                        setAlertState(null);
+                    }}
+                >
+                    Reset
+                </button>
+            </div>
+
+            <p className="text-muted mt-3">
+                All fields are optional — update only what you want.
+            </p>
+        </form>
     );
 }
