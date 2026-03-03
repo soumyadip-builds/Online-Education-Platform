@@ -144,7 +144,7 @@ const AuthPage = () => {
                     // Unknown/unsupported role
                     navigate("/not-authorized", { replace: true });
                 }
-            }, 1000); // Small delay to ensure toast is visible before navigation
+            }, 1000);
         } catch (err) {
             setLoginStatus({
                 type: "error",

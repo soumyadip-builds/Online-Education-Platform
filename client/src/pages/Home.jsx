@@ -56,16 +56,6 @@ const heroSlides = [
 	},
 ];
 
-const categories = [
-	{ key: 'genai', title: 'Generative AI', img: GenAI },
-	{ key: 'it-cert', title: 'IT Certifications', img: ITCert },
-	{ key: 'data', title: 'Data Science', img: DataScience },
-	{ key: 'chatgpt', title: 'ChatGPT', img: ChatGPT },
-	{ key: 'prompt', title: 'Prompt Engineering', img: PromptEng },
-	{ key: 'ml', title: 'Machine Learning', img: MachineLearning },
-	{ key: 'aiagents', title: 'AI Agents', img: AiAgents },
-];
-
 const logos = [
 	{ key: 'samsung', alt: 'Samsung', src: Samsung },
 	{ key: 'cisco', alt: 'Cisco', src: Cisco },
@@ -117,12 +107,10 @@ const testimonials = [
 
 export default function Home() {
 	const [heroIndex, setHeroIndex] = useState(0);
-	const [catIndex, setCatIndex] = useState(0);
 	const [activeTab, setActiveTab] = useState('all');
 
 	const navigate = useNavigate();
 
-	const catRef = useRef(null);
 	const courseRowRef = useRef(null);
 
 	const [courses, setcourses] = useState([]);
@@ -182,9 +170,6 @@ export default function Home() {
 
 	return (
 		<main className="home">
-			{/* <div className="nav-spacer">
-				<NavbarComponent />
-			</div> */}
 
 			{/* HERO SECTION */}
 			<section className="hero" aria-roledescription="carousel">
@@ -246,17 +231,6 @@ export default function Home() {
 					</svg>
 				</button>
 
-				<div className="dots" role="tablist" aria-label="Hero slides">
-					{heroSlides.map((_, i) => (
-						<button
-							key={i}
-							className={`dot ${heroIndex === i ? 'active' : ''}`}
-							aria-label={`Go to slide ${i + 1}`}
-							aria-selected={heroIndex === i}
-							onClick={() => setHeroIndex(i)}
-						/>
-					))}
-				</div>
 			</section>
 
 			{/* COURSES / TABS */}
@@ -310,11 +284,6 @@ export default function Home() {
 							</div>
 						))}
 					</div>
-					{/* <div className="row-track" ref={courseRowRef}>
-						{filteredcourses.map((c) => (
-							<CourseCard key={c.id} course={c} />
-						))}
-					</div> */}
 
 					<button
 						className="row-arrow right"
@@ -421,7 +390,7 @@ export default function Home() {
 				<div className="accel-grid">
 					{[
 						{
-							title: 'Full‑Stack Web Developer',
+							title: 'Full-Stack Web Developer',
 							rating: 4.7,
 							hours: '88 total hours',
 							src: Acc1,
@@ -474,10 +443,6 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* Footer */}
-			{/* <div className="footer-spacer">
-				<Footer />
-			</div> */}
 		</main>
 	);
 }

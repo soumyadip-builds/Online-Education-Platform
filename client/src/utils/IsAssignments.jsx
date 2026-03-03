@@ -1,5 +1,5 @@
 
-// Minimal LocalStorage helper (in-memory "db" in browser)
+//LocalStorage helper
 const LS_KEY = 'cb_assignments_v1';
 
 function lsLoad() {

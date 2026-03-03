@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /** Time helpers */
 export const toMinutes = (hours = 0, minutes = 0) => {
   const h = Number(hours) || 0;
@@ -18,64 +19,66 @@ export const formatDuration = (total = 0) => {
 };
 
 /** Duration input component */
-export const DurationField = ({
+export function DurationField({
   id,
-  valueMinutes = 0,
+  valueMinutes,
   onChangeMinutes,
   minuteStep = 5,
-  maxHours = 24,
-}) => {
-  const { hours, minutes } = minutesToParts(valueMinutes);
-  const mins = [];
-  for (let i = 0; i < 60; i += minuteStep) mins.push(i);
+  maxHours = 12,
+}) {
+  const total = Number(valueMinutes) || 0;
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+
+  const minuteOptions = [];
+  for (let m = 0; m < 60; m += minuteStep) minuteOptions.push(m);
+
+  const hourOptions = [];
+  for (let h = 0; h <= maxHours; h++) hourOptions.push(h);
+
+  const safeMinutes = minuteOptions.includes(minutes) ? minutes : 0;
+  const safeHours = hours > maxHours ? maxHours : hours;
+
+  const setHours = (h) => onChangeMinutes(h * 60 + safeMinutes);
+  const setMins = (m) => onChangeMinutes(safeHours * 60 + m);
 
   return (
     <div
-      className="duration-field cb-duration"
-      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+      className="cb-duration"
+      style={{ display: "flex", gap: 6, alignItems: "center" }}
     >
-      <label className="sr-only" htmlFor={`${id}-h`}>
-        Hours
-      </label>
-      <input
-        id={`${id}-h`}
-        type="number"
-        min={0}
-        max={maxHours}
-        step={1}
-        value={hours}
-        onChange={(e) =>
-          onChangeMinutes?.(toMinutes(Math.max(0, +e.target.value || 0), minutes))
-        }
-        className="assignment-card-input"
-        style={{ width: 56, textAlign: "right" }}
-        aria-label="Hours"
-      />
-      <span className="duration-field__suffix">h</span>
-
-      <label className="sr-only" htmlFor={`${id}-m`}>
-        Minutes
-      </label>
+      {/* Hours dropdown */}
       <select
-        id={`${id}-m`}
-        value={Math.min(59, minutes)}
-        onChange={(e) =>
-          onChangeMinutes?.(toMinutes(hours, Math.max(0, +e.target.value || 0)))
-        }
-        className="assignment-card-select"
-        aria-label="Minutes"
-        style={{ width: 64 }}
+        id={id ? `${id}-h` : undefined}
+        className="assignment-card-input cb-duration__select"
+        value={safeHours}
+        onChange={(e) => setHours(Number(e.target.value))}
+        aria-label="Hours"
       >
-        {mins.map((m) => (
-          <option key={m} value={m}>
-            {m}
+        {hourOptions.map((h) => (
+          <option key={h} value={h}>
+            {h}h
           </option>
         ))}
       </select>
-      <span className="duration-field__suffix">m</span>
+
+      {/* Minutes dropdown */}
+      <select
+        id={id ? `${id}-m` : undefined}
+        className="assignment-card-input cb-duration__select"
+        value={safeMinutes}
+        onChange={(e) => setMins(Number(e.target.value))}
+        aria-label="Minutes"
+      >
+        {minuteOptions.map((m) => (
+          <option key={m} value={m}>
+            {m}m
+          </option>
+        ))}
+      </select>
     </div>
   );
-};
+}
 
 /** ID helpers + empty models */
 export const uid = () => Math.random().toString(36).slice(2, 10);
