@@ -26,7 +26,11 @@ import { getCurrentUser, getUserByEmail } from "../utils/session";
  */
 
 function safeJSONParse(raw) {
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 function getWho(email) {
   return email || "anonymous";
@@ -115,8 +119,10 @@ export default function StudentMetrics() {
 
   const [metricsVersion, setMetricsVersion] = useState(0);
 
+  // Fetch base datasets
   useEffect(() => {
     let alive = true;
+
     (async () => {
       try {
         setLoading(true);
@@ -128,9 +134,9 @@ export default function StudentMetrics() {
           fetch("/data/quizData.json"),
         ]);
 
-        if (!cRes.ok) throw new Error(`Failed to load courseDetails.json`);
-        if (!aRes.ok) throw new Error(`Failed to load assignmentData.json`);
-        if (!qRes.ok) throw new Error(`Failed to load quizData.json`);
+        if (!cRes.ok) throw new Error("Failed to load courseDetails.json");
+        if (!aRes.ok) throw new Error("Failed to load assignmentData.json");
+        if (!qRes.ok) throw new Error("Failed to load quizData.json");
 
         const [cJson, aJson, qJson] = await Promise.all([
           cRes.json(),
@@ -139,17 +145,21 @@ export default function StudentMetrics() {
         ]);
 
         if (!alive) return;
+
         setCourses(Array.isArray(cJson) ? cJson : []);
         setAssignments(Array.isArray(aJson) ? aJson : []);
         setQuizzes(Array.isArray(qJson) ? qJson : []);
       } catch (e) {
         if (!alive) return;
-        setErr(e.message || "Failed to load metrics.");
+        setErr(e?.message || "Failed to load metrics.");
       } finally {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // Enrolled courses from profile
@@ -243,7 +253,13 @@ export default function StudentMetrics() {
       const moduleMap = new Map();
       function ensureModule(name) {
         const key = name || "General";
-        if (!moduleMap.has(key)) moduleMap.set(key, { moduleTitle: key, quizzes: [], assignments: [] });
+        if (!moduleMap.has(key)) {
+          moduleMap.set(key, {
+            moduleTitle: key,
+            quizzes: [],
+            assignments: [],
+          });
+        }
         return moduleMap.get(key);
       }
 
@@ -309,7 +325,9 @@ export default function StudentMetrics() {
         <div className="sm-card">
           <h2 className="sm-title">My Dashboard</h2>
           <p className="sm-alert sm-alert--err">{err}</p>
-          <Link to="/" className="sm-link">← Back</Link>
+          <Link to="/" className="sm-link">
+            ← Back
+          </Link>
         </div>
       </div>
     );
@@ -320,7 +338,9 @@ export default function StudentMetrics() {
       <div className="sm-card">
         <div className="sm-header">
           <h2 className="sm-title">My Dashboard</h2>
-          <Link to="/" className="sm-link">← Back</Link>
+          <Link to="/" className="sm-link">
+            ← Back
+          </Link>
         </div>
 
         {courseMetrics.length === 0 ? (
@@ -354,7 +374,13 @@ export default function StudentMetrics() {
                     </div>
                   </button>
 
-                  <div className="sm-progressBar" role="progressbar" aria-valuenow={cm.progressPct} aria-valuemin={0} aria-valuemax={100}>
+                  <div
+                    className="sm-progressBar"
+                    role="progressbar"
+                    aria-valuenow={cm.progressPct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
                     <div className="sm-progressFill" style={{ width: `${cm.progressPct}%` }} />
                   </div>
 

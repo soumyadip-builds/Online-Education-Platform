@@ -1,4 +1,6 @@
-
+/* =========================================================
+   THEME TOKENS
+========================================================= */
 :root {
   --bg: #f7f7fb;
   --bg-2: #ffffff;
@@ -10,14 +12,20 @@
   --shadow: rgba(0,0,0,0.18);
 }
 
-/* GLOBAL */
+/* =========================================================
+   GLOBAL
+========================================================= */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  background: var(--bg);
+  color: var(--text);
 }
 
-/* PAGE BG */
+/* =========================================================
+   PAGE BACKDROP
+========================================================= */
 .assignment-card-page {
   min-height: 100vh;
   width: 100%;
@@ -31,7 +39,9 @@ html, body {
     radial-gradient(900px 380px at 0% 110%, rgba(14,165,233,0.10), transparent 60%);
 }
 
-/* CARD */
+/* =========================================================
+   CARD
+========================================================= */
 .assignment-card {
   width: 100%;
   background: var(--bg-2);
@@ -48,7 +58,9 @@ html, body {
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
 
-/* HEADER */
+/* =========================================================
+   HEADER
+========================================================= */
 .assignment-card__header {
   display: flex;
   justify-content: space-between;
@@ -70,24 +82,27 @@ html, body {
   font-size: clamp(12px, 1.6vw, 14px);
 }
 
-/* GRID */
-.assignment-card__grid {
-  display: grid;
-  gap: 18px;
-}
-@media (min-width: 900px) {
-  .assignment-card__grid { grid-template-columns: 1fr 1fr; }
-}
-
+/* =========================================================
+   LAYOUT (Bootstrap handles grid; keep only light wrappers)
+========================================================= */
 .assignment-card__group {
   display: flex;
   flex-direction: column;
 }
 
-.assignment-card__group--full {
-  grid-column: 1 / -1;
+/* Work Type row: centered label + toggle (kept) */
+.assignment-card__worktype-row {
+  display: flex;
+  flex-direction: column;  /* label on top, toggle below */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 8px;
 }
 
+/* =========================================================
+   LABELS
+========================================================= */
 .assignment-card__label {
   font-size: 13px;
   color: var(--muted);
@@ -95,7 +110,9 @@ html, body {
   font-weight: 700;
 }
 
-/* INPUTS */
+/* =========================================================
+   FORM INPUTS
+========================================================= */
 .assignment-card-input,
 .assignment-card-select,
 .assignment-card-textarea {
@@ -107,6 +124,7 @@ html, body {
   font-size: 14px;
   box-shadow: 0 1px 0 rgba(31,41,55,0.04);
   transition: box-shadow 120ms ease, border-color 120ms ease;
+
 }
 
 .assignment-card-input:focus,
@@ -133,42 +151,14 @@ html, body {
   resize: vertical;
 }
 
-/* FILE INPUT */
+/* File input aligns visually with others */
 .assignment-card-file {
   padding: 6px 0;
 }
 
-/* RADIO BUTTONS */
-.assignment-card__radio-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.assignment-card__radio-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--bg) 70%, white 30%);
-  border: 1px solid rgba(31,41,55,0.10);
-}
-
-.assignment-card__radio-input-native {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.assignment-card__radio-visual {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
-}
-
-/* BUTTONS */
+/* =========================================================
+   BUTTONS
+========================================================= */
 .assignment-card__actions {
   margin-top: 20px;
   display: flex;
@@ -197,7 +187,9 @@ html, body {
   font-weight: 700;
 }
 
-/* MESSAGES */
+/* =========================================================
+   MESSAGES
+========================================================= */
 .assignment-card__msg-error,
 .assignment-card__msg-success {
   margin-top: 12px;
@@ -217,10 +209,9 @@ html, body {
   border: 1px solid rgba(16,185,129,0.35);
 }
 
-/* =============================
+/* =========================================================
    QUIZ EDITOR
-============================== */
-
+========================================================= */
 .quiz-editor {
   margin-top: 20px;
   padding: 20px;
@@ -230,6 +221,7 @@ html, body {
   box-shadow: 0 6px 18px var(--shadow);
 }
 
+/* Keep header layout; Bootstrap utilities supplement spacing */
 .quiz-editor__header {
   display: flex;
   justify-content: space-between;
@@ -243,28 +235,7 @@ html, body {
   font-size: clamp(18px, 2vw, 22px);
 }
 
-.quiz-editor__grid {
-  display: grid;
-  gap: 16px;
-  margin-top: 12px;
-}
-@media (min-width: 900px) {
-  .quiz-editor__grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.quiz-editor__group {
-  display: flex;
-  flex-direction: column;
-}
-
-.quiz-editor__toggles {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
+/* Toggle chip + checkbox */
 .quiz-editor__toggle {
   display: inline-flex;
   align-items: center;
@@ -281,7 +252,7 @@ html, body {
   accent-color: var(--accent);
 }
 
-/* Total Points */
+/* Total points chip */
 .quiz-editor__totals {
   display: flex;
   align-items: center;
@@ -303,7 +274,7 @@ html, body {
   font-weight: 800;
 }
 
-/* QUESTIONS */
+/* Scrollable questions list */
 .quiz-editor__questions {
   max-height: 50vh;
   overflow-y: auto;
@@ -313,17 +284,23 @@ html, body {
   background: color-mix(in srgb, var(--bg-2) 92%, var(--bg) 8%);
   border: 1px solid rgba(31,41,55,0.08);
 }
-
 .quiz-editor__questions::-webkit-scrollbar {
   width: 8px;
 }
-
 .quiz-editor__questions::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--accent) 35%, transparent);
   border-radius: 4px;
 }
 
-/* QUESTION CARD */
+/* Questions section header */
+.quiz-options__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+/* Question card */
 .quiz-question {
   margin-top: 14px;
   padding: 16px;
@@ -352,39 +329,15 @@ html, body {
   justify-content: center;
 }
 
+/* Let Bootstrap's .btn styles handle the remove button appearance */
 .quiz-question__remove {
-  background: transparent;
-  color: #ef4444;
-  border: 1px solid rgba(239,68,68,0.45);
-  padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
+  /* Intentionally minimal so .btn classes take over */
 }
 
-/* QUESTION GRID */
-.quiz-question__grid {
-  display: grid;
-  gap: 12px;
-}
-@media (min-width: 900px) {
-  .quiz-question__grid {
-    grid-template-columns: 2fr 1fr 1fr;
-  }
-}
+/* Options list */
+.quiz-options { margin-top: 8px; }
 
-/* OPTIONS */
-.quiz-options {
-  margin-top: 8px;
-}
-
-.quiz-options__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px; /* improved spacing */
-}
-
-/* OPTION ROW */
+/* Option row layout (kept for precise alignment) */
 .quiz-option {
   display: grid;
   grid-template-columns: 24px 1fr 36px;
@@ -399,9 +352,10 @@ html, body {
   width: 20px;
   height: 20px;
   accent-color: var(--accent);
-  margin-top: 1px; /* vertical alignment fix */
+  margin-top: 1px; /* vertical align tweak */
 }
 
+/* Combined with .form-control in JSX */
 .quiz-option__text {
   width: 100%;
   min-width: 0;
@@ -413,22 +367,18 @@ html, body {
   align-items: center;
 }
 
+/* Combined with .btn in JSX; keep square look */
 .quiz-option__remove {
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(31,41,55,0.15);
   border-radius: 10px;
-  cursor: pointer;
-  background: transparent;
 }
 
 @media (max-width: 420px) {
-  .quiz-option {
-    grid-template-columns: 24px 1fr;
-  }
+  .quiz-option { grid-template-columns: 24px 1fr; }
   .quiz-option__remove {
     grid-column: 2;
     justify-self: end;
@@ -436,8 +386,14 @@ html, body {
   }
 }
 
+/* Optional handle focus ring (if you use draggable handles) */
+.quiz-question__handle:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
 
-/* CourseBuilder modal */
+/* =========================================================
+   COURSE BUILDER MODAL (kept if used elsewhere)
+========================================================= */
 .cb-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; }
 .cb-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
 .cb-modal__panel {
@@ -453,14 +409,9 @@ html, body {
 .cb-modal__header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
 .cb-modal__body { overflow: auto; padding: 12px 16px; }
 
-/* Optional: make the module/item handle look consistent */
-.quiz-question__handle:focus { outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
-
-
-
-/* =============================
-   Segmented Control (Work Type)
-============================= */
+/* =========================================================
+   SEGMENTED CONTROL (WORK TYPE) — KEEP AS-IS
+========================================================= */
 .ac-segment {
   display: inline-flex;
   align-items: center;
@@ -476,7 +427,6 @@ html, body {
   position: relative;
   display: inline-flex;
   align-items: center;
-  /* Spread click target */
   cursor: pointer;
   user-select: none;
   border-radius: 999px;
@@ -504,60 +454,33 @@ html, body {
   transition: all 160ms ease;
 }
 
-/* Focus ring (keyboard a11y) */
+/* Keyboard focus */
 .ac-segment__option:focus-within .ac-segment__text {
   outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
   outline-offset: 2px;
 }
 
-/* Selected state -> gradient pill, white text */
+/* Selected pill */
 .ac-segment__input:checked + .ac-segment__text {
   color: #fff;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   box-shadow: 0 6px 18px var(--shadow);
 }
 
-/* Hover nudge on unselected */
-.ac-segment__option:hover .ac-segment__text {
-  background: color-mix(in srgb, var(--bg) 20%, var(--bg-2) 80%);
-}
-
-/* Inline group: label + control on one line */
-.assignment-card__group--inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* Keep label tight when inline */
-.assignment-card__group--inline .assignment-card__label {
-  margin: 0;
-}
-
-/* Responsive nicety for small screens */
+/* Small-screen nicety */
 @media (max-width: 520px) {
-  .ac-segment__text {
-    padding: 8px 12px;
-  }
+  .ac-segment__text { padding: 8px 12px; }
+}
+#estimatedMinutes {
+  min-width: 180px;
+  max-width: 260px;
 }
 
 
-.assignment-card__group--inline {
-  display: flex;
-  align-items: center;
-  justify-content: center;   /* Center horizontally */
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* =========================================================
+   SMALL UTILITIES
+========================================================= */
+.cb-module-title-input { min-width: 240px; font-weight: 600; }
+.cb-module-desc-input { width: 100%; resize: vertical; }
+.cb-duration__select   { width: 78px; padding: 6px 8px; }
 
-
-/* Make Work Type row full-width AND center the contents */
-.assignment-card__worktype-row {
-  display: flex;
-  flex-direction: column;     /* Label on top, toggle below */
-  align-items: center;        /* Center horizontally */
-  justify-content: center;
-  text-align: center;
-  padding-bottom: 8px;
-}
