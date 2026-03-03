@@ -1,17 +1,13 @@
 // model/CourseModel.js
 const mongoose = require('mongoose');
 
-// If you keep ItemSchema for non-work content (e.g., video/reading), keep it as-is.
-// Consider narrowing the enum to only content types you still embed.
+// --- ItemSchema & ModuleSchema remain unchanged ---
 const ItemSchema = new mongoose.Schema(
   {
-    // Allow work types as well so course modules can embed assignments/quizzes
     type: { type: String, enum: ['video', 'reading', 'assignment', 'quiz'], required: true },
     title: { type: String, required: true, trim: true },
     url: { type: String, default: '' },
-    // allow zero so drafts or placeholders don't fail validation
     estimatedMinutes: { type: Number, min: 0, required: true },
-    // external reference id (can be ObjectId string or local client id like 'local_...')
     refId: { type: String, default: null },
   },
   { _id: false }
@@ -26,6 +22,7 @@ const ModuleSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// --- CourseSchema with upload enabled for thumbnail.mode ---
 const CourseSchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
@@ -35,16 +32,21 @@ const CourseSchema = new mongoose.Schema(
     learningOutcomes: { type: [String], default: [] },
 
     thumbnail: {
-      mode: { type: String, enum: ['link'], default: 'link' },
+      // ✅ add 'upload' support
+      mode: { type: String, enum: ['link', 'upload'], default: 'link' },
+
+      // For mode='link'
       link: { type: String, default: '' },
+
+      // For mode='upload' 
+      fileName: { type: String, default: '' }, // display name
+   
     },
 
-    // Keep modules for non-work content
     modules: { type: [ModuleSchema], default: [] },
 
-    // NEW: external references
-    assignments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', index: true, default: [] }],
-    quizzes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quiz', index: true, default: [] }],
+    // assignments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', index: true, default: [] }],
+    // quizzes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quiz', index: true, default: [] }],
 
     totalEstimatedMinutes: { type: Number, default: 0 },
     counts: {
@@ -53,12 +55,12 @@ const CourseSchema = new mongoose.Schema(
       assignments: { type: Number, default: 0 },
       quizzes: { type: Number, default: 0 },
     },
-    status: { type: String, enum: ['published', 'draft'], default: 'draft' },
+    // status removed per your earlier change
   },
   { timestamps: true }
 );
 
-CourseSchema.index({ owner: 1, createdAt: -1 }); // helpful index
+CourseSchema.index({ owner: 1, createdAt: -1 });
 
 CourseSchema.set('toJSON', {
   virtuals: true,

@@ -10,7 +10,7 @@ import {
   uid,
 } from "./courseBuilderShared";
 
-export default function CourseModulesBuilder({ modules, setModules, showToast }) {
+export default function CourseModulesBuilder({ modules, setModules }) {
   const [aqModal, setAqModal] = useState({ open: false, moduleId: null });
   const openAQ = (mid) => setAqModal({ open: true, moduleId: mid });
   const closeAQ = () => setAqModal({ open: false, moduleId: null });
@@ -31,7 +31,9 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
   /** Item ops */
   const addItem = (mid, type) =>
     setModules((prev) =>
-      prev.map((m) => (m.id === mid ? { ...m, items: [...m.items, emptyItem(type)] } : m))
+      prev.map((m) =>
+        m.id === mid ? { ...m, items: [...m.items, emptyItem(type)] } : m
+      )
     );
 
   const rmItem = (mid, iid) =>
@@ -63,12 +65,12 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
       const mid = aqModal.moduleId;
       if (!mid) return;
 
+      const createdType = (created?.type || "").toLowerCase() === "quiz" ? "quiz" : "assignment";
+
       const newItem = {
         id: "i_" + uid(),
-        type: created?.type === "quiz" ? "quiz" : "assignment",
-        title:
-          created?.title ||
-          (created?.type === "quiz" ? "New Quiz" : "New Assignment"),
+        type: createdType, // normalized
+        title: created?.title || (createdType === "quiz" ? "New Quiz" : "New Assignment"),
         url: "",
         estimatedMinutes: Number(created?.estimatedMinutes) || 30,
         refId: created?.id ?? null,
@@ -80,9 +82,8 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
       );
 
       closeAQ();
-      showToast?.(`${newItem.type === "quiz" ? "Quiz" : "Assignment"} added`);
     },
-    [aqModal.moduleId, setModules, showToast]
+    [aqModal.moduleId, setModules]
   );
 
   return (
@@ -130,9 +131,7 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                     {m.collapsed ? ICONS.chevronRight : ICONS.chevronDown}
                   </button>
 
-                  <span className="badge rounded-pill">
-                    {mIdx + 1}
-                  </span>
+                  <span className="badge rounded-pill">{mIdx + 1}</span>
 
                   {/* Module title */}
                   <input
@@ -151,7 +150,6 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                     onBlur={(e) => {
                       const text = (e.currentTarget.value || "").trim();
                       patchModule(m.id, { title: text });
-                      showToast?.("Module title saved");
                     }}
                   />
 
@@ -166,9 +164,7 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                     type="button"
                     className="btn btn-outline-danger btn-sm"
                     title={
-                      disableDelete
-                        ? "At least one module is required"
-                        : "Delete module"
+                      disableDelete ? "At least one module is required" : "Delete module"
                     }
                     aria-label="Delete module"
                     onClick={() => rmModule(m.id)}
@@ -198,7 +194,6 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                       onBlur={(e) => {
                         const text = (e.currentTarget.value || "").trim();
                         patchModule(m.id, { description: text });
-                        showToast?.("Module description saved");
                       }}
                     />
                   </div>
@@ -223,7 +218,6 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                       return (
                         <li key={it.id} className="list-group-item">
                           <div className="d-flex align-items-center gap-2 flex-wrap">
-
                             {/* Type badge */}
                             <span
                               className={`badge ${typeBadgeClass}`}
@@ -257,7 +251,6 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                                     if (e.key === "Enter") {
                                       e.preventDefault();
                                       patchItem(m.id, it.id, { editing: false });
-                                      showToast?.("Item saved");
                                     }
                                   }}
                                 />
@@ -309,7 +302,6 @@ export default function CourseModulesBuilder({ modules, setModules, showToast })
                                       if (e.key === "Enter") {
                                         e.preventDefault();
                                         patchItem(m.id, it.id, { editing: false });
-                                        showToast?.("Item saved");
                                       }
                                     }}
                                   />

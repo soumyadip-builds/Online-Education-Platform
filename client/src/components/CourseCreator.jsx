@@ -8,35 +8,6 @@ import { recordCourseCreated } from "../utils/userStorage";
 import { useNavigate } from "react-router-dom";
 import { createCourse } from "../api/courses";
 
-/* ===========================
-   Small Floating Toast
-   (auto hides; accessible)
-=========================== */
-function FloatingToast({ message, type = "success", onClose }) {
-  if (!message) return null;
-  const isError = type === "error";
-  return (
-    <div
-      className={`cb-toast ${isError ? "cb-toast--error" : "cb-toast--success"}`}
-      role={isError ? "alert" : "status"}
-      aria-live={isError ? "assertive" : "polite"}
-      aria-atomic="true"
-    >
-      <div className="cb-toast__icon">{isError ? "⚠️" : "✅"}</div>
-      <div className="cb-toast__text">{message}</div>
-      <button
-        type="button"
-        className="cb-toast__close"
-        aria-label="Close"
-        onClick={onClose}
-        title="Dismiss"
-      >
-        ×
-      </button>
-    </div>
-  );
-}
-
 export default function CourseCreation() {
   const navigate = useNavigate();
 
@@ -51,34 +22,18 @@ export default function CourseCreation() {
   const [outcomeKeys, setOutcomeKeys] = useState([Date.now()]);
   const [saving, setSaving] = useState(false);
 
-  // ✅ Floating toast state
-  const [toast, setToast] = useState({ msg: "", type: "success" });
+  // ✅ Thumbnail mode toggle (link | upload)
+  const [thumbMode, setThumbMode] = useState("link");
+  const [thumbLink, setThumbLink] = useState("");
+  const [thumbFile, setThumbFile] = useState(null);
+  const [thumbPreviewUrl, setThumbPreviewUrl] = useState("");
 
-  // ✅ Segmented toggle UI state
-  const [publishSelected, setPublishSelected] = useState("draft");
-
-  const showToast = (msg, type = "success", duration = 1600) => {
-    setToast({ msg, type });
-    if (duration > 0) {
-      window.clearTimeout(showToast._t);
-      showToast._t = window.setTimeout(
-        () => setToast({ msg: "", type: "success" }),
-        duration,
-      );
-    }
-  };
-
+  // Clean up object URL on unmount/change
   useEffect(() => {
-    const handler = (e) => {
-      const { msg, type = "success", duration = 1600 } = e.detail || {};
-      if (msg) showToast(msg, type, duration);
-    };
-    window.addEventListener("cb:notify", handler);
     return () => {
-      window.removeEventListener("cb:notify", handler);
-      window.clearTimeout(showToast._t);
+      if (thumbPreviewUrl) URL.revokeObjectURL(thumbPreviewUrl);
     };
-  }, []);
+  }, [thumbPreviewUrl]);
 
   const addOutcome = () => setOutcomeKeys((prev) => [...prev, Date.now()]);
   const rmOutcome = (idx) =>
@@ -96,7 +51,8 @@ export default function CourseCreation() {
     [modules],
   );
 
-  // Derived: counts by item type
+  // ✅ You can still keep this grouped memo if used elsewhere in UI.
+  // We won't rely on it for payload counts (we compute counts from normalized modules in handleSave).
   const grouped = useMemo(() => {
     const out = { Videos: [], Documentation: [], Assignments: [], Quizzes: [] };
     modules.forEach((m) =>
@@ -135,82 +91,120 @@ export default function CourseCreation() {
       });
     });
 
+    // Thumbnail validation (optional): no hard requirement, but if link mode and entered, basic check
+    if (thumbMode === "link" && thumbLink) {
+      try {
+        // rudimentary URL format check
+        const u = new URL(thumbLink);
+        if (!/^https?:/.test(u.protocol)) throw new Error("Invalid URL");
+      } catch {
+        errors.push("Thumbnail link must be a valid URL.");
+      }
+    }
+
+    // If in upload mode and file selected, ensure it's an image
+    if (thumbMode === "upload" && thumbFile) {
+      if (!thumbFile.type.startsWith("image/")) {
+        errors.push("Uploaded thumbnail must be an image file.");
+      }
+    }
+
     return errors;
   };
 
-  // Save course
+  // Save course (JSON-only; Upload mode records file name only)
   const handleSave = async (e) => {
     e.preventDefault();
 
     const fd = new FormData(formRef.current);
     const errors = validate(fd);
     if (errors.length) {
-      showToast(errors[0], "error", 2400); // show just first error for brevity
+      console.warn("Validation error:", errors[0]);
       return;
     }
 
     const title = (fd.get("title") || "").trim();
     const description = (fd.get("description") || "").trim();
-    const publishMode = fd.get("publishMode") || "draft";
-    const thumbnailMode = "link"; // upload disabled per requirement
-    const thumbnailLink = (fd.get("thumbnailLink") || "").trim();
     const learningOutcomes = (fd.getAll("outcomes[]") || [])
       .map((s) => (s || "").trim())
       .filter(Boolean);
 
-    const status = publishMode === "publish" ? "published" : "draft";
+    const thumbnailMode = thumbMode; // 'link' | 'upload'
+    const thumbnailLink =
+      thumbnailMode === "link" ? (thumbLink || "").trim() : "";
+    const uploadedFile =
+      thumbnailMode === "upload" ? fd.get("thumbnailFile") || null : null;
+
+    // Normalize modules
+    const normalizedModules = modules.map((m) => ({
+      ...m,
+      title: m.title.trim(),
+      description: (m.description ?? "").trim(),
+      items: m.items.map((it) => ({
+        ...it,
+        title: it.title.trim(),
+        url: it.url?.trim() || "",
+        estimatedMinutes: Number(it.estimatedMinutes) || 0,
+        refId: it.refId ?? null,
+        type: (it.type || "").toLowerCase(), // 'video'|'reading'|'assignment'|'quiz'
+      })),
+    }));
+
+    // Totals & counts from normalizedModules
+    const totalEstimatedMinutes = normalizedModules.reduce(
+      (sum, m) =>
+        sum +
+        m.items.reduce((s, it) => s + (Number(it.estimatedMinutes) || 0), 0),
+      0,
+    );
+
+    let videos = 0,
+      documentation = 0,
+      assignments = 0,
+      quizzes = 0;
+    normalizedModules.forEach((m) => {
+      m.items.forEach((it) => {
+        if (it.type === "video") videos++;
+        else if (it.type === "reading") documentation++;
+        else if (it.type === "assignment") assignments++;
+        else if (it.type === "quiz") quizzes++;
+      });
+    });
+    const counts = { videos, documentation, assignments, quizzes };
+
+    // Thumbnail payload: only keep mode, link (for link mode), and fileName (for upload mode)
+    const thumbnail = {
+      mode: thumbnailMode, // 'link' or 'upload'
+      link: thumbnailMode === "link" ? thumbnailLink : "",
+      fileName: uploadedFile?.name || "", // when 'upload', record filename only
+    };
+
     const me = getCurrentUser();
 
-    const courseToSave = {
+    const courseMeta = {
       title,
+      author: "",
       description,
       learningOutcomes,
-      thumbnail: {
-        mode: thumbnailMode,
-        link: thumbnailMode === "link" ? thumbnailLink : "",
-      },
-      // IMPORTANT: modules array also carries { type, title, estimatedMinutes, refId } for works
-      modules: modules.map((m) => ({
-        ...m,
-        title: m.title.trim(),
-        description: (m.description ?? "").trim(),
-        items: m.items.map((it) => ({
-          ...it,
-          title: it.title.trim(),
-          url: it.url?.trim() || "",
-          estimatedMinutes: Number(it.estimatedMinutes) || 0,
-          refId: it.refId ?? null,
-        })),
-      })),
-      totalEstimatedMinutes: totalMinutes,
-      counts: {
-        videos: grouped.Videos.length,
-        documentation: grouped.Documentation.length,
-        assignments: grouped.Assignments.length,
-        quizzes: grouped.Quizzes.length,
-      },
-      status,
+      thumbnail,
+      modules: normalizedModules,
+      totalEstimatedMinutes,
+      counts,
     };
 
     setSaving(true);
     try {
-      // createCourse reads the JWT from localStorage key 'auth_token'
-      const created = await createCourse(courseToSave);
+      // Always JSON — no FormData, no multipart
+      const created = await createCourse(courseMeta, { isMultipart: false });
 
       if (me?.email) {
         recordCourseCreated(me.email, created.id);
       }
 
       window.dispatchEvent(new Event("courses-changed"));
-      showToast(
-        status === "published" ? "Course published" : "Course saved",
-        "success",
-      );
       navigate("/instructor-home");
     } catch (err) {
       console.error(err);
-      const text = err?.message || "Failed to save course.";
-      showToast(text, "error", 2600);
     } finally {
       setSaving(false);
     }
@@ -276,10 +270,7 @@ export default function CourseCreation() {
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-primary"
-                  onClick={() => {
-                    addOutcome();
-                    showToast("Added learning outcome");
-                  }}
+                  onClick={addOutcome}
                 >
                   {ICONS.plus} Add bullet
                 </button>
@@ -304,10 +295,7 @@ export default function CourseCreation() {
                       <button
                         type="button"
                         className="btn btn-outline-danger btn-sm"
-                        onClick={() => {
-                          rmOutcome(idx);
-                          showToast("Removed learning outcome");
-                        }}
+                        onClick={() => rmOutcome(idx)}
                         disabled={outcomeKeys.length === 1}
                         title="Remove"
                       >
@@ -316,69 +304,163 @@ export default function CourseCreation() {
                     </li>
                   ))}
                 </ul>
-                <div className="form-text mt-2">
-                  Tip: Press Enter to quickly add a new bullet.
-                </div>
               </div>
             </div>
 
             {/* Thumbnail */}
             <div className="card border-0 shadow-sm mb-4">
-              <div className="card-header bg-white">
+              <div className="card-header bg-white d-flex align-items-center justify-content-between">
                 <h3 className="h6 mb-0">Course Thumbnail</h3>
-              </div>
-              <div className="card-body">
-                <div className="mb-3">
-                  <label htmlFor="thumbnailLink" className="form-label">
-                    Thumbnail Link
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group-text">URL</span>
-                    <input
-                      ref={thumbLinkRef}
-                      type="url"
-                      id="thumbnailLink"
-                      name="thumbnailLink"
-                      className="form-control"
-                      placeholder="https://example.com/thumbnail.jpg"
-                    />
-                  </div>
-                  <div className="form-text">
-                    Paste an image URL to preview it.
-                  </div>
-                </div>
 
-                {!!thumbLinkRef?.current?.value && (
-                  <div className="border rounded p-2 cc-thumb-preview">
-                    <img
-                      src={thumbLinkRef.current.value}
-                      alt="Thumbnail preview"
-                      className="img-fluid rounded"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
+                {/* Reused segmented toggle for thumbnail mode */}
+                <div
+                  className="seg-toggle"
+                  role="radiogroup"
+                  aria-label="Thumbnail mode"
+                >
+                  <input
+                    type="radio"
+                    id="thumb-link"
+                    name="thumbnailMode"
+                    value="link"
+                    className="seg-toggle__input"
+                    checked={thumbMode === "link"}
+                    onChange={() => {
+                      setThumbMode("link");
+                      // clear upload selection when switching to link
+                      setThumbFile(null);
+                      if (thumbPreviewUrl) {
+                        URL.revokeObjectURL(thumbPreviewUrl);
+                        setThumbPreviewUrl("");
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="thumb-link"
+                    className={
+                      "seg-toggle__btn" +
+                      (thumbMode === "link" ? " is-active" : "")
+                    }
+                  >
+                    Link
+                  </label>
+
+                  <input
+                    type="radio"
+                    id="thumb-upload"
+                    name="thumbnailMode"
+                    value="upload"
+                    className="seg-toggle__input"
+                    checked={thumbMode === "upload"}
+                    onChange={() => {
+                      setThumbMode("upload");
+                      // keep link value but it won't be used in upload mode
+                    }}
+                  />
+                  <label
+                    htmlFor="thumb-upload"
+                    className={
+                      "seg-toggle__btn" +
+                      (thumbMode === "upload" ? " is-active" : "")
+                    }
+                  >
+                    Upload
+                  </label>
+                </div>
+              </div>
+
+              <div className="card-body">
+                {thumbMode === "link" ? (
+                  <div className="mb-3">
+                    <label htmlFor="thumbnailLink" className="form-label">
+                      Thumbnail Link
+                    </label>
+                    <div className="input-group">
+                      <span className="input-group-text">URL</span>
+                      <input
+                        ref={thumbLinkRef}
+                        type="url"
+                        id="thumbnailLink"
+                        name="thumbnailLink"
+                        className="form-control"
+                        placeholder="https://example.com/thumbnail.jpg"
+                        value={thumbLink}
+                        onChange={(e) => setThumbLink(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-text">
+                      Paste an image URL to preview it.
+                    </div>
+
+                    {!!thumbLink && (
+                      <div className="border rounded p-2 cc-thumb-preview mt-2">
+                        <img
+                          src={thumbLink}
+                          alt="Thumbnail preview"
+                          className="img-fluid rounded"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                        <div className="form-text mt-2">
+                          Preview (if the link is valid)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mb-3">
+                    <label htmlFor="thumbnailFile" className="form-label">
+                      Upload Thumbnail
+                    </label>
+                    <input
+                      type="file"
+                      id="thumbnailFile"
+                      name="thumbnailFile"
+                      className="form-control"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.currentTarget.files?.[0] || null;
+                        setThumbFile(file);
+                        // Manage preview
+                        if (thumbPreviewUrl)
+                          URL.revokeObjectURL(thumbPreviewUrl);
+                        if (file) {
+                          const url = URL.createObjectURL(file);
+                          setThumbPreviewUrl(url);
+                        } else {
+                          setThumbPreviewUrl("");
+                        }
                       }}
                     />
-                    <div className="form-text mt-2">
-                      Preview (if the link is valid)
+                    <div className="form-text">
+                      Choose an image file (PNG, JPG, etc.).
                     </div>
+
+                    {!!thumbPreviewUrl && (
+                      <div className="border rounded p-2 cc-thumb-preview mt-2">
+                        <img
+                          src={thumbPreviewUrl}
+                          alt="Thumbnail preview"
+                          className="img-fluid rounded"
+                        />
+                        <div className="form-text mt-2">Local preview</div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
 
             {/* --------------------------- */}
-            {/* 🔻 MODULES BUILDER MOVED UP INTO SAME FORM 🔻 */}
+            {/* 🔻 MODULES BUILDER 🔻 */}
             {/* --------------------------- */}
             <div className="mb-4 course-modules-scope">
-              <CourseModulesBuilder
-                modules={modules}
-                setModules={setModules}
-                showToast={showToast}
-              />
+              <CourseModulesBuilder modules={modules} setModules={setModules} />
             </div>
 
             {/* --------------------------- */}
-            {/* 🔻 TOTAL COURSE TIME (now ABOVE save buttons) 🔻 */}
+            {/* 🔻 TOTAL COURSE TIME 🔻 */}
             {/* --------------------------- */}
             <div className="d-flex align-items-center justify-content-between p-3 cc-total-bar mb-3">
               <div>
@@ -392,78 +474,21 @@ export default function CourseCreation() {
 
             {/* Bottom Action Bar */}
             <div
-              className="d-flex align-items-center justify-content-between mt-4 p-3 border-top"
+              className="d-flex align-items-center justify-content-end mt-4 p-3 border-top"
               style={{ gap: "1rem" }}
             >
-              {/* Publish / Draft Toggle */}
-              <div
-                className="seg-toggle"
-                role="radiogroup"
-                aria-label="Publish mode"
-              >
-                <input
-                  type="radio"
-                  id="mode-publish"
-                  name="publishMode"
-                  value="publish"
-                  className="seg-toggle__input"
-                  onChange={() => setPublishSelected("publish")}
-                />
-                <label
-                  htmlFor="mode-publish"
-                  className={
-                    "seg-toggle__btn" +
-                    (publishSelected === "publish" ? " is-active" : "")
-                  }
-                >
-                  Publish
-                </label>
-
-                <input
-                  type="radio"
-                  id="mode-draft"
-                  name="publishMode"
-                  value="draft"
-                  className="seg-toggle__input"
-                  defaultChecked
-                  onChange={() => setPublishSelected("draft")}
-                />
-                <label
-                  htmlFor="mode-draft"
-                  className={
-                    "seg-toggle__btn" +
-                    (publishSelected === "draft" ? " is-active" : "")
-                  }
-                >
-                  Save as Draft
-                </label>
-              </div>
-
-              {/* Save Button */}
+              {/* Single Submit Button */}
               <button
                 type="submit"
                 disabled={saving}
                 className="btn btn-primary"
               >
-                {saving
-                  ? publishSelected === "publish"
-                    ? "Publishing..."
-                    : "Saving..."
-                  : publishSelected === "publish"
-                    ? "Publish Course"
-                    : "Save as Draft"}
+                {saving ? "Saving..." : "Publish Course"}
               </button>
             </div>
           </div>
         </div>
       </form>
-
-      {/* Floating Toast */}
-      <FloatingToast
-        message={toast.msg}
-        type={toast.type}
-        onClose={() => setToast({ msg: "", type: "success" })}
-      />
     </div>
   );
 }

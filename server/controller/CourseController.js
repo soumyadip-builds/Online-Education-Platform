@@ -2,9 +2,9 @@
 const mongoose = require('mongoose');
 const { Course } = require('../model/CourseModel');
 const Instructor = require('../model/InstructorModel'); // optional, non-blocking
-const Assignment = require('../model/AssignmentModel'); // NEW: for attach hydration
-const Quiz = require('../model/QuizModel'); // NEW: for attach hydration
-const { attachItemToCourse } = require('./_work.helpers'); // NEW: reuse attach helper
+const Assignment = require('../model/AssignmentModel'); // used by attach
+const Quiz = require('../model/QuizModel');             // used by attach
+const { attachItemToCourse } = require('./_work.helpers'); // used by attach
 
 function getAuthIdentity(req) {
   const userId = req.user?.id;
@@ -12,37 +12,97 @@ function getAuthIdentity(req) {
   const email = (req.user?.email && String(req.user.email).trim()) || '';
   return { userId, name, email };
 }
+
 const asArray = (v) => (Array.isArray(v) ? v : []);
 const asNumber = (v, fallback = 0) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 };
+
+// --- NEW: compute counts from modules (source of truth) ---
+function computeCountsFromModules(mods) {
+  const out = { videos: 0, documentation: 0, assignments: 0, quizzes: 0 };
+  (mods || []).forEach((m) => {
+    (m.items || []).forEach((it) => {
+      const t = String(it.type || '').toLowerCase();
+      if (t === 'video') out.videos += 1;
+      else if (t === 'reading') out.documentation += 1;
+      else if (t === 'assignment') out.assignments += 1;
+      else if (t === 'quiz') out.quizzes += 1;
+    });
+  });
+  return out;
+}
+
+// --- NEW: compute total minutes from modules (keeps DB consistent) ---
+function computeTotalMinutesFromModules(mods) {
+  let total = 0;
+  (mods || []).forEach((m) => {
+    (m.items || []).forEach((it) => {
+      const mins = Number(it.estimatedMinutes);
+      if (Number.isFinite(mins) && mins > 0) total += mins;
+    });
+  });
+  return total;
+}
+
 async function createCourse(req, res, next) {
   try {
     const { userId, name, email } = getAuthIdentity(req);
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-    const p = req.body ?? {};
+
+    // If multipart: client sent FormData with a 'meta' JSON part
+    const raw = typeof req.body.meta === 'string' ? JSON.parse(req.body.meta) : (req.body ?? {});
+    const p = raw || {};
+
     const title = (p.title ?? '').trim();
     if (!title) return res.status(400).json({ message: 'Title is required' });
+
     const author = name || email || 'Unknown';
+
+    // Normalize modules and derive counts/total server-side
+    const modules = asArray(p.modules);
+    const counts = computeCountsFromModules(modules);
+    // Prefer computing total from modules to keep truth in one place
+    const totalEstimatedMinutes = computeTotalMinutesFromModules(modules);
+
+    // --- Thumbnail normalization (supports link & upload) ---
+    // Start with payload thumbnail
+    const t = p.thumbnail || {};
+    let thumbnail = {
+      mode: t.mode === 'upload' ? 'upload' : 'link',
+      link: t.mode === 'link' ? (t.link || '') : '',
+      fileName: t.fileName || '',
+    };
+
+    // If file provided (multer), prefer it
+    // NOTE: set storageKey/etag here if you upload to S3/local disk.
+    if (req.file) {
+      thumbnail = {
+        mode: 'upload',
+        link: '', // not used for uploads
+        fileName: req.file.originalname || thumbnail.fileName,
+        mimeType: req.file.mimetype || thumbnail.mimeType,
+        sizeBytes: typeof req.file.size === 'number' ? req.file.size : thumbnail.sizeBytes,
+        storageKey: thumbnail.storageKey || '', // fill from storage provider if you upload here
+        etag: thumbnail.etag || '',             // fill from storage provider if you upload here
+      };
+    }
+
     const course = await Course.create({
       owner: userId,
       author,
       title,
       description: p.description ?? '',
       learningOutcomes: asArray(p.learningOutcomes),
-      thumbnail: { mode: 'link', link: p?.thumbnail?.link || '' },
-      modules: asArray(p.modules), // only non-work items if you still use modules
-      totalEstimatedMinutes: asNumber(p.totalEstimatedMinutes, 0),
-      counts: {
-        videos: asNumber(p?.counts?.videos, 0),
-        documentation: asNumber(p?.counts?.documentation, 0),
-        assignments: 0, // works added later will update these counts
-        quizzes: 0,
-      },
-      status: p.status === 'published' ? 'published' : 'draft',
-      // assignments/quizzes arrays start empty
+      thumbnail,
+      modules, // keep embedded items for non-work content and placements
+      totalEstimatedMinutes,
+      counts, // ✅ now computed server-side and always correct
+      // status: p.status === 'published' ? 'published' : 'draft', // omit if status removed from schema
+      // assignments/quizzes arrays: omit if you removed them from the schema
     });
+
     // Optional: track under Instructor profile (non-blocking)
     try {
       await Instructor.findOneAndUpdate(
@@ -51,11 +111,13 @@ async function createCourse(req, res, next) {
         { upsert: false }
       );
     } catch (_) {}
+
     return res.status(201).json(course);
   } catch (err) {
     next(err);
   }
 }
+
 async function listMyCourses(req, res, next) {
   try {
     const userId = req.user?.id;
@@ -66,6 +128,7 @@ async function listMyCourses(req, res, next) {
     next(err);
   }
 }
+
 async function getMyCourseById(req, res, next) {
   try {
     const userId = req.user?.id;
@@ -81,6 +144,7 @@ async function getMyCourseById(req, res, next) {
     next(err);
   }
 }
+
 async function updateMyCourse(req, res, next) {
   try {
     const userId = req.user?.id;
@@ -89,7 +153,16 @@ async function updateMyCourse(req, res, next) {
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ message: 'Invalid course id' });
     }
+
+    // prevent sensitive fields from being overwritten via payload
     const { owner, author, _id, id: clientId, assignments, quizzes, ...payload } = req.body ?? {};
+
+    // (Optional) If modules are updated, recompute counts/total server-side to keep consistency
+    if (Array.isArray(payload.modules)) {
+      payload.counts = computeCountsFromModules(payload.modules);
+      payload.totalEstimatedMinutes = computeTotalMinutesFromModules(payload.modules);
+    }
+
     const updated = await Course.findOneAndUpdate(
       { _id: id, owner: userId },
       { $set: payload },
@@ -101,6 +174,7 @@ async function updateMyCourse(req, res, next) {
     next(err);
   }
 }
+
 async function deleteMyCourse(req, res, next) {
   try {
     const userId = req.user?.id;
@@ -111,8 +185,7 @@ async function deleteMyCourse(req, res, next) {
     }
     const removed = await Course.findOneAndDelete({ _id: id, owner: userId });
     if (!removed) return res.status(404).json({ message: 'Course not found' });
-    // NOTE: We are not cascading delete works here. Do that via
-    // dedicated endpoints if you want a "dangerous delete" path.
+    // NOTE: Not cascading deletes for works here.
     return res.status(204).send();
   } catch (err) {
     next(err);
@@ -182,5 +255,5 @@ module.exports = {
   getMyCourseById,
   updateMyCourse,
   deleteMyCourse,
-  attachItemToModule, // NEW export
+  attachItemToModule,
 };
