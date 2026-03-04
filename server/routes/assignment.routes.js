@@ -1,27 +1,34 @@
-// routes/assignment.routes.js
 const express = require('express');
 const router = express.Router();
 
 const { requireAuth } = require('../middleware/requireAuth');
+
 const {
-  createAssignmentStandalone,
-  updateAssignment,
-  deleteAssignment,
-  getById
+	createAssignmentStandalone,
+	updateAssignment,
+	deleteAssignment,
+	getById,
 } = require('../controller/assignment.controller');
 
-// All routes below require a valid JWT
+const {
+	submitAssignment,
+	getMySubmission,
+} = require('../controller/assignmentSubmission.controller');
+
+const upload = require('../middleware/upload');
+
 router.use(requireAuth);
 
-// Create a standalone assignment
+// Assignment CRUD
 router.post('/', createAssignmentStandalone);
-
-// Edit an assignment
 router.patch('/:id', updateAssignment);
-
-// Delete an assignment (also removes any course items that reference it)
 router.delete('/:id', deleteAssignment);
+router.get('/:id', getById);
 
-router.get('/:id', getById); // GET /edstream/assignments/:id
+// Submit assignment (file or link)
+router.post('/:id/submissions', upload.single('file'), submitAssignment);
+
+// Get current user’s latest submission
+router.get('/:id/submissions/me', getMySubmission);
 
 module.exports = router;

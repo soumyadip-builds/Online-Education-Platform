@@ -4,7 +4,7 @@ import { getAuthUser, getAuthHeader } from '../lib/authLocal';
 
 /**
  * QuizPage.jsx — DB powered
- * - GET /api/quizzes/:id
+ * - GET /edstream/quizzes/:id
  * - Grades locally using `isCorrect` flags in quiz document
  * - Keeps your original UI/UX and styles (scoped under `.ap-quiz-page`)
  */
@@ -39,7 +39,7 @@ export default function QuizPage() {
 				setLoading(true);
 				setErr(null);
 				const API_BASE =
-					import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+					import.meta.env.VITE_API_BASE || 'http://localhost:8000/edstream';
 				const res = await fetch(`${API_BASE}/quizzes/${quizId}`, {
 					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
 					credentials: 'include',
