@@ -7,7 +7,8 @@ const {
   createQuizStandalone,
   updateQuiz,
   deleteQuiz,
-  getById
+  getById,
+  submitQuizAttempt
 } = require('../controller/quiz.controller');
 
 // All routes below require a valid JWT (same pattern as assignments)
@@ -26,5 +27,11 @@ router.patch('/:id', updateQuiz);
 router.delete('/:id', deleteQuiz);
 
 router.get('/:id', getById); // GET /api/quizzes/:id
+
+
+// Submit quiz attempt (server-side grading)
+// POST /edstream/quizzes/:id/submit
+router.post('/:id/submit', submitQuizAttempt);
+
 
 module.exports = router;
