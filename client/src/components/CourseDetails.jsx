@@ -57,6 +57,18 @@ export default function CourseDetails() {
 	const [loading, setLoading] = useState(true);
 	const [loadErr, setLoadErr] = useState('');
 	const [course, setCourse] = useState(null);
+	// NEW: toast + checking flag
+	const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+	const [toast, setToast] = useState({ type: '', message: '', visible: false });
+
+	// Tiny toast helpers
+	function showToast(message, type = 'success', timeoutMs = 2500) {
+		setToast({ type, message, visible: true });
+		window.clearTimeout(showToast._t);
+		showToast._t = window.setTimeout(() => {
+			setToast((t) => ({ ...t, visible: false }));
+		}, timeoutMs);
+	}
 
 	// Enrollment + role
 	const [enrolled, setEnrolled] = useState(false);
@@ -91,30 +103,24 @@ export default function CourseDetails() {
 				setLoading(true);
 				setLoadErr('');
 
-				const API_BASE =
-					import.meta.env.VITE_API_BASE || 'http://localhost:8000/edstream';
+				const API_BASE = 'http://localhost:8000/edstream';
+
 				const res = await fetch(`${API_BASE}/courses/${id}?expand=1`, {
 					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
 					credentials: 'include',
 				});
 
-				if (!res.ok) {
-					throw new Error(`HTTP ${res.status} fetching course`);
-				}
+				if (!res.ok) throw new Error(`HTTP ${res.status} fetching course`);
 
-				// Always define payload right here and only use it below
 				const payload = await res.json();
-				// Log safely
-				// console.log('course payload:', payload);
 
-				// Support both shapes: { ok, data } OR raw document
+				// Works with both shapes: {ok:true,data} OR raw doc
 				const isWrapped =
 					payload &&
 					typeof payload === 'object' &&
 					Object.prototype.hasOwnProperty.call(payload, 'ok');
 
 				if (isWrapped && payload.ok === false) {
-					// API explicitly signals failure
 					throw new Error(payload?.error || 'Failed to load course');
 				}
 
@@ -127,7 +133,7 @@ export default function CourseDetails() {
 					...foundCourse,
 					// normalize thumbnail to a plain string
 					thumbnail: foundCourse?.thumbnail?.link ?? '',
-					// map modules -> sections for your UI
+					// map modules -> sections your UI expects
 					sections: (foundCourse.modules ?? []).map((m, idx) => ({
 						id: m.id ?? `module-${idx + 1}`,
 						title: m.title ?? `Module ${idx + 1}`,
@@ -136,7 +142,7 @@ export default function CourseDetails() {
 							id: it.id ?? `${m.id ?? `module-${idx + 1}`}-item-${ii + 1}`,
 							title: it.title ?? `Item ${ii + 1}`,
 							type: it.type ?? 'reading',
-							// external resources
+							// external link (videos/docs/resources)
 							url: it.url || undefined,
 							// internal routes (server adds when ?expand=1; else derive from refId)
 							to:
@@ -149,7 +155,7 @@ export default function CourseDetails() {
 							estimatedMinutes: it.estimatedMinutes ?? 0,
 						})),
 					})),
-					// derive side-panel videos if needed
+					// build right‑panel videos if not present at top-level
 					videos: deriveVideosFromCourse(foundCourse),
 				};
 
@@ -160,6 +166,47 @@ export default function CourseDetails() {
 				setLoadErr(e?.message ?? 'Failed to load course.');
 			} finally {
 				if (alive) setLoading(false);
+			}
+		})();
+
+		return () => {
+			alive = false;
+		};
+	}, [id]);
+
+	// 2) Check if the learner already enrolled (hide CTA when true)
+	useEffect(() => {
+		let alive = true;
+
+		(async () => {
+			try {
+				const me = getAuthUser();
+				if (!me?.email || me?.role !== 'learner') return; // only for learners
+				setCheckingEnrollment(true);
+
+				const API_BASE = 'http://localhost:8000/edstream';
+
+				const res = await fetch(`${API_BASE}/courses?scope=enrolled`, {
+					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+					credentials: 'include',
+				});
+
+				if (!res.ok) return; // not enrolled or unauthorized → leave CTA as-is
+
+				const payload = await res.json();
+				const list = Array.isArray(payload?.data)
+					? payload.data
+					: Array.isArray(payload)
+						? payload
+						: [];
+
+				const already = list.some((c) => (c.id || c._id) === id);
+				if (!alive) return;
+				if (already) setEnrolled(true);
+			} catch {
+				// swallow; absence of enrollment keeps CTA visible
+			} finally {
+				if (alive) setCheckingEnrollment(false);
 			}
 		})();
 
@@ -192,6 +239,7 @@ export default function CourseDetails() {
 				throw new Error(data?.error || 'Failed to enroll.');
 			}
 			setEnrolled(true);
+			showToast('Enrolled successfully ✅', 'success');
 
 			try {
 				await notifyCourseEnrollment({
@@ -201,10 +249,11 @@ export default function CourseDetails() {
 					learnerName: me.name,
 				});
 			} catch (e) {
+				// non-blocking; no toast for this
 				console.warn('Enrollment notification failed:', e);
 			}
 		} catch (e) {
-			alert(e.message || 'Enrollment failed.');
+			showToast(e.message || 'Enrollment failed', 'error');
 		}
 	};
 
@@ -334,15 +383,37 @@ export default function CourseDetails() {
 						{/* CTA / Enrollment */}
 						{isLearner && !enrolled ? (
 							<>
-								<button
-									className="mybtn mybtn-primary mybtn-xl"
-									onClick={handleEnroll}
-								>
-									Enroll now
-								</button>
-								<div className="enrollment-status">
-									Content is locked until you enroll
-								</div>
+								{checkingEnrollment ? (
+									<div
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: 8,
+											minHeight: 40,
+										}}
+									>
+										<span
+											className="mini-spinner"
+											aria-hidden="true"
+										/>
+										<span className="enrollment-status">
+											Checking enrollment…
+										</span>
+									</div>
+								) : (
+									<>
+										<button
+											className="mybtn mybtn-primary mybtn-xl"
+											onClick={handleEnroll}
+											disabled={checkingEnrollment}
+										>
+											Enroll now
+										</button>
+										<div className="enrollment-status">
+											Content is locked until you enroll
+										</div>
+									</>
+								)}
 							</>
 						) : isLearner && enrolled ? (
 							<div className="enrollment-status">
@@ -476,6 +547,15 @@ export default function CourseDetails() {
 					</section>
 				)}
 			</div>
+			{toast.visible && (
+				<div
+					className={`inline-toast inline-toast--${toast.type}`}
+					role="status"
+					aria-live="polite"
+				>
+					{toast.message}
+				</div>
+			)}
 		</div>
 	);
 }

@@ -105,12 +105,16 @@ function Logout() {
 
 // Shell with global Toaster
 function AppShell({ children }) {
+
+  const location = useLocation();
+  const isQuizPage = location.pathname.startsWith("/quiz");
+  
   return (
     <>
       <Toaster position="top-right" />
-      <NavbarComponent />
+      {!isQuizPage && <NavbarComponent />}
       {children}
-      <Footer />
+      {!isQuizPage && <Footer />}
     </>
   );
 }

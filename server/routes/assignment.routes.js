@@ -7,6 +7,7 @@ const {
   createAssignmentStandalone,
   updateAssignment,
   deleteAssignment,
+  getById
 } = require('../controller/assignment.controller');
 
 // All routes below require a valid JWT
@@ -20,5 +21,7 @@ router.patch('/:id', updateAssignment);
 
 // Delete an assignment (also removes any course items that reference it)
 router.delete('/:id', deleteAssignment);
+
+router.get('/:id', getById); // GET /edstream/assignments/:id
 
 module.exports = router;
