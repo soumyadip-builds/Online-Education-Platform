@@ -5,11 +5,10 @@ import { useLocation } from 'react-router-dom';
 import { getAuthHeader } from '../lib/authLocal';
 
 /**
- * CoursePage.jsx — now fetches from API:
- *   GET /api/courses?scope=enrolled|created|authored
- * If no scope, returns a general listing (server decides).
+ * CoursePage.jsx — fetches from API:
+ *   GET /edstream/courses?scope=enrolled|created|authored|all
+ * If no scope, we request scope=all (catalog).
  */
-
 export default function CoursePage() {
 	const [courses, setCourses] = useState([]);
 	const [query, setQuery] = useState('');
@@ -18,6 +17,8 @@ export default function CoursePage() {
 	const location = useLocation();
 	const scopeFromState = location.state?.scope;
 	const scopeFromQuery = new URLSearchParams(location.search).get('scope');
+
+	// ✅ fix: proper OR chaining
 	const scope = scopeFromState || scopeFromQuery || null; // 'enrolled' | 'created' | 'authored' | null
 
 	useEffect(() => {
@@ -25,24 +26,36 @@ export default function CoursePage() {
 		(async () => {
 			try {
 				const API_BASE =
-					import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
-				const endpoint = scope
-					? `${API_BASE}/courses?scope=${encodeURIComponent(scope)}`
-					: `${API_BASE}/courses`;
+					import.meta.env.VITE_API_BASE || 'http://localhost:8000/edstream';
+
+				// ✅ If no scope passed (Explore), ask the server for a public/all listing
+				const effectiveScope = scope || 'all';
+				const endpoint = `${API_BASE}/courses?scope=${encodeURIComponent(effectiveScope)}`;
+
 				const res = await fetch(endpoint, {
 					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
 				});
-				const payload = await res.json();
+
+				// If the server responds with 401 for public/all (while unauthenticated),
+				// we still try to parse JSON to show a meaningful message.
+				const payload = await res.json().catch(() => ({}));
 				if (!alive) return;
 
-				// Support either { ok, data } or raw list
-				const list = payload?.data || payload || [];
-				// Normalize id + thumbnail for Card navigation and image
-				const normalized = (Array.isArray(list) ? list : []).map((c) => ({
+				// Support both { ok, data } and raw arrays
+				const list = Array.isArray(payload?.data)
+					? payload.data
+					: Array.isArray(payload)
+						? payload
+						: [];
+				
+				const normalized = list.map((c) => ({
 					...c,
-					id: c.id || c._id, // ensure id for <CourseCard/>
-					thumbnail: c.thumbnail?.link || c.thumbnail || '',
-				}));
+					id: c.id || c._id, // used by <CourseCard/>
+					thumbnail: c.thumbnail || '',
+					title: c.title ?? '',
+					author: c.author ?? '',
+				}));				
+
 				setCourses(normalized);
 			} catch (e) {
 				if (!alive) return;

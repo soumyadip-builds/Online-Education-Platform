@@ -14,7 +14,6 @@ import {
 import "../styles/EdNavbar.css";
 import { useNavigate } from "react-router-dom";
 import { COURSES } from "../data/courses";
-import { toast } from "react-hot-toast";
 
 /** -------------------- Local-only auth helpers -------------------- */
 /** Prefer a tiny inline set so we don't depend on utils/session anymore. */
@@ -190,7 +189,6 @@ const NavbarComponent = () => {
                 </Button>
                 <Button
                   className="nav-btn"
-                  variant="outline-primary"
                   onClick={() => navigate("/course-creator")}
                 >
                   + Create Course

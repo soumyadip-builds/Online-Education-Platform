@@ -85,65 +85,79 @@ export default function CourseDetails() {
 	// Fetch course from API
 	useEffect(() => {
 		let alive = true;
+
 		(async () => {
 			try {
 				setLoading(true);
 				setLoadErr('');
 
 				const API_BASE =
-					import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+					import.meta.env.VITE_API_BASE || 'http://localhost:8000/edstream';
 				const res = await fetch(`${API_BASE}/courses/${id}?expand=1`, {
 					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
 					credentials: 'include',
 				});
-				if (!res.ok) throw new Error(`HTTP ${res.status} fetching course`);
+
+				if (!res.ok) {
+					throw new Error(`HTTP ${res.status} fetching course`);
+				}
+
+				// Always define payload right here and only use it below
 				const payload = await res.json();
-				if (!payload?.ok && !payload?._id && !payload?.data) {
+				// Log safely
+				// console.log('course payload:', payload);
+
+				// Support both shapes: { ok, data } OR raw document
+				const isWrapped =
+					payload &&
+					typeof payload === 'object' &&
+					Object.prototype.hasOwnProperty.call(payload, 'ok');
+
+				if (isWrapped && payload.ok === false) {
+					// API explicitly signals failure
 					throw new Error(payload?.error || 'Failed to load course');
 				}
-				// support both {ok:true,data} and raw doc
-				const foundCourse = payload.data || payload;
 
-				const normalizedCourse = foundCourse
-					? {
-							...foundCourse,
-							// normalize thumbnail to string
-							thumbnail: foundCourse?.thumbnail?.link ?? '',
-							// API returns modules; map to sections for UI
-							sections: (foundCourse.modules ?? []).map((m, idx) => ({
-								id: m.id ?? `module-${idx + 1}`,
-								title: m.title ?? `Module ${idx + 1}`,
-								description: m.description ?? '',
-								items: (m.items ?? []).map((it, ii) => ({
-									id:
-										it.id ??
-										`${m.id ?? `module-${idx + 1}`}-item-${ii + 1}`,
-									title: it.title ?? `Item ${ii + 1}`,
-									type: it.type ?? 'reading',
-									// external link (videos/docs/links)
-									url: it.url || undefined,
-									// internal routes for works (server may already add `to`)
-									to:
-										it.to ||
-										(it.refId && it.type === 'assignment'
-											? `/assignment/${it.refId}`
-											: it.refId && it.type === 'quiz'
-												? `/quiz/${it.refId}`
-												: undefined),
-									estimatedMinutes: it.estimatedMinutes ?? 0,
-								})),
-							})),
-							// right panel videos
-							videos: deriveVideosFromCourse(foundCourse),
-						}
-					: null;
+				const foundCourse = isWrapped ? payload.data : payload;
+				if (!foundCourse || typeof foundCourse !== 'object') {
+					throw new Error('Course not found');
+				}
+
+				const normalizedCourse = {
+					...foundCourse,
+					// normalize thumbnail to a plain string
+					thumbnail: foundCourse?.thumbnail?.link ?? '',
+					// map modules -> sections for your UI
+					sections: (foundCourse.modules ?? []).map((m, idx) => ({
+						id: m.id ?? `module-${idx + 1}`,
+						title: m.title ?? `Module ${idx + 1}`,
+						description: m.description ?? '',
+						items: (m.items ?? []).map((it, ii) => ({
+							id: it.id ?? `${m.id ?? `module-${idx + 1}`}-item-${ii + 1}`,
+							title: it.title ?? `Item ${ii + 1}`,
+							type: it.type ?? 'reading',
+							// external resources
+							url: it.url || undefined,
+							// internal routes (server adds when ?expand=1; else derive from refId)
+							to:
+								it.to ||
+								(it.refId && it.type === 'assignment'
+									? `/assignment/${it.refId}`
+									: it.refId && it.type === 'quiz'
+										? `/quiz/${it.refId}`
+										: undefined),
+							estimatedMinutes: it.estimatedMinutes ?? 0,
+						})),
+					})),
+					// derive side-panel videos if needed
+					videos: deriveVideosFromCourse(foundCourse),
+				};
 
 				if (!alive) return;
 				setCourse(normalizedCourse);
-				if (!foundCourse) setLoadErr('Course not found.');
 			} catch (e) {
 				if (!alive) return;
-				setLoadErr(e.message ?? 'Failed to load course.');
+				setLoadErr(e?.message ?? 'Failed to load course.');
 			} finally {
 				if (alive) setLoading(false);
 			}
@@ -165,12 +179,14 @@ export default function CourseDetails() {
 			return;
 		}
 		try {
-			const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+			const API_BASE = 'http://localhost:8000/edstream';
+
 			const resp = await fetch(`${API_BASE}/courses/${id}/enroll`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
 				credentials: 'include',
 			});
+
 			const data = await resp.json();
 			if (!resp.ok || data?.ok === false) {
 				throw new Error(data?.error || 'Failed to enroll.');

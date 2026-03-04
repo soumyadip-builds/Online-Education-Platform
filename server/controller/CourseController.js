@@ -13,7 +13,6 @@ function getAuthIdentity(req) {
 	const email = (req.user?.email && String(req.user.email).trim()) || '';
 	return { userId, name, email };
 }
-
 const asArray = (v) => (Array.isArray(v) ? v : []);
 const asNumber = (v, fallback = 0) => {
 	const n = Number(v);
@@ -34,7 +33,6 @@ function computeCountsFromModules(mods) {
 	});
 	return out;
 }
-
 function computeTotalMinutesFromModules(mods) {
 	let total = 0;
 	(mods || []).forEach((m) => {
@@ -46,7 +44,7 @@ function computeTotalMinutesFromModules(mods) {
 	return total;
 }
 
-// --- existing create/update/delete/attach retained from your file ---
+// --- existing create/update/delete/attach (unchanged) ---
 async function createCourse(req, res, next) {
 	try {
 		const { userId, name, email } = getAuthIdentity(req);
@@ -57,6 +55,7 @@ async function createCourse(req, res, next) {
 				? JSON.parse(req.body.meta)
 				: (req.body ?? {});
 		const p = raw || {};
+
 		const title = (p.title ?? '').trim();
 		if (!title) return res.status(400).json({ message: 'Title is required' });
 
@@ -122,15 +121,17 @@ async function listMyCourses(req, res, next) {
 
 async function getMyCourseById(req, res, next) {
 	try {
+		console.log('inside getMyCourseById');
 		const userId = req.user?.id;
 		if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 		const { id } = req.params;
 		if (!mongoose.isValidObjectId(id)) {
 			return res.status(400).json({ message: 'Invalid course id' });
 		}
-		const doc = await Course.findOne({ _id: id, owner: userId });
+		console.log('id:', id, 'userId:', userId);
+		const doc = await Course.findOne({ _id: id });
 		if (!doc) return res.status(404).json({ message: 'Course not found' });
-		return res.json(doc);
+		return res.status(200).json(doc);
 	} catch (err) {
 		next(err);
 	}
@@ -193,6 +194,7 @@ async function attachItemToModule(req, res, next) {
 	try {
 		const userId = req.user?.id;
 		if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
 		const { courseId, moduleIndex } = req.params;
 		const { type, refId } = req.body ?? {};
 		if (!['assignment', 'quiz'].includes(type)) {
@@ -247,41 +249,73 @@ async function attachItemToModule(req, res, next) {
 	}
 }
 
-/** NEW: GET /api/courses?scope=enrolled|created|authored */
+/** UPDATED: GET /edstream/courses?scope=enrolled|created|authored|all */
 async function listCourses(req, res) {
 	try {
 		const scope = String(req.query.scope || '').toLowerCase();
-		let filter = {};
 
+		// ✅ NEW: public/all catalog branch
+		if (!scope || scope === 'all') {
+			const list = await Course.find({})
+				.select('title author thumbnail.link counts totalEstimatedMinutes')
+				.lean();
+			const data = (list || []).map((c) => ({
+				...c,
+				thumbnail: c?.thumbnail?.link || '',
+				id: c._id,
+			}));
+			return res.json({ ok: true, data });
+		}
+
+		// existing scoped branches (enrolled/created/authored)
 		if (scope === 'enrolled' && req.user?.role === 'learner') {
 			const prof = await Learner.findOne({ userId: req.user.id }).lean();
 			const ids = prof?.coursesEnrolled || [];
-			filter = { _id: { $in: ids } };
-		} else if (scope === 'created' && req.user?.role === 'instructor') {
-			const prof = await Instructor.findOne({ userId: req.user.id }).lean();
-			const ids = prof?.coursesCreated || [];
-			filter = { _id: { $in: ids } };
-		} else if (scope === 'authored' && req.user?.role === 'instructor') {
-			filter = { author: req.user.name };
+			const list = await Course.find({ _id: { $in: ids } })
+				.select('title author thumbnail.link counts totalEstimatedMinutes')
+				.lean();
+			const data = (list || []).map((c) => ({
+				...c,
+				thumbnail: c?.thumbnail?.link || '',
+				id: c._id,
+			}));
+			return res.json({ ok: true, data });
 		}
 
-		const list = await Course.find(filter)
-			.select('title author thumbnail.link counts totalEstimatedMinutes')
-			.lean();
+		if (scope === 'created' && req.user?.role === 'instructor') {
+			const prof = await Instructor.findOne({ userId: req.user.id }).lean();
+			const ids = prof?.coursesCreated || [];
+			const list = await Course.find({ _id: { $in: ids } })
+				.select('title author thumbnail.link counts totalEstimatedMinutes')
+				.lean();
+			const data = (list || []).map((c) => ({
+				...c,
+				thumbnail: c?.thumbnail?.link || '',
+				id: c._id,
+			}));
+			return res.json({ ok: true, data });
+		}
 
-		const data = (list || []).map((c) => ({
-			...c,
-			thumbnail: c?.thumbnail?.link || '',
-			id: c._id,
-		}));
+		if (scope === 'authored' && req.user?.role === 'instructor') {
+			const list = await Course.find({ author: req.user.name })
+				.select('title author thumbnail.link counts totalEstimatedMinutes')
+				.lean();
+			const data = (list || []).map((c) => ({
+				...c,
+				thumbnail: c?.thumbnail?.link || '',
+				id: c._id,
+			}));
+			return res.json({ ok: true, data });
+		}
 
-		return res.json({ ok: true, data });
+		// Fallback: nothing matched (e.g., role mismatch)
+		return res.json({ ok: true, data: [] });
 	} catch (e) {
 		return res.status(500).json({ ok: false, error: 'Failed to list courses' });
 	}
 }
 
-/** NEW: GET /api/courses/:id?expand=1 */
+/** GET /edstream/courses/:id?expand=1 */
 async function getCourse(req, res) {
 	try {
 		const { id } = req.params;
@@ -307,7 +341,51 @@ async function getCourse(req, res) {
 		return res.status(500).json({ ok: false, error: 'Failed to get course' });
 	}
 }
+// controllers/CourseController.js  (ADD THIS FUNCTION)
+async function enrollCourse(req, res) {
+	try {
+		// Must be authenticated & a learner
+		if (!req.user?.id) {
+			return res.status(401).json({ ok: false, error: 'Unauthorized' });
+		}
+		if (req.user?.role !== 'learner') {
+			return res.status(403).json({ ok: false, error: 'Only learners can enroll' });
+		}
 
+		const { id } = req.params; // course id
+		if (!mongoose.isValidObjectId(id)) {
+			return res.status(400).json({ ok: false, error: 'Invalid course id' });
+		}
+
+		// Optional: ensure the course exists
+		const exists = await Course.exists({ _id: id });
+		if (!exists) {
+			return res.status(404).json({ ok: false, error: 'Course not found' });
+		}
+
+		// Upsert learner profile & add the course
+		const updated = await Learner.findOneAndUpdate(
+			{ userId: req.user.id },
+			{
+				$addToSet: { coursesEnrolled: id },
+				// if learner doc not found, create a minimal one
+				$setOnInsert: { domainInterest: [] },
+			},
+			{ new: true, upsert: true },
+		).lean();
+
+		return res.json({
+			ok: true,
+			data: {
+				enrolled: true,
+				courseId: id,
+				coursesEnrolled: updated?.coursesEnrolled ?? [],
+			},
+		});
+	} catch (e) {
+		return res.status(500).json({ ok: false, error: 'Failed to enroll' });
+	}
+}
 module.exports = {
 	createCourse,
 	listMyCourses,
@@ -315,7 +393,8 @@ module.exports = {
 	updateMyCourse,
 	deleteMyCourse,
 	attachItemToModule,
-	// new read endpoints
+	enrollCourse,
+	// read endpoints
 	listCourses,
 	getCourse,
 };

@@ -39,7 +39,7 @@ mongoose
 
 // Routes
 app.use("/edstream/auth", authRouter);
-app.use("/api/courses", courseRoutes);
+app.use("/edstream/courses", courseRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true }));

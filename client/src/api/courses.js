@@ -32,7 +32,7 @@ export async function createCourse(payload) {
     ? localStorage.getItem('auth_token')
     : null;
 
-  const res = await fetch(`${BASE_URL}/api/courses`, {
+  const res = await fetch(`${BASE_URL}/edstream/courses`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export async function listMyCourses() {
     ? localStorage.getItem('auth_token')
     : null;
 
-  const res = await fetch(`${BASE_URL}/api/courses`, {
+  const res = await fetch(`${BASE_URL}/edstream/courses`, {
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     // credentials: 'include',
   });
