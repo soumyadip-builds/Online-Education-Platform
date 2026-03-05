@@ -306,6 +306,43 @@ async function deleteQuiz(req, res) {
 	}
 }
 
+
+
+// GET /api/quizzes/:id/my-latest-submission
+async function getMyLatestSubmission(req, res) {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ ok: false, error: 'Unauthorized' });
+
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid quiz id' });
+    }
+
+    const sub = await QuizSubmission
+      .findOne({ quiz: id, user: userId })
+      .sort({ submittedAt: -1, createdAt: -1 })
+      .lean();
+
+    if (!sub) return res.status(404).json({ ok: false, error: 'No submission found' });
+
+    return res.json({
+      ok: true,
+      data: {
+        id: sub._id?.toString?.() || sub.id,
+        score: sub.score,
+        maxScore: sub.maxScore,
+        passingScore: sub.passingScore,
+        passed: sub.passed,
+        submittedAt: sub.submittedAt,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: 'Failed to load submission' });
+  }
+}
+
+
 module.exports = {
 	// read
 	getById,
@@ -316,4 +353,5 @@ module.exports = {
 	createQuizAndAttach,
 	updateQuiz,
 	deleteQuiz,
+	getMyLatestSubmission
 };
