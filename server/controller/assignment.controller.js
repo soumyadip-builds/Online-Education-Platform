@@ -46,6 +46,9 @@ async function createAssignmentStandalone(req, res, next) {
 			estimatedMinutes: asNumber(p.estimatedMinutes, 1),
 			maxScore: asNumber(p.maxScore, 1),
 			passingScore: asNumber(p.passingScore, 1),
+			fileName: p.fileName ?? '',
+			fileUrl: p.fileUrl ?? '',
+			status: p.status ?? 'draft',
 		});
 
 		const item = {

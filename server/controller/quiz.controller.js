@@ -335,6 +335,7 @@ async function getMyLatestSubmission(req, res) {
         passingScore: sub.passingScore,
         passed: sub.passed,
         submittedAt: sub.submittedAt,
+		answers: sub.answers,
       },
     });
   } catch (err) {
