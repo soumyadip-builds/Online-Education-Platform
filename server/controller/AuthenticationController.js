@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../model/UserModel");
 const Instructor = require("../model/InstructorModel");
 const Learner = require("../model/LearnerModel");
+const Enrollment = require("../model/EnrollmentModel");
 
 function signToken(user) {
   const payload = {
@@ -68,6 +69,11 @@ exports.register = async (req, res) => {
           occupation: "",
           domainInterest: [],
           coursesEnrolled: [],
+        });
+        await Enrollment.create({
+          course: null,
+          user: user._id,
+          role: "learner",
         });
       }
     } catch (profileErr) {

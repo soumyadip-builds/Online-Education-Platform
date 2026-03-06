@@ -1,221 +1,114 @@
+// StudentMetrics.jsx
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/studentMetrics.css";
-import { getCurrentUser, getUserByEmail } from "../utils/session";
+import { getAuthHeader, requireAuth } from "../lib/authLocal"; // keep as-is
 
-/**
- * StudentMetrics.jsx
- * - Progress bar per enrolled course
- * - Module-wise tracking of quizzes & assignments
- *
- * Data sources:
- *  /data/courseDetails.json
- *  /data/assignmentData.json
- *  /data/quizData.json
- *
- * ✅ Quizzes (per-user):
- *  quizAttempt:<email>:<quizId>
- *  quizResult:<email>:<quizId>
- *
- * ✅ Assignments (per-user):
- *  assignmentAttempt:<email>:<assignmentId>
- *  assignmentResult:<email>:<assignmentId>
- *  assignmentAttemptFile:<email>:<assignmentId>   (JSON document string, fetched via data URL)
- *
- * Note: uses email as user identifier for per-user data storage
- */
+// ✅ Do NOT change base/URLs as requested
+const API_BASE = "http://localhost:8000/edstream";
 
-function safeJSONParse(raw) {
+function readAuthUser() {
   try {
-    return JSON.parse(raw);
+    const raw = localStorage.getItem("auth_user");
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
-function getWho(email) {
-  return email || "anonymous";
-}
-function fmtDateTime(iso) {
-  if (!iso) return "—";
-  try { return new Date(iso).toLocaleString(); } catch { return "—"; }
-}
 
-/* ---------------------- QUIZ READERS (per-user) ---------------------- */
-function readQuizAttempt(quizId, email) {
-  const who = getWho(email);
-  const key = `quizAttempt:${who}:${quizId}`;
-  const found = safeJSONParse(localStorage.getItem(key));
-  if (found) return found;
-  // legacy fallback (if any)
-  return safeJSONParse(localStorage.getItem(`quizAttempt:${quizId}`));
-}
-function readQuizResult(quizId, email) {
-  const attempt = readQuizAttempt(quizId, email);
-  if (attempt) {
-    return {
-      score: attempt.score,
-      maxScore: attempt.maxScore,
-      submittedAt: attempt.submittedAt,
-      passed: attempt.passed,
-      questions: attempt.questions,
-    };
+async function fetchJSON(url) {
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const err = new Error(`HTTP ${res.status} ${url}${text ? ` — ${text}` : ""}`);
+    err.status = res.status;
+    throw err;
   }
-  const who = getWho(email);
-  return (
-    safeJSONParse(localStorage.getItem(`quizResult:${who}:${quizId}`)) ||
-    safeJSONParse(localStorage.getItem(`quizResult:${quizId}`)) // legacy fallback
-  );
-}
-
-/* ------------------- ASSIGNMENT READERS (per-user) ------------------- */
-// function readAssignmentAttempt(assignmentId, email) {
-//   const who = getWho(email);
-//   return (
-//     safeJSONParse(localStorage.getItem(`assignmentAttempt:${who}:${assignmentId}`)) ||
-//     null
-//   );
-// }
-
-function readAssignmentResult(assignmentId, email) {
-  const who = getWho(email);
-  return (
-    safeJSONParse(localStorage.getItem(`assignmentResult:${who}:${assignmentId}`)) ||
-    null
-  );
-}
-
-/**
- * ✅ Fetch “JSON file” for assignment details
- * We store JSON string in localStorage as assignmentAttemptFile:<who>:<assignmentId>,
- * then fetch it through a data URL.
- */
-async function fetchAssignmentAttemptFile(assignmentId, email) {
-  const who = getWho(email);
-  const raw = localStorage.getItem(`assignmentAttemptFile:${who}:${assignmentId}`);
-  if (!raw) return null;
-
-  const url = `data:application/json;charset=utf-8,${encodeURIComponent(raw)}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
   return res.json();
 }
 
+function fmt(iso) {
+  try {
+    return iso ? new Date(iso).toLocaleString() : "—";
+  } catch {
+    return "—";
+  }
+}
+
 export default function StudentMetrics() {
-  const meEmail = getCurrentUser()?.email || "anonymous";
+  const navigate = useNavigate();
+  useEffect(() => {
+    requireAuth(navigate, "/auth");
+  }, [navigate]);
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+
+  // Full course docs (not just ids)
   const [courses, setCourses] = useState([]);
-  const [assignments, setAssignments] = useState([]);
-  const [quizzes, setQuizzes] = useState([]);
 
+  // courseId -> { quizzes:[], assignments:[] }
+  const [workMap, setWorkMap] = useState({});
+
+  // Submissions (latest per user)
+  const [quizSubs, setQuizSubs] = useState({});     // { [quizId]: {score,maxScore,passingScore,passed,submittedAt,answers?} | null }
+  const [assignSubs, setAssignSubs] = useState({}); // { [assnId]: {submittedAt,status,link,fileName,fileUrl,score,feedback} | null }
+
+  // Expanders
   const [openCourse, setOpenCourse] = useState({});
-  const [openQuizDetails, setOpenQuizDetails] = useState({});
-  const [openAssignmentDetails, setOpenAssignmentDetails] = useState({}); // ✅ NEW
+  const toggleCourse = (cid) => setOpenCourse((p) => ({ ...p, [cid]: !p[cid] }));
 
-  const [assignmentDetailsCache, setAssignmentDetailsCache] = useState({}); // { [assignmentId]: payload }
-  const [assignmentDetailsLoading, setAssignmentDetailsLoading] = useState({}); // { [assignmentId]: boolean }
-  const [assignmentDetailsError, setAssignmentDetailsError] = useState({}); // { [assignmentId]: string }
+  // ---------- Detail toggles & caches ----------
+  const [openQuizDetails, setOpenQuizDetails] = useState({}); // { [quizId]: boolean }
+  const [openAssignmentDetails, setOpenAssignmentDetails] = useState({}); // { [assnId]: boolean }
 
-  const [metricsVersion, setMetricsVersion] = useState(0);
+  const [quizDetailsCache, setQuizDetailsCache] = useState({});   // { [quizId]: { quiz, submission } }
+  const [quizDetailsLoading, setQuizDetailsLoading] = useState({}); // { [quizId]: boolean }
+  const [quizDetailsError, setQuizDetailsError] = useState({});     // { [quizId]: string }
 
-  // Fetch base datasets
-  useEffect(() => {
-    let alive = true;
+  const [assignmentDetailsCache, setAssignmentDetailsCache] = useState({}); // { [id]: AssignmentDoc }
+  const [assignmentDetailsLoading, setAssignmentDetailsLoading] = useState({});
+  const [assignmentDetailsError, setAssignmentDetailsError] = useState({});
 
-    (async () => {
-      try {
-        setLoading(true);
-        setErr("");
+  // -------- Fetchers for details --------
 
-        const [cRes, aRes, qRes] = await Promise.all([
-          fetch("/data/courseDetails.json"),
-          fetch("/data/assignmentData.json"),
-          fetch("/data/quizData.json"),
-        ]);
+  // Quiz details + latest submission (answers)
+  const ensureQuizDetailsLoaded = async (quizId) => {
+    if (quizDetailsCache[quizId]) return;
 
-        if (!cRes.ok) throw new Error("Failed to load courseDetails.json");
-        if (!aRes.ok) throw new Error("Failed to load assignmentData.json");
-        if (!qRes.ok) throw new Error("Failed to load quizData.json");
+    setQuizDetailsLoading((p) => ({ ...p, [quizId]: true }));
+    setQuizDetailsError((p) => ({ ...p, [quizId]: "" }));
 
-        const [cJson, aJson, qJson] = await Promise.all([
-          cRes.json(),
-          aRes.json(),
-          qRes.json(),
-        ]);
+    try {
+      // 1) Quiz document (questions, options)
+      const quizJson = await fetchJSON(`${API_BASE}/quizzes/${quizId}`);
+      const quizDoc = quizJson?.data ?? quizJson;
 
-        if (!alive) return;
+      // 2) Latest submission (answers with picked & correct indexes)
+      const subJson = await fetchJSON(`${API_BASE}/quizzes/${quizId}/my-latest-submission`);
+      const submission = subJson?.data ?? subJson;
 
-        setCourses(Array.isArray(cJson) ? cJson : []);
-        setAssignments(Array.isArray(aJson) ? aJson : []);
-        setQuizzes(Array.isArray(qJson) ? qJson : []);
-      } catch (e) {
-        if (!alive) return;
-        setErr(e?.message || "Failed to load metrics.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
+      setQuizDetailsCache((prev) => ({
+        ...prev,
+        [quizId]: { quiz: quizDoc, submission },
+      }));
+    } catch (e) {
+      setQuizDetailsError((p) => ({
+        ...p,
+        [quizId]: e?.message || "Failed to load quiz details",
+      }));
+    } finally {
+      setQuizDetailsLoading((p) => ({ ...p, [quizId]: false }));
+    }
+  };
 
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Enrolled courses from profile
-  const [enrolledCourseIds, setEnrolledCourseIds] = useState([]);
-  useEffect(() => {
-    const refreshEnrollments = () => {
-      const me = getCurrentUser();
-      if (!me?.email) {
-        setEnrolledCourseIds([]);
-        return;
-      }
-      const full = getUserByEmail(me.email) || me;
-      const ids = Array.isArray(full.coursesEnrolled) ? full.coursesEnrolled : [];
-      setEnrolledCourseIds(ids);
-    };
-
-    refreshEnrollments();
-    window.addEventListener("session-changed", refreshEnrollments);
-    window.addEventListener("users-changed", refreshEnrollments);
-    return () => {
-      window.removeEventListener("session-changed", refreshEnrollments);
-      window.removeEventListener("users-changed", refreshEnrollments);
-    };
-  }, []);
-
-  // Sync metrics on updates
-  useEffect(() => {
-    const bump = () => setMetricsVersion((v) => v + 1);
-
-    window.addEventListener("metrics-changed", bump);
-
-    const onStorage = (e) => {
-      if (!e?.key) return;
-      if (
-        e.key.startsWith("quizAttempt:") ||
-        e.key.startsWith("quizResult:") ||
-        e.key.startsWith("assignmentAttempt:") ||
-        e.key.startsWith("assignmentResult:") ||
-        e.key.startsWith("assignmentAttemptFile:")
-      ) {
-        bump();
-      }
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener("metrics-changed", bump);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
-
-  const enrolledCourses = useMemo(() => {
-    return courses.filter((c) => enrolledCourseIds.includes(c.id));
-  }, [courses, enrolledCourseIds]);
-
-  // Load assignment details on demand (when user clicks View Details)
+  // Assignment details (Assignment doc)
   const ensureAssignmentDetailsLoaded = async (assignmentId) => {
     if (assignmentDetailsCache[assignmentId]) return;
 
@@ -223,90 +116,117 @@ export default function StudentMetrics() {
     setAssignmentDetailsError((p) => ({ ...p, [assignmentId]: "" }));
 
     try {
-      const payload = await fetchAssignmentAttemptFile(assignmentId, meEmail);
-      if (!payload) throw new Error("No assignment details found (JSON document missing).");
-
-      setAssignmentDetailsCache((p) => ({ ...p, [assignmentId]: payload }));
+      const json = await fetchJSON(`${API_BASE}/assignments/${assignmentId}`);
+      const doc = json?.data ?? json;
+      setAssignmentDetailsCache((p) => ({ ...p, [assignmentId]: doc }));
     } catch (e) {
-      setAssignmentDetailsError((p) => ({ ...p, [assignmentId]: e.message || "Failed to load details" }));
+      setAssignmentDetailsError((p) => ({
+        ...p,
+        [assignmentId]: e?.message || "Failed to load assignment details",
+      }));
     } finally {
       setAssignmentDetailsLoading((p) => ({ ...p, [assignmentId]: false }));
     }
   };
 
-  // Build metrics per course
-  const courseMetrics = useMemo(() => {
-    return enrolledCourses.map((c) => {
-      const aFor = assignments.filter((a) => a.courseId === c.id);
-      const qFor = quizzes.filter((q) => q.courseId === c.id);
-
-      // ✅ Completed = per-user assignmentResult exists OR per-user quizResult exists
-      const aDone = aFor.filter((a) => !!readAssignmentResult(a.id, meEmail));
-      const qDone = qFor.filter((q) => !!readQuizResult(q.id, meEmail));
-
-      const totalTrackable = aFor.length + qFor.length;
-      const completedTrackable = aDone.length + qDone.length;
-      const progressPct =
-        totalTrackable === 0 ? 0 : Math.round((completedTrackable / totalTrackable) * 100);
-
-      // Group into modules
-      const moduleMap = new Map();
-      function ensureModule(name) {
-        const key = name || "General";
-        if (!moduleMap.has(key)) {
-          moduleMap.set(key, {
-            moduleTitle: key,
-            quizzes: [],
-            assignments: [],
-          });
-        }
-        return moduleMap.get(key);
-      }
-
-      qFor.forEach((q) => {
-        const mod = ensureModule(q.moduleTitle || q.module || q.sectionTitle || "General");
-        const result = readQuizResult(q.id, meEmail);
-        mod.quizzes.push({
-          ...q,
-          completed: !!result,
-          score: result?.score ?? null,
-          maxScore: result?.maxScore ?? q.maxScore ?? null,
-          completedAt: result?.submittedAt ?? null,
-        });
-      });
-
-      aFor.forEach((a) => {
-        const mod = ensureModule(a.moduleTitle || a.module || a.sectionTitle || "General");
-        const res = readAssignmentResult(a.id, meEmail);
-        mod.assignments.push({
-          ...a,
-          completed: !!res,
-          completedAt: res?.submittedAt ?? null,
-          link: res?.link ?? null,
-          fileName: res?.fileName ?? null,
-          status: res?.status ?? null,
-        });
-      });
-
-      const modules = Array.from(moduleMap.values()).map((m) => {
-        const quizzesSorted = [...m.quizzes].sort((x, y) => Number(y.completed) - Number(x.completed));
-        const assignmentsSorted = [...m.assignments].sort((x, y) => Number(y.completed) - Number(x.completed));
-        return { ...m, quizzes: quizzesSorted, assignments: assignmentsSorted };
-      });
-
-      modules.sort((a, b) => {
-        if (a.moduleTitle === "General") return 1;
-        if (b.moduleTitle === "General") return -1;
-        return a.moduleTitle.localeCompare(b.moduleTitle);
-      });
-
-      return { course: c, progressPct, completedTrackable, totalTrackable, modules };
-    });
-  }, [enrolledCourses, assignments, quizzes, metricsVersion, meEmail]);
-
-  const toggleCourse = (courseId) => {
-    setOpenCourse((prev) => ({ ...prev, [courseId]: !prev[courseId] }));
+  // ⚠️ NEW: On-demand fetch of the user's assignment submission if needed
+  const ensureMyAssignmentSubmissionLoaded = async (assignmentId) => {
+    if (assignSubs[assignmentId]) return; // already have it
+    try {
+      const subJson = await fetchJSON(`${API_BASE}/assignments/${assignmentId}/my-submission`);
+      const submission = subJson?.data ?? subJson;
+      setAssignSubs((prev) => ({ ...prev, [assignmentId]: submission || null }));
+    } catch {
+      // leave as is if not found
+    }
   };
+
+  // Load learner → courses → work → submissions
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setErr("");
+
+        // 1) read auth_user._id
+        const me = readAuthUser();
+        const userId = me?._id;
+        if (!userId) throw new Error("No authenticated user session found.");
+
+        // 2) fetch learner + full courses
+        const learnerJson = await fetchJSON(`${API_BASE}/learners/by-user/${userId}`);
+        const learner = learnerJson?.data ?? learnerJson;
+        const fullCourses = Array.isArray(learner?.courses) ? learner.courses : [];
+        if (cancelled) return;
+        setCourses(fullCourses);
+
+        // 3) for each course, load work (quizzes+assignments)
+        const workResults = await Promise.all(
+          fullCourses.map((c) =>
+            fetchJSON(`${API_BASE}/coursework/${c.id || c._id}/work`)
+              .then((j) => ({ id: c.id || c._id, ok: true, data: j?.data ?? j }))
+              .catch((e) => ({ id: c.id || c._id, ok: false, error: e?.message || "Failed" }))
+          )
+        );
+
+        const nextWorkMap = {};
+        for (const r of workResults) {
+          nextWorkMap[String(r.id)] = r.ok
+            ? {
+                quizzes: Array.isArray(r.data?.quizzes) ? r.data.quizzes : [],
+                assignments: Array.isArray(r.data?.assignments) ? r.data.assignments : [],
+              }
+            : { quizzes: [], assignments: [], error: r.error };
+        }
+        if (cancelled) return;
+        setWorkMap(nextWorkMap);
+
+        // 4) submissions for all items
+        const allQuizIds = Object.values(nextWorkMap).flatMap((w) => w.quizzes.map((q) => q.id));
+        const allAssignIds = Object.values(nextWorkMap).flatMap((w) => w.assignments.map((a) => a.id));
+
+        const qFetches = allQuizIds.map((qid) =>
+          fetchJSON(`${API_BASE}/quizzes/${qid}/my-latest-submission`)
+            .then((j) => ({ id: qid, ok: true, data: j?.data ?? j }))
+            .catch(() => ({ id: qid, ok: false, data: null }))
+        );
+        const aFetches = allAssignIds.map((aid) =>
+          fetchJSON(`${API_BASE}/assignments/${aid}/my-submission`)
+            .then((j) => ({ id: aid, ok: true, data: j?.data ?? j }))
+            .catch(() => ({ id: aid, ok: false, data: null }))
+        );
+
+        const [qSubs, aSubs] = await Promise.all([Promise.all(qFetches), Promise.all(aFetches)]);
+
+        const nextQuizSubs = {};
+        qSubs.forEach((r) => (nextQuizSubs[r.id] = r.ok ? r.data : null));
+        const nextAssignSubs = {};
+        aSubs.forEach((r) => (nextAssignSubs[r.id] = r.ok ? r.data : null));
+
+        if (cancelled) return;
+        setQuizSubs(nextQuizSubs);
+        setAssignSubs(nextAssignSubs);
+      } catch (e) {
+        if (!cancelled) setErr(e?.message || "Failed to load dashboard.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Build view: we already have full course docs in `courses`
+  const coursesForUI = useMemo(
+    () =>
+      courses.map((c) => ({
+        id: String(c.id || c._id),
+        title: c.title || `Course ${c.id || c._id}`,
+      })),
+    [courses]
+  );
 
   if (loading) {
     return (
@@ -318,16 +238,13 @@ export default function StudentMetrics() {
       </div>
     );
   }
-
   if (err) {
     return (
       <div className="sm-page">
         <div className="sm-card">
           <h2 className="sm-title">My Dashboard</h2>
           <p className="sm-alert sm-alert--err">{err}</p>
-          <Link to="/" className="sm-link">
-            ← Back
-          </Link>
+          <Link to="/" className="sm-link">← Back</Link>
         </div>
       </div>
     );
@@ -338,38 +255,40 @@ export default function StudentMetrics() {
       <div className="sm-card">
         <div className="sm-header">
           <h2 className="sm-title">My Dashboard</h2>
-          <Link to="/" className="sm-link">
-            ← Back
-          </Link>
+          <Link to="/" className="sm-link">← Back</Link>
         </div>
 
-        {courseMetrics.length === 0 ? (
-          <div className="sm-empty">
-            <p className="sm-muted">No enrolled courses found.</p>
-            <p className="sm-muted">Enroll in a course first to see progress and tracking.</p>
-          </div>
+        {coursesForUI.length === 0 ? (
+          <div className="sm-empty"><p className="sm-muted">No enrolled courses found.</p></div>
         ) : (
           <div className="sm-list">
-            {courseMetrics.map((cm) => {
-              const c = cm.course;
-              const isOpen = !!openCourse[c.id];
+            {coursesForUI.map((c) => {
+              const cid = c.id;
+              const isOpen = !!openCourse[cid];
+              const work = workMap[cid] || { quizzes: [], assignments: [] };
+
+              const aDone = work.assignments.filter((a) => !!assignSubs[a.id]);
+              const qDone = work.quizzes.filter((q) => !!quizSubs[q.id]);
+              const total = work.assignments.length + work.quizzes.length;
+              const done = aDone.length + qDone.length;
+              const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
               return (
-                <section key={c.id} className="sm-course">
+                <section key={cid} className="sm-course">
                   <button
                     type="button"
                     className="sm-courseHead"
-                    onClick={() => toggleCourse(c.id)}
+                    onClick={() => toggleCourse(cid)}
                     aria-expanded={isOpen}
                   >
                     <div className="sm-courseLeft">
                       <div className="sm-courseTitle">{c.title}</div>
                       <div className="sm-courseMeta">
-                        Completed {cm.completedTrackable}/{cm.totalTrackable} (Quizzes + Assignments)
+                        Completed {done}/{total} (Quizzes + Assignments)
                       </div>
                     </div>
                     <div className="sm-courseRight">
-                      <div className="sm-progressNum">{cm.progressPct}%</div>
+                      <div className="sm-progressNum">{pct}%</div>
                       <div className={`sm-chevron ${isOpen ? "open" : ""}`}>▾</div>
                     </div>
                   </button>
@@ -377,256 +296,303 @@ export default function StudentMetrics() {
                   <div
                     className="sm-progressBar"
                     role="progressbar"
-                    aria-valuenow={cm.progressPct}
+                    aria-valuenow={pct}
                     aria-valuemin={0}
                     aria-valuemax={100}
                   >
-                    <div className="sm-progressFill" style={{ width: `${cm.progressPct}%` }} />
+                    <div className="sm-progressFill" style={{ width: `${pct}%` }} />
                   </div>
 
                   {isOpen && (
                     <div className="sm-courseBody">
-                      {cm.modules.map((m) => (
-                        <div key={m.moduleTitle} className="sm-module">
-                          <div className="sm-moduleHead">
-                            <div className="sm-moduleTitle">{m.moduleTitle}</div>
-                            <div className="sm-moduleCounts">
-                              {m.assignments.length} assignments • {m.quizzes.length} quizzes
-                            </div>
-                          </div>
-
-                          {/* ---------------- ASSIGNMENTS (with details) ---------------- */}
-                          {m.assignments.length > 0 && (
-                            <div className="sm-block">
-                              <div className="sm-blockTitle">Assignments</div>
-                              <ul className="sm-items">
-                                {m.assignments.map((a) => (
-                                  <li key={a.id} className={`sm-item ${a.completed ? "done" : ""}`}>
-                                    <div className="sm-itemMain">
-                                      <div className="sm-itemTitle">
-                                        <span className="sm-tag sm-tag--assignment">📘</span>
-                                        {a.title}
-                                      </div>
-
-                                      <div className="sm-itemSub">
-                                        Completion:{" "}
-                                        <b>{a.completed ? fmtDateTime(a.completedAt) : "Not completed"}</b>
-                                        {a.completed && a.status ? (
-                                          <>
-                                            {" "}• Status: <b>{a.status}</b>
-                                          </>
-                                        ) : null}
-                                      </div>
+                      {/* ---------------- ASSIGNMENTS ---------------- */}
+                      {work.assignments.length > 0 && (
+                        <div className="sm-block">
+                          <div className="sm-blockTitle">Assignments</div>
+                          <ul className="sm-items">
+                            {work.assignments.map((a) => {
+                              const sub = assignSubs[a.id] || null;
+                              const completed = !!sub;
+                              const detailsOpen = !!openAssignmentDetails[a.id];
+                              return (
+                                <li key={a.id} className={`sm-item ${completed ? "done" : ""}`}>
+                                  <div className="sm-itemMain">
+                                    <div className="sm-itemTitle">
+                                      <span className="sm-tag sm-tag--assignment">📘</span>
+                                      {a.title}
                                     </div>
+                                    <div className="sm-itemSub">
+                                      Completion: <b>{completed ? fmt(sub.submittedAt) : "Not completed"}</b>
+                                      {completed && sub?.status ? <> • Status: <b>{sub.status}</b></> : null}
+                                    </div>
+                                  </div>
 
-                                    <div className="sm-itemRight">
-                                      <span className={`sm-status ${a.completed ? "ok" : "muted"}`}>
-                                        {a.completed ? "Completed" : "Pending"}
-                                      </span>
+                                  <div className="sm-itemRight">
+                                    <span className={`sm-status ${completed ? "ok" : "muted"}`}>
+                                      {completed ? "Completed" : "Pending"}
+                                    </span>
 
-                                      {a.completed && (
-                                        <button
-                                          type="button"
-                                          className="sm-open"
-                                          style={{ border: "none", cursor: "pointer" }}
-                                          onClick={async () => {
-                                            const next = !openAssignmentDetails[a.id];
-                                            setOpenAssignmentDetails((p) => ({ ...p, [a.id]: next }));
-                                            if (next) await ensureAssignmentDetailsLoaded(a.id);
-                                          }}
-                                        >
-                                          {openAssignmentDetails[a.id] ? "Hide Details" : "View Details"}
-                                        </button>
-                                      )}
-
+                                    {/* Completed -> View Details; else -> Open */}
+                                    {completed ? (
+                                      <button
+                                        type="button"
+                                        className="sm-open"
+                                        style={{ border: "none", cursor: "pointer" }}
+                                        onClick={async () => {
+                                          const next = !detailsOpen;
+                                          setOpenAssignmentDetails((p) => ({ ...p, [a.id]: next }));
+                                          if (next) {
+                                            // ensure both assignment doc & my-submission are available
+                                            await Promise.all([
+                                              ensureAssignmentDetailsLoaded(a.id),
+                                              ensureMyAssignmentSubmissionLoaded(a.id),
+                                            ]);
+                                          }
+                                        }}
+                                      >
+                                        {detailsOpen ? "Hide Details" : "View Details"}
+                                      </button>
+                                    ) : (
                                       <Link to={`/assignment/${a.id}`} className="sm-open" rel="noopener noreferrer">
                                         Open
                                       </Link>
-                                    </div>
+                                    )}
+                                  </div>
 
-                                    {/* ✅ Assignment detail panel (fetched JSON doc) */}
-                                    {a.completed && openAssignmentDetails[a.id] && (
-                                      <div
-                                        className="sm-assignmentDetails"
-                                        style={{
-                                          marginTop: 10,
-                                          padding: 10,
-                                          border: "1px solid #e5e7eb",
-                                          borderRadius: 10,
-                                          background: "#fafafa",
-                                          width: "100%",
+                                  {/* Inline details panel for Assignments (now includes submission info) */}
+                                  {completed && detailsOpen && (
+                                    <div
+                                      className="sm-assignmentDetails"
+                                      style={{
+                                        marginTop: 10,
+                                        padding: 10,
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 10,
+                                        background: "#fafafa",
+                                        width: "100%",
+                                      }}
+                                    >
+                                      {assignmentDetailsLoading[a.id] ? (
+                                        <div className="sm-muted">Loading assignment details…</div>
+                                      ) : assignmentDetailsError[a.id] ? (
+                                        <div className="sm-muted">{assignmentDetailsError[a.id]}</div>
+                                      ) : (() => {
+                                        const doc = assignmentDetailsCache[a.id] || null;
+                                        const mySub = assignSubs[a.id] || null;
+
+                                        return (
+                                          <div>
+                                            <div style={{ fontWeight: 700, marginBottom: 8 }}>Assignment</div>
+                                            <div style={{ fontSize: 13, marginBottom: 8 }}>
+                                              <div><b>Title:</b> {doc?.title || "—"}</div>
+                                              <div><b>Estimated Time:</b> {doc?.estimatedMinutes ?? "—"} mins</div>
+                                              <div><b>Max Score:</b> {doc?.maxScore ?? "—"}</div>
+                                              <div><b>Passing Score:</b> {doc?.passingScore ?? "—"}</div>
+                                              {doc?.attachmentName ? <div><b>Attachment:</b> {doc.attachmentName}</div> : null}
+                                            </div>
+
+                                            {doc?.description ? (
+                                              <div style={{ marginTop: 10 }}>
+                                                <div style={{ fontWeight: 700 }}>Instructions</div>
+                                                <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.6 }}>
+                                                  {doc.description}
+                                                </div>
+                                              </div>
+                                            ) : null}
+
+                                            {/* --- NEW: My Submission section (fileName, fileUrl, status, etc.) --- */}
+                                            <div style={{ marginTop: 14 }}>
+                                              <div style={{ fontWeight: 700, marginBottom: 6 }}>My Submission</div>
+                                              {!mySub ? (
+                                                <div className="sm-muted">No submission found.</div>
+                                              ) : (
+                                                <div style={{ fontSize: 13, lineHeight: 1.7 }}>
+                                                  <div><b>Submitted At:</b> {fmt(mySub.submittedAt)}</div>
+                                                  <div><b>Status:</b> {mySub.status ?? "—"}</div>
+                                                  {mySub.link ? (
+                                                    <div>
+                                                      <b>Link:</b>{" "}
+                                                      <a href={mySub.link} target="_blank" rel="noreferrer">
+                                                        {mySub.link}
+                                                      </a>
+                                                    </div>
+                                                  ) : null}
+                                                  {mySub.fileName ? <div><b>File Name:</b> {mySub.fileName}</div> : null}
+                                                  {mySub.fileUrl ? (
+                                                    <div>
+                                                      <b>File URL:</b>{" "}
+                                                      <a href={mySub.fileUrl} target="_blank" rel="noreferrer">
+                                                        {mySub.fileUrl}
+                                                      </a>
+                                                    </div>
+                                                  ) : null}
+                                                  {mySub.score != null ? <div><b>Score:</b> {mySub.score}</div> : null}
+                                                  {mySub.feedback ? <div><b>Feedback:</b> {mySub.feedback}</div> : null}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* ---------------- QUIZZES ---------------- */}
+                      {work.quizzes.length > 0 && (
+                        <div className="sm-block">
+                          <div className="sm-blockTitle">Quizzes</div>
+                          <ul className="sm-items">
+                            {work.quizzes.map((q) => {
+                              const sub = quizSubs[q.id] || null;
+                              const completed = !!sub;
+                              const detailsOpen = !!openQuizDetails[q.id];
+                              const max = sub?.maxScore ?? q.maxScore ?? "—";
+                              return (
+                                <li key={q.id} className={`sm-item ${completed ? "done" : ""}`}>
+                                  <div className="sm-itemMain">
+                                    <div className="sm-itemTitle">
+                                      <span className="sm-tag sm-tag--quiz">📝</span>
+                                      {q.title}
+                                    </div>
+                                    <div className="sm-itemSub">
+                                      Score: <b>{completed ? `${sub.score ?? 0} / ${max}` : "—"}</b> • Completion:{" "}
+                                      <b>{completed ? fmt(sub.submittedAt) : "Not completed"}</b>
+                                    </div>
+                                  </div>
+
+                                  <div className="sm-itemRight">
+                                    <span className={`sm-status ${completed ? "ok" : "muted"}`}>
+                                      {completed ? "Completed" : "Pending"}
+                                    </span>
+
+                                    {/* Completed -> View Details; else -> Open */}
+                                    {completed ? (
+                                      <button
+                                        type="button"
+                                        className="sm-open"
+                                        style={{ border: "none", cursor: "pointer" }}
+                                        onClick={async () => {
+                                          const next = !detailsOpen;
+                                          setOpenQuizDetails((prev) => ({ ...prev, [q.id]: next }));
+                                          if (next) await ensureQuizDetailsLoaded(q.id);
                                         }}
                                       >
-                                        {assignmentDetailsLoading[a.id] ? (
-                                          <div className="sm-muted">Loading assignment details…</div>
-                                        ) : assignmentDetailsError[a.id] ? (
-                                          <div className="sm-muted">{assignmentDetailsError[a.id]}</div>
-                                        ) : (() => {
-                                          const payload = assignmentDetailsCache[a.id] || null;
-                                          if (!payload) return <div className="sm-muted">No detailed assignment data found.</div>;
-
-                                          const snap = payload.assignmentSnapshot || {};
-                                          return (
-                                            <div>
-                                              <div style={{ fontWeight: 700, marginBottom: 8 }}>Assignment Submission Review</div>
-                                              <div style={{ fontSize: 13, marginBottom: 8 }}>
-                                                <div><b>Submitted At:</b> {fmtDateTime(payload.submittedAt)}</div>
-                                                <div><b>Status:</b> {payload.status || "Submitted"}</div>
-                                                {payload.link ? (
-                                                  <div>
-                                                    <b>Link:</b>{" "}
-                                                    <a href={payload.link} target="_blank" rel="noreferrer">
-                                                      {payload.link}
-                                                    </a>
-                                                  </div>
-                                                ) : null}
-                                                {payload.fileName ? <div><b>File:</b> {payload.fileName}</div> : null}
-                                              </div>
-
-                                              <div style={{ marginTop: 10, fontWeight: 700 }}>Assignment Details</div>
-                                              <div style={{ fontSize: 13, marginTop: 6 }}>
-                                                <div><b>Title:</b> {snap.title || payload.title || "—"}</div>
-                                                <div><b>Course:</b> {(snap.courseId || payload.courseId || "—").toString().replace(/-/g, " ")}</div>
-                                                <div><b>Max Score:</b> {snap.maxScore ?? "—"}</div>
-                                                <div><b>Expected Time:</b> {snap.expectedTimeMins ?? "—"} mins</div>
-                                              </div>
-
-                                              {snap.description ? (
-                                                <div style={{ marginTop: 10 }}>
-                                                  <div style={{ fontWeight: 700 }}>Instructions</div>
-                                                  <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.6 }}>
-                                                    {snap.description}
-                                                  </div>
-                                                </div>
-                                              ) : null}
-
-                                              {Array.isArray(snap.attachments) && snap.attachments.length > 0 ? (
-                                                <div style={{ marginTop: 10 }}>
-                                                  <div style={{ fontWeight: 700 }}>Attachments</div>
-                                                  <ul style={{ margin: "6px 0 0 18px", padding: 0 }}>
-                                                    {snap.attachments.map((att) => (
-                                                      <li key={att.url}>
-                                                        <a href={att.url} target="_blank" rel="noreferrer">
-                                                          {att.name}
-                                                        </a>
-                                                      </li>
-                                                    ))}
-                                                  </ul>
-                                                </div>
-                                              ) : null}
-
-                                              {Array.isArray(snap.rubric) && snap.rubric.length > 0 ? (
-                                                <div style={{ marginTop: 10 }}>
-                                                  <div style={{ fontWeight: 700 }}>Rubric</div>
-                                                  <ul style={{ margin: "6px 0 0 18px", padding: 0 }}>
-                                                    {snap.rubric.map((r, idx) => (
-                                                      <li key={idx} style={{ marginBottom: 4 }}>
-                                                        <b>{r.criterion}:</b> {r.points} pts
-                                                      </li>
-                                                    ))}
-                                                  </ul>
-                                                </div>
-                                              ) : null}
-                                            </div>
-                                          );
-                                        })()}
-                                      </div>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* ---------------- QUIZZES (existing behavior) ---------------- */}
-                          {m.quizzes.length > 0 && (
-                            <div className="sm-block">
-                              <div className="sm-blockTitle">Quizzes</div>
-                              <ul className="sm-items">
-                                {m.quizzes.map((q) => (
-                                  <li key={q.id} className={`sm-item ${q.completed ? "done" : ""}`}>
-                                    <div className="sm-itemMain">
-                                      <div className="sm-itemTitle">
-                                        <span className="sm-tag sm-tag--quiz">📝</span>
-                                        {q.title}
-                                      </div>
-                                      <div className="sm-itemSub">
-                                        Score:{" "}
-                                        <b>
-                                          {q.completed ? `${q.score ?? 0} / ${q.maxScore ?? "—"}` : "—"}
-                                        </b>{" "}
-                                        • Completion:{" "}
-                                        <b>{q.completed ? fmtDateTime(q.completedAt) : "Not completed"}</b>
-                                      </div>
-                                    </div>
-
-                                    <div className="sm-itemRight">
-                                      <span className={`sm-status ${q.completed ? "ok" : "muted"}`}>
-                                        {q.completed ? "Completed" : "Pending"}
-                                      </span>
-
-                                      {q.completed && (
-                                        <button
-                                          type="button"
-                                          className="sm-open"
-                                          style={{ border: "none", cursor: "pointer" }}
-                                          onClick={() =>
-                                            setOpenQuizDetails((prev) => ({ ...prev, [q.id]: !prev[q.id] }))
-                                          }
-                                        >
-                                          {openQuizDetails[q.id] ? "Hide Details" : "View Details"}
-                                        </button>
-                                      )}
-
+                                        {detailsOpen ? "Hide Details" : "View Details"}
+                                      </button>
+                                    ) : (
                                       <Link to={`/quiz/${q.id}`} className="sm-open" rel="noopener noreferrer">
                                         Open
                                       </Link>
-                                    </div>
+                                    )}
+                                  </div>
 
-                                    {q.completed && openQuizDetails[q.id] && (
-                                      <div
-                                        className="sm-quizDetails"
-                                        style={{
-                                          marginTop: 10,
-                                          padding: 10,
-                                          border: "1px solid #e5e7eb",
-                                          borderRadius: 10,
-                                          background: "#fafafa",
-                                          width: "100%",
-                                        }}
-                                      >
-                                        {(() => {
-                                          const attempt = readQuizAttempt(q.id, meEmail);
-                                          if (!attempt?.questions?.length) {
-                                            return <div className="sm-muted">No detailed attempt data found.</div>;
-                                          }
-                                          return (
-                                            <div>
-                                              <div style={{ fontWeight: 700, marginBottom: 8 }}>Quiz Attempt Review</div>
-                                              <div style={{ fontSize: 13, marginBottom: 8 }}>
-                                                Score: <b>{attempt.score}</b> / <b>{attempt.maxScore}</b> • Status:{" "}
-                                                <b>{attempt.passed ? "Passed" : "Not Passed"}</b>
+                                  {/* Inline details panel for Quizzes (with answers) */}
+                                  {completed && detailsOpen && (
+                                    <div
+                                      className="sm-quizDetails"
+                                      style={{
+                                        marginTop: 10,
+                                        padding: 10,
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 10,
+                                        background: "#fafafa",
+                                        width: "100%",
+                                      }}
+                                    >
+                                      {quizDetailsLoading[q.id] ? (
+                                        <div className="sm-muted">Loading quiz details…</div>
+                                      ) : quizDetailsError[q.id] ? (
+                                        <div className="sm-muted">{quizDetailsError[q.id]}</div>
+                                      ) : (() => {
+                                        const data = quizDetailsCache[q.id];
+                                        if (!data) return <div className="sm-muted">No detailed quiz data found.</div>;
+
+                                        const quizDoc = data.quiz;
+                                        const submission = data.submission;
+
+                                        const questions = Array.isArray(quizDoc?.quiz?.questions)
+                                          ? quizDoc.quiz.questions
+                                          : [];
+                                        const answers = Array.isArray(submission?.answers)
+                                          ? submission.answers
+                                          : [];
+
+                                        // Compute total points (prefer doc.maxScore if present)
+                                        const totalPts =
+                                          Number.isFinite(Number(quizDoc?.maxScore))
+                                            ? Number(quizDoc.maxScore)
+                                            : questions.reduce((s, qq) => s + (Number(qq.points) || 0), 0);
+
+                                        return (
+                                          <div>
+                                            <div style={{ fontWeight: 700, marginBottom: 8 }}>Quiz</div>
+                                            <div style={{ fontSize: 13, marginBottom: 8 }}>
+                                              <div><b>Title:</b> {quizDoc.title || "—"}</div>
+                                              <div><b>Estimated Time:</b> {quizDoc.estimatedMinutes ?? "—"} mins</div>
+                                              <div><b>Max Score:</b> {totalPts}</div>
+                                              <div><b>Passing Score:</b> {quizDoc.passingScore ?? "—"}</div>
+                                              <div><b>Shuffle Questions:</b> {quizDoc?.quiz?.shuffleQuestions ? "Yes" : "No"}</div>
+                                              <div style={{ marginTop: 6 }}>
+                                                <b>Your Score:</b> {submission?.score ?? 0} / {submission?.maxScore ?? totalPts} •{" "}
+                                                <b>Status:</b> {submission?.passed ? "Passed" : "Not Passed"}
                                               </div>
+                                            </div>
 
+                                            <div style={{ marginTop: 12 }}>
+                                              <div style={{ fontWeight: 700, marginBottom: 6 }}>Questions & Answers</div>
                                               <ol style={{ margin: 0, paddingLeft: 18 }}>
-                                                {attempt.questions.map((qq) => {
-                                                  const optMap = new Map((qq.options || []).map((o) => [o.oid, o.text]));
-                                                  const chosen = (qq.selectedOptionIds || []).map((oid) => `${oid}. ${optMap.get(oid) || ""}`.trim());
-                                                  const correct = (qq.correctOptionIds || []).map((oid) => `${oid}. ${optMap.get(oid) || ""}`.trim());
-                                                  const isCorrect =
-                                                    JSON.stringify([...(qq.selectedOptionIds || [])].sort()) ===
-                                                    JSON.stringify([...(qq.correctOptionIds || [])].sort());
+                                                {questions.map((qq, index) => {
+                                                  const subAns = answers.find((a) => a.qIndex === index);
+
+                                                  const pickedIndexes = Array.isArray(subAns?.pickedSourceIndexes)
+                                                    ? subAns.pickedSourceIndexes
+                                                    : [];
+                                                  const correctIndexes = Array.isArray(subAns?.correctSourceIndexes)
+                                                    ? subAns.correctSourceIndexes
+                                                    : [];
+
+                                                  const pickedTexts = pickedIndexes.map(
+                                                    (i) => qq?.options?.[i]?.text ?? "(unknown option)"
+                                                  );
+                                                  const correctTexts = correctIndexes.map(
+                                                    (i) => qq?.options?.[i]?.text ?? "(unknown option)"
+                                                  );
+
+                                                  const awarded = Number.isFinite(Number(subAns?.awarded))
+                                                    ? subAns.awarded
+                                                    : 0;
+                                                  const qPts = Number.isFinite(Number(subAns?.points))
+                                                    ? subAns.points
+                                                    : Number(qq?.points) || 0;
+
+                                                  const isExact =
+                                                    pickedIndexes.length === correctIndexes.length &&
+                                                    pickedIndexes.every((p) => correctIndexes.includes(p));
+
                                                   return (
-                                                    <li key={qq.qid} style={{ marginBottom: 10 }}>
-                                                      <div style={{ fontWeight: 600 }}>{qq.text}</div>
-                                                      <div style={{ fontSize: 13, marginTop: 4 }}>
-                                                        <div><b>Your Answer:</b> {chosen.length ? chosen.join(", ") : "—"}</div>
-                                                        <div><b>Correct Answer:</b> {correct.length ? correct.join(", ") : "—"}</div>
+                                                    <li key={index} style={{ marginBottom: 14 }}>
+                                                      <div style={{ fontWeight: 600 }}>{qq?.title ?? `Question ${index + 1}`}</div>
+                                                      <div style={{ marginTop: 4, fontSize: 13 }}>
+                                                        <div>
+                                                          <b>Your Answer:</b>{" "}
+                                                          {pickedTexts.length ? pickedTexts.join(", ") : "—"}
+                                                        </div>
+                                                        <div>
+                                                          <b>Correct Answer:</b>{" "}
+                                                          {correctTexts.length ? correctTexts.join(", ") : "—"}
+                                                        </div>
                                                         <div>
                                                           <b>Result:</b>{" "}
-                                                          <span style={{ color: isCorrect ? "#065f46" : "#9b1c1c" }}>
-                                                            {isCorrect ? "Correct" : "Incorrect"}
-                                                          </span>
+                                                          <span style={{ color: isExact ? "#065f46" : "#9b1c1c" }}>
+                                                            {isExact ? "Correct" : "Incorrect"}
+                                                          </span>{" "}
+                                                          • <b>Points Awarded:</b> {awarded} / {qPts}
                                                         </div>
                                                       </div>
                                                     </li>
@@ -634,17 +600,17 @@ export default function StudentMetrics() {
                                                 })}
                                               </ol>
                                             </div>
-                                          );
-                                        })()}
-                                      </div>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </section>
