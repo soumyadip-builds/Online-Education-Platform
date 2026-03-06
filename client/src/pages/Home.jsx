@@ -2,15 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import CourseCard from '../components/CourseCard';
 import '../styles/home.css';
 
-// Hero art
-import GenAI from '/images/GenAI.png';
-import ITCert from '/images/IT_Certifications.png';
-import DataScience from '/images/Data_Science.png';
-import ChatGPT from '/images/ChatGPT.png';
-import PromptEng from '/images/Promp_Eng.png';
-import MachineLearning from '/images/Machine_Learning.png';
-import AiAgents from '/images/AI-Agents.png';
-
 import HeroSlide_1 from '/images/HeroSlide_1.png';
 import HeroSlide_2 from '/images/HeroSlide_2.png';
 import HeroSlide_3 from '/images/HeroSlide_3.png';
@@ -34,6 +25,7 @@ import Acc2 from '/images/accelerators/Acc3.png';
 import Acc3 from '/images/accelerators/Acc4.png';
 
 import { useNavigate } from 'react-router-dom';
+import { getAuthHeader } from '../lib/authLocal';
 
 const heroSlides = [
 	{
@@ -114,23 +106,56 @@ export default function Home() {
 	const courseRowRef = useRef(null);
 
 	const [courses, setcourses] = useState([]);
+	const [coursesLoading, setCoursesLoading] = useState(true);
+	const [coursesError, setCoursesError] = useState(null);
 
 	useEffect(() => {
+		let isMounted = true;
 		const load = async () => {
+			setCoursesLoading(true);
+			setCoursesError(null);
 			try {
-				const res = await fetch('/data/courseDetails.json', {
-					cache: 'no-store',
+				const API_BASE =
+					import.meta.env.VITE_API_BASE ?? 'http://localhost:8000/edstream';
+				const res = await fetch(`${API_BASE}/courses`, {
+					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+					credentials: 'include',
 				});
-				if (!res.ok)
-					throw new Error(`Failed to load courseDetails.json (${res.status})`);
-				const data = await res.json();
-				const data_fetched = Array.isArray(data) ? data : [];
-				setcourses(data_fetched);
+
+				if (!res.ok) {
+					throw new Error(`Failed to load courses (${res.status})`);
+				}
+
+				const payload = await res.json();
+				const items = payload?.data ?? [];
+
+				// Map to the shape expected by this component
+				const normalized = items.map((c) => ({
+					id: c.id,
+					title: c.title ?? 'Untitled Course',
+					description: c.description ?? '',
+					thumbnail: c.thumbnail || '',
+					learners: 0, // server doesn't currently return learner counts
+					rating: 0,
+					author: c.author ?? '',
+					tags: c.tags ?? [],
+					isBestseller: c.isBestseller ?? false,
+					counts: c.counts || {},
+				}));
+
+				if (isMounted) setcourses(normalized);
 			} catch (err) {
+				if (isMounted) setCoursesError(err.message || 'Error loading courses');
 				console.log(err);
+			} finally {
+				if (isMounted) setCoursesLoading(false);
 			}
 		};
+
 		load();
+		return () => {
+			isMounted = false;
+		};
 	}, []);
 
 	const byAnyTag = (c, tags) => (c.tags ?? []).some((t) => tags.includes(t));
@@ -170,7 +195,6 @@ export default function Home() {
 
 	return (
 		<main className="home">
-
 			{/* HERO SECTION */}
 			<section className="hero" aria-roledescription="carousel">
 				<button
@@ -230,7 +254,6 @@ export default function Home() {
 						/>
 					</svg>
 				</button>
-
 			</section>
 
 			{/* COURSES / TABS */}
@@ -275,14 +298,37 @@ export default function Home() {
 						</svg>
 					</button>
 					<div className="row-track" ref={courseRowRef}>
-						{filteredcourses.map((c) => (
-							<div key={c.id} className="col-12 col-sm-6 col-lg-4">
-								<div className="card h-100 shadow-sm border-0">
-									<CourseCard course={c} />
-								</div>
-								{/* End Inline Course Card */}
+						{coursesLoading && (
+							<div style={{ padding: '20px', color: '#666' }}>
+								Loading courses…
 							</div>
-						))}
+						)}
+
+						{coursesError && !coursesLoading && (
+							<div style={{ padding: '20px', color: '#d9534f' }}>
+								Error: {coursesError}
+							</div>
+						)}
+
+						{!coursesLoading &&
+							!coursesError &&
+							filteredcourses.length === 0 && (
+								<div style={{ padding: '20px', color: '#666' }}>
+									No courses found in this category.
+								</div>
+							)}
+
+						{!coursesLoading &&
+							!coursesError &&
+							filteredcourses.length > 0 &&
+							filteredcourses.map((c) => (
+								<div key={c.id} className="col-12 col-sm-6 col-lg-4">
+									<div className="card h-100 shadow-sm border-0">
+										<CourseCard course={c} />
+									</div>
+									{/* End Inline Course Card */}
+								</div>
+							))}
 					</div>
 
 					<button
@@ -442,7 +488,6 @@ export default function Home() {
 					))}
 				</div>
 			</section>
-
 		</main>
 	);
 }
