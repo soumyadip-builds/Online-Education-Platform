@@ -1,222 +1,133 @@
-import { useEffect, useMemo, useState } from "react";
-import CourseCard from "../components/CourseCard";
-import "../styles/course.css";
-
-// NEW: pull user + role-aware lists
-import { getCurrentUser } from "../utils/session";
-import { findUser } from "../utils/userStorage";
-import { useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from 'react';
+import CourseCard from '../components/CourseCard';
+import '../styles/course.css';
+import { useLocation } from 'react-router-dom';
+import { getAuthHeader } from '../lib/authLocal';
 
 /**
- * Courses listing page
- * - Fetches /data/courseDetails.json (public/data/)
- * - Search by title/author
- * - Toggle to filter bestsellers
- * - Renders CourseCard for each course
+ * CoursePage.jsx — fetches from API:
+ *   GET /edstream/courses?scope=enrolled|created|authored|all
+ * If no scope, we request scope=all (catalog).
  */
-// Created courses are stored by CourseCreator in localStorage under this key
-const LS_KEY_COURSES = "cb_courses_v1";
-
-function loadCreatedCourses() {
-    try {
-        const raw = localStorage.getItem(LS_KEY_COURSES) || "[]";
-        const list = JSON.parse(raw);
-        return Array.isArray(list) ? list : [];
-    } catch {
-        return [];
-    }
-}
-
-function mergeCourses(seedCourses, createdCourses) {
-    // Avoid duplicates by id; created items override seed with same id
-    const map = new Map();
-    [...(seedCourses || []), ...(createdCourses || [])].forEach((c) => {
-        if (c && c.id) map.set(c.id, c);
-    });
-    return Array.from(map.values());
-}
 export default function CoursePage() {
-    const [courses, setCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [loadErr, setLoadErr] = useState("");
-    const [query, setQuery] = useState("");
-    const [showBest, setShowBest] = useState(false);
+	const [courses, setCourses] = useState([]);
+	const [query, setQuery] = useState('');
+	const [showBest, setShowBest] = useState(false);
 
-    // NEW: read scope from query or navigation state
-    const location = useLocation();
-    const scopeFromState = location.state?.scope;
-    const scopeFromQuery = new URLSearchParams(location.search).get("scope");
-    // /coursepage?scope=enrolled
-    const scope = scopeFromState || scopeFromQuery || null; // 'enrolled' | 'created' | null
+	const location = useLocation();
+	const scopeFromState = location.state?.scope;
+	const scopeFromQuery = new URLSearchParams(location.search).get('scope');
 
-    // NEW: keep a copy of the current, fully-populated user from storage
-    const [user, setUser] = useState(null);
-    useEffect(() => {
-        const pull = () => {
-            const cu = getCurrentUser();
-            setUser(cu?.email ? findUser(cu.email) : null);
-        };
-        pull();
-        // update course page filters if user changes without refreshing page.
-        window.addEventListener("session-changed", pull);
-        //  remove listener on component unmount.
-        return () => window.removeEventListener("session-changed", pull);
-    }, []);
+	// ✅ fix: proper OR chaining
+	const scope = scopeFromState || scopeFromQuery || null; // 'enrolled' | 'created' | 'authored' | null
 
-    useEffect(() => {
-        let alive = true;
-        (async () => {
-            try {
-                setLoading(true);
-                setLoadErr("");
-                // Fetch from public/data
-                const res = await fetch("/data/courseDetails.json");
-                if (!res.ok) {
-                    throw new Error(
-                        `HTTP ${res.status} fetching courseDetails.json`,
-                    );
-                }
-                const ct = res.headers.get("content-type") || "";
-                if (!ct.includes("application/json")) {
-                    const text = await res.text();
-                    throw new Error(
-                        `Expected JSON but got '${ct}'. First bytes: ${text.slice(0, 80)}`,
-                    );
-                }
-                const data = await res.json();
-                if (!Array.isArray(data))
-                    throw new Error("courseDetails.json must be an array");
-                const created = loadCreatedCourses();
-                const merged = mergeCourses(data, created);
-                if (alive) setCourses(merged);
-            } catch (e) {
-                if (alive) setLoadErr(e.message || "Failed to load courses");
-            } finally {
-                if (alive) setLoading(false);
-            }
-        })();
-        const reload = () => {
-            const createdNow = loadCreatedCourses();
-            setCourses((prev) => mergeCourses(prev, createdNow));
-        };
-        window.addEventListener("courses-changed", reload);
-        return () => {
-            alive = false;
-            window.removeEventListener("courses-changed", reload);
-        };
-    }, []);
+	useEffect(() => {
+		let alive = true;
+		(async () => {
+			try {
+				const API_BASE =
+					import.meta.env.VITE_API_BASE || 'http://localhost:8000/edstream';
 
-    // NEW: build a Set of Courses to keep, based on scope + role
-    const scopedIdSet = useMemo(() => {
-        if (!user || !scope) return null;
-        if (scope === "enrolled" && user.role === "learner") {
-            return new Set(user.coursesEnrolled || []);
-        }
-        if (scope === "created" && user.role === "instructor") {
-            return new Set(user.coursesCreated || []);
-        }
-        return null;
-    }, [user, scope]);
+				// ✅ If no scope passed (Explore), ask the server for a public/all listing
+				const effectiveScope = scope || 'all';
+				const endpoint = `${API_BASE}/courses?scope=${encodeURIComponent(effectiveScope)}`;
 
-    // NEW (authored): normalized author name for current instructor
-    const authoredName = useMemo(() => {
-        if (!user || user.role !== "instructor") return null;
-        const n = (user.name || "").trim().toLowerCase();
-        return n || null;
-    }, [user]);
+				const res = await fetch(endpoint, {
+					headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+				});
 
-    // Combine: text + bestseller + scope filters
-    const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        return (Array.isArray(courses) ? courses : [])
-            .filter((c) => {
-                const title = (c.title ?? "").toLowerCase();
-                const author = (c.author ?? "").toLowerCase();
-                const matchesText = q ? `${title} ${author}`.includes(q) : true;
-                const matchesBest = showBest ? c.isBestseller === true : true;
+				// If the server responds with 401 for public/all (while unauthenticated),
+				// we still try to parse JSON to show a meaningful message.
+				const payload = await res.json().catch(() => ({}));
+				if (!alive) return;
 
-                // Scope by IDs (enrolled/created)
-                const matchesIdScope = scopedIdSet
-                    ? scopedIdSet.has(c.id)
-                    : true;
+				// Support both { ok, data } and raw arrays
+				const list = Array.isArray(payload?.data)
+					? payload.data
+					: Array.isArray(payload)
+						? payload
+						: [];
+				
+				const normalized = list.map((c) => ({
+					...c,
+					id: c.id || c._id, // used by <CourseCard/>
+					thumbnail: c.thumbnail || '',
+					title: c.title ?? '',
+					author: c.author ?? '',
+				}));				
 
-                // NEW (authored): author exact match with current instructor's name
-                const matchesAuthored =
-                    scope === "authored" && authoredName
-                        ? author.trim() === authoredName
-                        : true;
+				setCourses(normalized);
+			} catch (e) {
+				if (!alive) return;
+				setCourses([]);
+			}
+		})();
 
-                return (
-                    matchesText &&
-                    matchesBest &&
-                    matchesIdScope &&
-                    matchesAuthored
-                );
-            })
-            .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
-    }, [courses, query, showBest, scopedIdSet, scope, authoredName]);
+		return () => {
+			alive = false;
+		};
+	}, [scope]);
 
-    const heading =
-        scope === "enrolled"
-            ? "My Learning"
-            : scope === "created"
-              ? "My Courses"
-              : scope === "authored" // NEW
-                ? "Courses Authored by You"
-                : // ? "Courses"
-                  "Courses";
+	const filtered = useMemo(() => {
+		const q = query.trim().toLowerCase();
+		return (Array.isArray(courses) ? courses : [])
+			.filter((c) => {
+				const title = (c.title ?? '').toLowerCase();
+				const author = (c.author ?? '').toLowerCase();
+				const matchesText = q ? `${title} ${author}`.includes(q) : true;
+				const matchesBest = showBest ? c.isBestseller === true : true;
+				return matchesText && matchesBest;
+			})
+			.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''));
+	}, [courses, query, showBest]);
 
-    const emptyMsg =
-        scope === "enrolled"
-            ? "You haven't enrolled in any courses yet."
-            : scope === "created"
-              ? "You haven't created any courses yet."
-              : scope === "authored" // NEW
-                ? "No courses authored by you were found."
-                : "No courses found.";
+	const heading =
+		scope === 'enrolled'
+			? 'My Learning'
+			: scope === 'created'
+				? 'My Courses'
+				: scope === 'authored'
+					? 'Courses Authored by You'
+					: 'Courses';
 
-    return (
-        <div>
-            {/* <NavbarComponent /> */}
-            <section className="course-page">
-                <h3>{heading}</h3>
-                {/* Controls row */}
-                <div className="course-page__controls">
-                    <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        className="course-page__search"
-                        aria-label="Search courses"
-                        placeholder="Search by title or author…"
-                        type="search"
-                    />
+	return (
+		<div>
+			<section className="course-page">
+				<h3>{heading}</h3>
 
-                    {/* Bestseller toggle button */}
-                    <button
-                        type="button"
-                        className={`mybtn ${showBest ? "mybtn--active" : ""}`}
-                        onClick={() => setShowBest((prev) => !prev)}
-                        aria-pressed={showBest}
-                        title={showBest ? "Show all" : "Show only bestsellers"}
-                    >
-                        {showBest ? "Show all" : "Show only bestsellers"}
-                    </button>
-                </div>
+				{/* Controls */}
+				<div className="course-page__controls">
+					<input
+						value={query}
+						onChange={(e) => setQuery(e.target.value)}
+						className="course-page__search"
+						aria-label="Search courses"
+						placeholder="Search by title or author…"
+						type="search"
+					/>
+					<button
+						type="button"
+						className={`mybtn ${showBest ? 'mybtn--active' : ''}`}
+						onClick={() => setShowBest((prev) => !prev)}
+						aria-pressed={showBest}
+						title={showBest ? 'Show all' : 'Show only bestsellers'}
+					>
+						{showBest ? 'Show all' : 'Show only bestsellers'}
+					</button>
+				</div>
 
-                {/* Results */}
-                {filtered.length === 0 && (
-                    <p className="course-page__empty">No courses found.</p>
-                )}
-
-                {filtered.length > 0 && (
-                    <div className="course-grid">
-                        {filtered.map((course) => (
-                            <CourseCard key={course.id} course={course} />
-                        ))}
-                    </div>
-                )}
-            </section>
-            {/* <Footer /> */}
-        </div>
-    );
+				{/* Results */}
+				{filtered.length === 0 && (
+					<p className="course-page__empty">No courses found.</p>
+				)}
+				{filtered.length > 0 && (
+					<div className="course-grid">
+						{filtered.map((course) => (
+							<CourseCard key={course.id} course={course} />
+						))}
+					</div>
+				)}
+			</section>
+		</div>
+	);
 }

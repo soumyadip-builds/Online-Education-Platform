@@ -1,440 +1,636 @@
-import { useEffect, useMemo, useState } from 'react';
-import '../styles/editProfile.css';
+import { useEffect, useMemo, useState } from "react";
+import "../styles/editProfile.css";
 
+// Auth helpers
 import {
-  getCurrentUser,
-  getUserByEmail,
-  updateUserByEmail,
-  createSession,
-} from '../utils/session';
+    getAuthUser,
+    createLocalSession,
+    isAuthed,
+    getAuthToken,
+} from "../lib/authLocal";
+
+// Resolve API base from env or fallback
+const API_BASE = "http://localhost:8000/edstream";
 
 /** Small reusable TagInput */
 function TagInput({
-  label,
-  value = [],
-  placeholder = 'Type and press Enter',
-  onChange,
+    label,
+    value = [],
+    placeholder = "Type and press Enter",
+    onChange,
 }) {
-  const [input, setInput] = useState('');
+    const [input, setInput] = useState("");
 
-  function addTag(e) {
-    if (e.key === 'Enter') {
-      // Prevent Enter from submitting the whole form
-      e.preventDefault();
+    function addTag(e) {
+        if (e.key === "Enter") {
+            // Prevent Enter from submitting the whole form
+            e.preventDefault();
 
-      if (input.trim()) {
-        const next = Array.from(new Set([...(value || []), input.trim()]));
-        onChange?.(next);
-        setInput('');
-      }
+            if (input.trim()) {
+                const next = Array.from(
+                    new Set([...(value || []), input.trim()]),
+                );
+                onChange?.(next);
+                setInput("");
+            }
+        }
     }
-  }
 
-  function removeTag(tag) {
-    const next = (value || []).filter(t => t !== tag);
-    onChange?.(next);
-  }
+    function removeTag(tag) {
+        const next = (value || []).filter((t) => t !== tag);
+        onChange?.(next);
+    }
 
-  return (
-    <div className="form-group">
-      <label className="label">{label}</label>
+    return (
+        <div className="form-group">
+            <label className="label">{label}</label>
 
-      <div className="chip-input">
-        {(value || []).map(tag => (
-          <span key={tag} className="chip" onClick={() => removeTag(tag)}>
-            {tag}
-            <button type="button">&times;</button>
-          </span>
-        ))}
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={addTag}
-          placeholder={placeholder}
-        />
-      </div>
+            <div className="chip-input">
+                {(value || []).map((tag) => (
+                    <span
+                        key={tag}
+                        className="chip"
+                        onClick={() => removeTag(tag)}
+                    >
+                        {tag}
+                        <button type="button">&times;</button>
+                    </span>
+                ))}
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={addTag}
+                    placeholder={placeholder}
+                />
+            </div>
 
-      <small className="hint">Press Enter to add. Click a chip to remove.</small>
-    </div>
-  );
+            <small className="hint">
+                Press Enter to add. Click a chip to remove.
+            </small>
+        </div>
+    );
 }
 
 /** Skills input with explicit Add button */
 function SkillsInput({
-  label,
-  value = [],
-  placeholder = 'Type a skill',
-  onChange,
+    label,
+    value = [],
+    placeholder = "Type a skill",
+    onChange,
 }) {
-  const [input, setInput] = useState('');
-
-  function addSkill() {
-    const skill = input.trim();
-    if (!skill) return;
-
-    // prevent duplicates
-    const next = Array.from(new Set([...(value || []), skill]));
-    onChange?.(next);
-    setInput('');
-  }
-
-  function removeSkill(skill) {
-    const next = (value || []).filter(s => s !== skill);
-    onChange?.(next);
-  }
-
-  return (
-    <div className="form-group">
-      <label className="label">{label}</label>
-
-      <div className="skill-add-row" style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={placeholder}
-          onKeyDown={(e) => {
-            // Optional: allow Enter to add skill, but still do NOT submit the form
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              addSkill();
-            }
-          }}
-        />
-        <button
-          type="button"
-          className="btn ghost"
-          onClick={addSkill}
-          disabled={!input.trim()}
-        >
-          Add Skill
-        </button>
-      </div>
-
-      <div className="chip-input" style={{ marginTop: 10 }} aria-label="Added skills">
-        {(value || []).map(skill => (
-          <span key={skill} className="chip" onClick={() => removeSkill(skill)}>
-            {skill}
-            <button type="button">&times;</button>
-          </span>
-        ))}
-      </div>
-
-      <small className="hint">Type a skill and click “Add Skill”. Click a chip to remove.</small>
-    </div>
-  );
+    const [input, setInput] = useState("");
+ 
+    function addSkill() {
+        const skill = input.trim();
+        if (!skill) return;
+ 
+        // prevent duplicates
+        const next = Array.from(new Set([...(value || []), skill]));
+        onChange?.(next);
+        setInput("");
+    }
+ 
+    function removeSkill(skill) {
+        const next = (value || []).filter((s) => s !== skill);
+        onChange?.(next);
+    }
+ 
+    return (
+        <div className="form-group">
+            <label className="label">{label}</label>
+ 
+            <div className="skill-add-row" style={{ display: "flex", gap: 8 }}>
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder={placeholder}
+                    onKeyDown={(e) => {
+                        // Optional: allow Enter to add skill, but still do NOT submit the form
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            addSkill();
+                        }
+                    }}
+                />
+                <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={addSkill}
+                    disabled={!input.trim()}
+                >
+                    Add Skill
+                </button>
+            </div>
+ 
+            <div
+                className="chip-input"
+                style={{ marginTop: 10 }}
+                aria-label="Added skills"
+            >
+                {(value || []).map((skill) => (
+                    <span
+                        key={skill}
+                        className="chip"
+                        onClick={() => removeSkill(skill)}
+                    >
+                        {skill}
+                        <button type="button">&times;</button>
+                    </span>
+                ))}
+            </div>
+ 
+            <small className="hint">
+                Type a skill and click “Add Skill”. Click a chip to remove.
+            </small>
+        </div>
+    );
 }
 
 /** Repeater for Education entries */
 function EducationRepeater({ value = [], onChange }) {
-  const [items, setItems] = useState(value);
-
-  useEffect(() => setItems(value || []), [value]);
-
-  function update(idx, field, val) {
-    const next = items.map((it, i) =>
-      i === idx ? { ...it, [field]: val } : it
-    );
-    setItems(next);
-    onChange?.(next);
-  }
-
-  function add() {
-    const next = [...items, { degree: '', institution: '', year: '' }];
-    setItems(next);
-    onChange?.(next);
-  }
-
-  function remove(idx) {
-    const next = items.filter((_, i) => i !== idx);
-    setItems(next);
-    onChange?.(next);
-  }
-
-  return (
-    <div className="form-group">
-      <label className="label">Educational Qualifications</label>
-
-      <div className="edu-list">
-        {items.length === 0 && (
-          <div className="muted">No entries yet (optional).</div>
-        )}
-
-        {items.map((row, idx) => (
-          <div className="edu-row" key={idx}>
-            <input
-              type="text"
-              placeholder="Degree / Program"
-              value={row.degree || ''}
-              onChange={(e) => update(idx, 'degree', e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Institution"
-              value={row.institution || ''}
-              onChange={(e) => update(idx, 'institution', e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Year (e.g., 2024)"
-              value={row.year || ''}
-              onChange={(e) => update(idx, 'year', e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn ghost danger"
-              onClick={() => remove(idx)}
-            >
-              Remove
+    const [items, setItems] = useState(value);
+ 
+    useEffect(() => setItems(value || []), [value]);
+ 
+    function update(idx, field, val) {
+        const next = items.map((it, i) =>
+            i === idx ? { ...it, [field]: val } : it,
+        );
+        setItems(next);
+        onChange?.(next);
+    }
+ 
+    function add() {
+        const next = [...items, { degree: "", institution: "", year: "" }];
+        setItems(next);
+        onChange?.(next);
+    }
+ 
+    function remove(idx) {
+        const next = items.filter((_, i) => i !== idx);
+        setItems(next);
+        onChange?.(next);
+    }
+ 
+    return (
+        <div className="form-group">
+            <label className="label">Educational Qualifications</label>
+ 
+            <div className="edu-list">
+                {items.length === 0 && (
+                    <div className="muted">No entries yet (optional).</div>
+                )}
+ 
+                {items.map((row, idx) => (
+                    <div className="edu-row" key={idx}>
+                        <input
+                            type="text"
+                            placeholder="Degree / Program"
+                            value={row.degree || ""}
+                            onChange={(e) =>
+                                update(idx, "degree", e.target.value)
+                            }
+                        />
+                        <input
+                            type="text"
+                            placeholder="Institution"
+                            value={row.institution || ""}
+                            onChange={(e) =>
+                                update(idx, "institution", e.target.value)
+                            }
+                        />
+                        <input
+                            type="text"
+                            placeholder="Year (e.g., 2024)"
+                            value={row.year || ""}
+                            onChange={(e) =>
+                                update(idx, "year", e.target.value)
+                            }
+                        />
+                        <button
+                            type="button"
+                            className="btn ghost danger"
+                            onClick={() => remove(idx)}
+                        >
+                            Remove
+                        </button>
+                    </div>
+                ))}
+            </div>
+ 
+            <button type="button" className="btn ghost" onClick={add}>
+                + Add Qualification
             </button>
-          </div>
-        ))}
-      </div>
-
-      <button type="button" className="btn ghost" onClick={add}>
-        + Add Qualification
-      </button>
-    </div>
-  );
+        </div>
+    );
 }
 
+/** ===========================
+ * MAIN COMPONENT
+ * ========================== */
 export default function EditProfile() {
-  const [loading, setLoading] = useState(true);
-  const [initial, setInitial] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [initial, setInitial] = useState(null);
+    const [alertState, setAlertState] = useState(null);
 
-  // Bootstrap alert state
-  const [alertState, setAlertState] = useState(null);
-  // alertState = { type: 'success'|'danger'|'warning'|'info', message: string }
-
-  const [form, setForm] = useState({
-    name: '',
-    dob: '',
-    skills: [],
-    occupation: '',
-    experience: '',
-    education: [],
-    domainInterests: [],
-  });
-
-  useEffect(() => {
-    const sessionUser = getCurrentUser();
-    if (!sessionUser) {
-      setLoading(false);
-      setInitial(null);
-      return;
-    }
-
-    const full = getUserByEmail(sessionUser.email) || sessionUser;
-
-    const start = {
-      role: full.role,
-      email: full.email,
-      name: full.name || '',
-      dob: full.dob || '',
-      skills: Array.isArray(full.skills) ? full.skills : [],
-      occupation: full.occupation || '',
-      experience: full.experience ?? '',
-      education: Array.isArray(full.education) ? full.education : [],
-      domainInterests: Array.isArray(full.domainInterests)
-        ? full.domainInterests
-        : [],
-    };
-
-    setInitial(start);
-    setForm(start);
-    setLoading(false);
-  }, []);
-
-  const role = useMemo(() => initial?.role || 'learner', [initial]);
-
-  function patch(field, val) {
-    setForm(prev => ({ ...prev, [field]: val }));
-  }
-
-  function diff(original, current) {
-    const out = {};
-    Object.keys(current).forEach(k => {
-      if (k === 'role' || k === 'email') return;
-      const a = original?.[k];
-      const b = current?.[k];
-      const changed =
-        typeof b === 'object'
-          ? JSON.stringify(a || null) !== JSON.stringify(b || null)
-          : a !== b;
-      if (changed) out[k] = b;
+    const [form, setForm] = useState({
+        name: "",
+        dob: "",
+        skills: [],
+        occupation: "",
+        experience: "",
+        education: [],
+        domainInterests: [],
     });
-    return out;
-  }
 
-  function save(e) {
-    e.preventDefault();
-    setAlertState(null);
+    /** ---------------------------
+     * Load the logged-in user and fetch latest profile from server
+     * -------------------------- */
+    useEffect(() => {
+        (async () => {
+            try {
+                if (!isAuthed()) {
+                    setLoading(false);
+                    return;
+                }
+                const localUser = getAuthUser();
 
-    if (!initial?.email) return;
+                // Base object from local session (fallbacks if server has nothing yet)
+                const baseStart = {
+                    role: localUser.role,
+                    email: localUser.email,
+                    name: localUser.name ?? "",
+                    dob: localUser.dob ?? "",
+                    skills: Array.isArray(localUser.skills)
+                        ? localUser.skills
+                        : [],
+                    occupation: localUser.occupation ?? "",
+                    experience: localUser.experience ?? "",
+                    education: Array.isArray(localUser.education)
+                        ? localUser.education
+                        : [],
+                    domainInterests: Array.isArray(localUser.domainInterests)
+                        ? localUser.domainInterests
+                        : [],
+                };
 
-    const changes = diff(initial, form);
-    if (Object.keys(changes).length === 0) {
-      setAlertState({ type: 'warning', message: 'Nothing to update.' });
-      return;
+                // Fetch latest from server to prefill with existing data
+                const res = await fetch(
+                    `${API_BASE}/editProfile/profile?email=${encodeURIComponent(localUser.email)}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(getAuthToken()
+                                ? { Authorization: `Bearer ${getAuthToken()}` }
+                                : {}),
+                        },
+                    },
+                );
+                const body = await res.json().catch(() => ({}));
+                // If server returns ok, map fields to UI shape
+                if (res.ok && body?.ok) {
+                    const { user: serverUser, profile } = body.data ?? {};
+                    const role = serverUser?.role ?? baseStart.role;
+
+                    const mappedBack =
+                        role === "learner"
+                            ? {
+                                  // server: profile.domainInterest[] -> UI: skills[]
+                                  occupation:
+                                      profile?.occupation ??
+                                      baseStart.occupation,
+                                  skills: Array.isArray(profile?.domainInterest)
+                                      ? profile.domainInterest
+                                      : baseStart.skills,
+                              }
+                            : {
+                                  // server: profile.experienceYears -> UI: experience (string)
+                                  experience:
+                                      (profile?.experienceYears ??
+                                          baseStart.experience ??
+                                          "") + "",
+                                  // server: profile.skills -> UI: domainInterests[] (mirrored for display)
+                                  skills: Array.isArray(profile?.skills)
+                                      ? profile.skills
+                                      : baseStart.skills,
+                                  domainInterests: Array.isArray(
+                                      profile?.skills,
+                                  )
+                                      ? profile.skills
+                                      : baseStart.domainInterests,
+                                  // server: profile.qualifications -> UI: education[]
+                                  education: Array.isArray(
+                                      profile?.qualifications,
+                                  )
+                                      ? profile.qualifications
+                                      : baseStart.education,
+                              };
+
+                    const merged = {
+                        ...baseStart,
+                        ...mappedBack,
+                        name: serverUser?.name ?? baseStart.name,
+                        dob: serverUser?.dob
+                            ? new Date(serverUser.dob)
+                                  .toISOString()
+                                  .slice(0, 10)
+                            : baseStart.dob,
+                        role,
+                        email: baseStart.email,
+                    };
+
+                    setInitial(merged);
+                    setForm(merged);
+
+                    // Keep local session in sync with server prefill so other screens are consistent
+                    createLocalSession({
+                        user: merged,
+                        token: getAuthToken() ?? "valid",
+                    });
+                } else {
+                    // Fall back to local session only
+                    setInitial(baseStart);
+                    setForm(baseStart);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const role = useMemo(() => initial?.role ?? "learner", [initial]);
+
+    function patch(field, val) {
+        setForm((prev) => ({ ...prev, [field]: val }));
     }
 
-    const res = updateUserByEmail(initial.email, changes);
-    if (!res.ok) {
-      setAlertState({
-        type: 'danger',
-        message: res.error || 'Failed to update profile.',
-      });
-      return;
+    function diff(original, current) {
+        const out = {};
+        Object.keys(current).forEach((k) => {
+            if (k === "role" || k === "email") return; // immutable for this form
+            const a = original?.[k];
+            const b = current?.[k];
+            const changed =
+                typeof b === "object"
+                    ? JSON.stringify(a) !== JSON.stringify(b)
+                    : a !== b;
+            if (changed) out[k] = b;
+        });
+        return out;
     }
 
-    const updatedUser = { ...initial, ...changes };
-    createSession(updatedUser);
-    setInitial(updatedUser);
+    /** ---------------------------
+     * SAVE PROFILE
+     * -------------------------- */
+    async function save(e) {
+        e.preventDefault();
+        setAlertState(null);
+        if (!initial?.email) return;
 
-    setAlertState({ type: 'success', message: 'Profile updated successfully!' });
-  }
+        const changes = diff(initial, form);
+        if (Object.keys(changes).length === 0) {
+            setAlertState({ type: "warning", message: "Nothing to update." });
+            return;
+        }
 
-  if (loading) {
-    return (
-      <div className="edit-profile-layout">
-        <div className="editcard loading">Loading...</div>
-      </div>
-    );
-  }
+        // Build API payload based on current form + role
+        const payload = {
+            email: initial.email,
+            name: form.name ?? undefined,
+            dob: form.dob ?? undefined,
+            ...(role === "learner"
+                ? {
+                      occupation: form.occupation ?? "",
+                      skills: Array.isArray(form.skills) ? form.skills : [],
+                  }
+                : {
+                      experience: form.experience ?? "",
+                      domainInterests: Array.isArray(form.domainInterests)
+                          ? form.domainInterests
+                          : [],
+                      education: Array.isArray(form.education)
+                          ? form.education
+                          : [],
+                  }),
+        };
 
-  if (!initial) {
-    return (
-      <div className="edit-profile-layout">
-        <div className="editcard">
-          <h2 className="title">Edit Profile</h2>
-          <p className="muted">
-            You’re not signed in. Please sign in to edit your profile.
-          </p>
-        </div>
-      </div>
-    );
-  }
+        try {
+            const res = await fetch(`${API_BASE}/editProfile/profile`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(getAuthToken()
+                        ? { Authorization: `Bearer ${getAuthToken()}` }
+                        : {}),
+                },
+                body: JSON.stringify(payload),
+            });
 
-  return (
-    <div className="edit-profile-layout">
-      <div className="aurora-bg" />
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || !body?.ok) {
+                throw new Error(body?.error ?? "Failed to update profile.");
+            }
 
-      <form
-        className="editcard"
-        onSubmit={save}
-        onKeyDown={(e) => {
-          // Only Save Changes should submit the form
-          if (e.key === 'Enter') e.preventDefault();
-        }}
-      >
-        <h2 className="title">
-          Edit Profile <span className="role-pill">{role}</span>
-        </h2>
+            // Normalize server response back into UI shape
+            const { user: serverUser, profile } = body.data ?? {};
+            const mappedBack =
+                role === "learner"
+                    ? {
+                          occupation:
+                              profile?.occupation ?? form.occupation ?? "",
+                          skills: Array.isArray(profile?.domainInterest)
+                              ? profile.domainInterest
+                              : (form.skills ?? []),
+                      }
+                    : {
+                          experience:
+                              (profile?.experienceYears ??
+                                  form.experience ??
+                                  "") + "",
+                          skills: Array.isArray(profile?.skills)
+                              ? profile.skills
+                              : [],
+                          domainInterests: Array.isArray(profile?.skills)
+                              ? profile.skills
+                              : (form.domainInterests ?? []),
+                          education: Array.isArray(profile?.qualifications)
+                              ? profile.qualifications
+                              : (form.education ?? []),
+                      };
 
-        {/* Bootstrap Alert */}
-        {alertState && (
-          <div
-            className={`alert alert-${alertState.type} alert-dismissible fade show`}
-            role="alert"
-            style={{ marginTop: 12 }}
-          >
-            {alertState.message}
-            <button
-              type="button"
-              className="btn-close"
-              aria-label="Close"
-              onClick={() => setAlertState(null)}
-            />
-          </div>
-        )}
+            const updatedUserForLocal = {
+                ...initial,
+                ...form,
+                ...mappedBack,
+                name: serverUser?.name ?? form.name,
+                dob: serverUser?.dob
+                    ? new Date(serverUser.dob).toISOString().slice(0, 10)
+                    : (form.dob ?? ""),
+                role,
+                email: initial.email,
+            };
 
-        {/* Common fields */}
-        <div className="form-group">
-          <label className="label">Name (optional)</label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => patch('name', e.target.value)}
-          />
-        </div>
+            // Persist to local auth store to keep the app state in sync
+            createLocalSession({
+                user: updatedUserForLocal,
+                token: getAuthToken() ?? "valid",
+            });
 
-        <div className="form-group">
-          <label className="label">Date of Birth (optional)</label>
-          <input
-            type="date"
-            value={form.dob || ''}
-            onChange={(e) => patch('dob', e.target.value)}
-          />
-        </div>
+            setInitial(updatedUserForLocal);
+            setForm(updatedUserForLocal);
+            setAlertState({
+                type: "success",
+                message: "Profile updated successfully!",
+            });
+        } catch (err) {
+            console.error(err);
+            setAlertState({
+                type: "danger",
+                message: err.message ?? "Failed to update profile.",
+            });
+        }
+    }
 
-        {/* Learner */}
-        {role === 'learner' && (
-          <>
-            <SkillsInput
-              label="Skills (optional)"
-              value={form.skills}
-              onChange={(v) => patch('skills', v)}
-            />
+    if (loading) return <div>Loading...</div>;
 
-            <div className="form-group">
-              <label className="label">Occupation (optional)</label>
-              <input
-                type="text"
-                value={form.occupation}
-                onChange={(e) => patch('occupation', e.target.value)}
-              />
+    if (!initial) {
+        return (
+            <div className="container py-4">
+                <h4 className="mb-3">Edit Profile</h4>
+                <p>
+                    You’re not signed in. Please sign in to edit your profile.
+                </p>
             </div>
-          </>
-        )}
+        );
+    }
 
-        {/* Instructor */}
-        {role === 'instructor' && (
-          <>
-            <div className="form-group">
-              <label className="label">
-                Experience (years, optional)
-              </label>
-              <input
-                type="number"
-                value={form.experience}
-                onChange={(e) => patch('experience', e.target.value)}
-              />
-            </div>
-
-            <EducationRepeater
-              value={form.education}
-              onChange={(v) => patch('education', v)}
-            />
-
-            <TagInput
-              label="Domain Interests (optional)"
-              value={form.domainInterests}
-              onChange={(v) => patch('domainInterests', v)}
-            />
-          </>
-        )}
-
-        <div className="actions">
-          <button type="submit" className="btn primary">
-            Save Changes
-          </button>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => {
-              setForm(initial);
-              setAlertState(null);
+    return (
+        <form
+            className="container py-4"
+            onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
             }}
-          >
-            Reset
-          </button>
-        </div>
+            onSubmit={save}
+        >
+            <h3 className="mb-4">Edit Profile {role}</h3>
 
-        <p className="footnote muted">
-          All fields are optional — update only what you want.
-        </p>
-      </form>
-    </div>
-  );
+            {/* Alert */}
+            {alertState && (
+                <div
+                    className={`alert alert-${alertState.type} d-flex justify-content-between align-items-center`}
+                    role="alert"
+                >
+                    <span>{alertState.message}</span>
+                    <button
+                        type="button"
+                        className="btn-close"
+                        aria-label="Close"
+                        onClick={() => setAlertState(null)}
+                    />
+                </div>
+            )}
+
+            {/* Common fields */}
+            <div className="mb-3">
+                <label className="form-label fw-semibold">
+                    Name (optional)
+                </label>
+                <input
+                    className="form-control"
+                    value={form.name}
+                    onChange={(e) => patch("name", e.target.value)}
+                />
+            </div>
+
+            <div className="mb-3">
+                <label className="form-label fw-semibold">
+                    Date of Birth (optional)
+                </label>
+                <input
+                    type="date"
+                    className="form-control"
+                    value={form.dob}
+                    onChange={(e) => patch("dob", e.target.value)}
+                />
+            </div>
+
+            {/* Learner */}
+            {role === "learner" && (
+                <>
+                    <SkillsInput
+                        label="Skills (optional)"
+                        value={form.skills}
+                        onChange={(v) => patch("skills", v)}
+                    />
+                    <div className="mb-3">
+                        <label className="form-label fw-semibold">
+                            Occupation (optional)
+                        </label>
+                        <input
+                            className="form-control"
+                            value={form.occupation}
+                            onChange={(e) =>
+                                patch("occupation", e.target.value)
+                            }
+                        />
+                    </div>
+                </>
+            )}
+
+            {/* Instructor */}
+            {role === "instructor" && (
+                <>
+                    <div className="mb-3">
+                        <label className="form-label fw-semibold">
+                            Experience (years, optional)
+                        </label>
+                        <input
+                            className="form-control"
+                            value={form.experience}
+                            onChange={(e) =>
+                                patch("experience", e.target.value)
+                            }
+                        />
+                    </div>
+
+                    {/* Existing qualifications will appear here and can be edited/added/removed */}
+                    <EducationRepeater
+                        value={form.education}
+                        onChange={(v) => patch("education", v)}
+                    />
+
+                    <TagInput
+                        label="Domain Interests (optional)"
+                        value={form.domainInterests}
+                        onChange={(v) => patch("domainInterests", v)}
+                    />
+                </>
+            )}
+
+            <div className="d-flex gap-2">
+                <button type="submit" className="btn btn-primary">
+                    Save Changes
+                </button>
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => {
+                        setForm(initial);
+                        setAlertState(null);
+                    }}
+                >
+                    Reset
+                </button>
+            </div>
+
+            <p className="text-muted mt-3">
+                All fields are optional — update only what you want.
+            </p>
+        </form>
+    );
 }

@@ -7,11 +7,11 @@ import { getAuthToken } from "../utils/authToken";
 /**
  * AssignmentCard (Option-A)
  * - Assignments:
- *     1) POST /api/assignments (standalone create)
- *     2) Optional attach: POST /api/courses/:courseId/modules/:moduleIndex/items { type:'assignment', refId }
+ *     1) POST /edstream/assignments (standalone create)
+ *     2) Optional attach: POST /edstream/courses/:courseId/modules/:moduleIndex/items { type:'assignment', refId }
  * - Quizzes:
  *     Uses existing create-and-attach path:
- *     POST /api/courses/:courseId/modules/:moduleIndex/quizzes
+ *     POST /edstream/courses/:courseId/modules/:moduleIndex/quizzes
  *
  * onCreated: ({ id, type, title, estimatedMinutes }) => void
  */
@@ -19,7 +19,7 @@ const AssignmentCard = ({
   courseId,
   moduleIndex,
   onCreated,
-  apiBaseUrl = "http://localhost:8000/api",
+  apiBaseUrl = "http://localhost:8000/edstream",
   tokenProvider,
 }) => {
   // ------- Defaults -------

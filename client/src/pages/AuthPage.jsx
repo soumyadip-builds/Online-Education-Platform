@@ -135,14 +135,16 @@ const AuthPage = () => {
             const role = storedUser?.role;
             toast.success("Login successful! ");
 
-            if (role === "learner") {
-                navigate("/student-home", { replace: true });
-            } else if (role === "instructor") {
-                navigate("/instructor-home", { replace: true });
-            } else {
-                // Unknown/unsupported role
-                navigate("/not-authorized", { replace: true });
-            }
+            setTimeout(() => {
+                if (role === "learner") {
+                    navigate("/student-home", { replace: true });
+                } else if (role === "instructor") {
+                    navigate("/instructor-home", { replace: true });
+                } else {
+                    // Unknown/unsupported role
+                    navigate("/not-authorized", { replace: true });
+                }
+            }, 1000);
         } catch (err) {
             setLoginStatus({
                 type: "error",

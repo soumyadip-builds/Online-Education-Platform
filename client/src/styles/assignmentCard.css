@@ -195,6 +195,7 @@ html, body {
   margin-top: 12px;
   padding: 10px 12px;
   border-radius: 12px;
+  height: fit-content;
 }
 
 .assignment-card__msg-error {
@@ -329,10 +330,6 @@ html, body {
   justify-content: center;
 }
 
-/* Let Bootstrap's .btn styles handle the remove button appearance */
-.quiz-question__remove {
-  /* Intentionally minimal so .btn classes take over */
-}
 
 /* Options list */
 .quiz-options { margin-top: 8px; }
