@@ -16,6 +16,8 @@ const editProfileRouter = require('./routes/editProfile');
 
 const learnerRoutes = require('./routes/learner.routes');         // NEW
 const courseWorkRoutes = require('./routes/courseWork.routes');   // NEW
+const instructorRoutes = require("./routes/instructor.routes");
+
 
 
 const app = express();
@@ -54,6 +56,7 @@ app.use('/edstream/quizzes', quizRoutes);
 app.use('/edstream/editProfile', editProfileRouter);
 app.use('/edstream/learners', learnerRoutes);
 app.use('/edstream/coursework', courseWorkRoutes);
+app.use("/edstream/instructorDashboard", instructorRoutes); // NEW - instructor dashboard routes
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
