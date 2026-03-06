@@ -140,6 +140,7 @@ export default function CourseModulesBuilder({ modules, setModules }) {
                     className="form-control form-control-sm"
                     value={m.title || ""}
                     placeholder="Untitled module"
+                    required
                     onChange={(e) => patchModule(m.id, { title: e.target.value })}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -244,6 +245,7 @@ export default function CourseModulesBuilder({ modules, setModules }) {
                                   className="form-control form-control-sm"
                                   value={it.title}
                                   placeholder="Item title"
+                                  required
                                   onChange={(e) =>
                                     patchItem(m.id, it.id, { title: e.target.value })
                                   }
@@ -295,6 +297,7 @@ export default function CourseModulesBuilder({ modules, setModules }) {
                                         : "https://article.example"
                                     }
                                     value={it.url}
+                                    required
                                     onChange={(e) =>
                                       patchItem(m.id, it.id, { url: e.target.value })
                                     }

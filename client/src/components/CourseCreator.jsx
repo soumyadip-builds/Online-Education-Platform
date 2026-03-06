@@ -254,6 +254,7 @@ export default function CourseCreation() {
                 placeholder="Describe what this course covers..."
                 rows={4}
                 defaultValue=""
+                required
               />
               <div className="form-text">Tip: Be clear and concise.</div>
             </div>

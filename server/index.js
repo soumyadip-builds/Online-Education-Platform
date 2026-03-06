@@ -45,5 +45,5 @@ app.use("/api/quizzes", quizRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // Start
-const PORT = process.env.PORT || 5000; // your .env has 8000; this will pick that up
+const PORT = process.env.PORT || 5000; 
 app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
