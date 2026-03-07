@@ -85,7 +85,6 @@ export default function ForumPage() {
 			setLoadingData(true);
 			setDataError(null);
 			try {
-				console.log('ForumPage mounted, fetching courses...');
 				const response = await fetch(
 					'http://localhost:8000/edstream/courses?scope=all',
 					{
@@ -105,7 +104,6 @@ export default function ForumPage() {
 							author: c.author ?? '',
 						}))
 					: [];
-				console.log('Fetched courses:', courses);
 				setCourseDetails(courses);
 			} catch (e) {
 				if (alive) setDataError(e.message ?? 'Failed to load forum data');
@@ -258,22 +256,19 @@ export default function ForumPage() {
 	}, [courseId]);
 
 	// ---- actions ----
+	// Allow posting if:
+	// 1. User has a message and course selected
+	// 2. User is logged in (has a valid session userId from JWT - can be userId or sub)
 	const canPost = Boolean(
 		newMessage.trim() &&
 		courseId &&
-		(currentServiceUser?.userId || currentSessionUser?.userId),
+		(currentSessionUser?.userId || currentSessionUser?.sub),
 	);
 
 	const getActiveForumUserId = () => {
-		// Prefer stable derived service user; fallback to lookup; finally to session userId (if accepted by backend)
-		return (
-			currentServiceUser?.userId ??
-			(currentSessionUser?.userId
-				? serviceUsers.find((u) => u.userId === currentSessionUser.userId)?.userId
-				: null) ??
-			currentSessionUser?.userId ??
-			null
-		);
+		// Use userId if available, otherwise fall back to sub from JWT
+		// The forum system can accept either userId or sub
+		return currentSessionUser?.userId ?? currentSessionUser?.sub ?? null;
 	};
 
 	const onSendPost = async (e) => {
@@ -476,11 +471,6 @@ export default function ForumPage() {
 					</button>
 				</div>
 				{postError && <div className="text-danger small mt-2">{postError}</div>}
-				{/* {!currentServiceUser?.userId && (
-          <div className="text-muted small mt-1">
-            Tip: Add a user with your session identity to <code>/data/forum.json → users[]</code>.
-          </div>
-        )} */}
 				{!courseId && (
 					<div className="text-muted small mt-1">
 						No course available/selected. Instructors see authored; learners
