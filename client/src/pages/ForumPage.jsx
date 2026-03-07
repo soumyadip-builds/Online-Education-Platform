@@ -152,6 +152,26 @@ export default function ForumPage() {
 					}
 					setCurrentSessionUser(mergedUser);
 					console.log('Parsed user from JWT and merged:', mergedUser);
+
+					// Auto-create/update forum user for the logged-in user
+					try {
+						await fetch('http://localhost:8000/edstream/forum/users', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								...getAuthHeader(),
+							},
+							credentials: 'include',
+							body: JSON.stringify({
+								userId: mergedUser.sub || mergedUser.userId,
+								name: mergedUser.name,
+								email: mergedUser.email,
+								role: mergedUser.role,
+							}),
+						});
+					} catch (err) {
+						console.log('Failed to upsert forum user:', err);
+					}
 				} else {
 					setCurrentSessionUser(null);
 					console.log('No JWT found');
