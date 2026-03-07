@@ -14,7 +14,7 @@ import { listPosts, addReply, getUsers } from '../services/communicationService'
 import { getCurrentUser as getSessionUser } from '../utils/session';
 import { getAuthHeader, getAuthUser } from '../lib/authLocal';
 
-export default function InstructorHomePage({ authorName }) {
+export default function InstructorHomePage() {
 	const navigate = useNavigate();
 
 	// NEW: compute current instructor's display name (normalized)
@@ -166,16 +166,24 @@ export default function InstructorHomePage({ authorName }) {
 			setQnaLoading(true);
 			setQnaError(null);
 			try {
+				// First, get all forum users to resolve names
+				const users = await getUsers();
+				const usersById = Object.fromEntries(
+					(users ?? []).map((u) => [u.userId, u]),
+				);
+
 				const authored = courses; // already filtered above by authorName if provided
 				const collected = [];
 				for (const c of authored) {
 					const posts = await listPosts(c.id);
 					(posts ?? []).forEach((p) => {
+						// Resolve user name from users list, fallback to 'Unknown'
+						const user = usersById[p.userId];
 						collected.push({
 							id: p.postId,
 							courseId: c.id,
 							courseName: c.title,
-							askedByName: 'Learner', // optional: resolve via getUsers() if needed
+							askedByName: user?.name || user?.email || 'Unknown',
 							message: p.message,
 							createdAt: p.timestamp,
 						});
@@ -194,30 +202,6 @@ export default function InstructorHomePage({ authorName }) {
 		};
 	}, [courses]);
 
-	const handleReply = async (q, text) => {
-		try {
-			if (!currentServiceUser?.userId) {
-				throw new Error('Forum user not mapped for this session account.');
-			}
-			await addReply({
-				postId: q.id,
-				userId: currentServiceUser.userId,
-				message: text,
-			});
-			// Hide the item immediately in the Q&A widget (requested behavior)
-			setQnaItems((prev) => prev.filter((x) => x.id !== q.id));
-		} catch (e) {
-			alert(e?.message ?? 'Failed to reply. Please try again.');
-		}
-	};
-
-	// (Optional) live refresh:
-	// const [qnaReloadToken, setQnaReloadToken] = useState(0);
-	// useEffect(() => {
-	//   const unsub = subscribe(() => setQnaReloadToken(Date.now()));
-	//   return unsub;
-	// }, []);
-	// Add qnaReloadToken to the Q&A loader deps if enabled.
 
 	return (
 		<div>
@@ -415,13 +399,6 @@ export default function InstructorHomePage({ authorName }) {
 													<div className="fw-semibold">
 														{q.message}
 													</div>
-													<div className="mt-3">
-														<InlineReply
-															onSubmit={(txt) =>
-																handleReply(q, txt)
-															}
-														/>
-													</div>
 												</div>
 											</div>
 										</li>
@@ -437,28 +414,3 @@ export default function InstructorHomePage({ authorName }) {
 	);
 }
 
-// Small inline reply component
-function InlineReply({ onSubmit }) {
-	const [txt, setTxt] = useState('');
-	return (
-		<div className="d-flex gap-2">
-			<input
-				className="form-control form-control-sm"
-				placeholder="Write a reply…"
-				value={txt}
-				onChange={(e) => setTxt(e.target.value)}
-			/>
-			<button
-				className="btn btn-sm btn-primary"
-				onClick={() => {
-					if (txt.trim()) {
-						onSubmit(txt.trim());
-						setTxt('');
-					}
-				}}
-			>
-				Reply
-			</button>
-		</div>
-	);
-}
