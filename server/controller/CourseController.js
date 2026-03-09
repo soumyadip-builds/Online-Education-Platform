@@ -543,6 +543,70 @@ async function enrollCourse(req, res) {
 //     }
 // }
 
+/**
+ * PATCH /edstream/courses/:id/modules/:moduleIndex
+ * Update a specific module's title and description
+ * Body: { title, description }
+ */
+async function updateModule(req, res) {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        const { id, moduleIndex } = req.params;
+        if (!mongoose.isValidObjectId(id)) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "Invalid course id" });
+        }
+
+        const idx = Number(moduleIndex);
+        if (!Number.isFinite(idx) || idx < 0) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "Invalid module index" });
+        }
+
+        const { title, description } = req.body ?? {};
+
+        // Build the update object
+        const updateFields = {};
+        if (title !== undefined) {
+            updateFields[`modules.${idx}.title`] = title;
+        }
+        if (description !== undefined) {
+            updateFields[`modules.${idx}.description`] = description;
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "No fields to update" });
+        }
+
+        const updated = await Course.findOneAndUpdate(
+            { _id: id, owner: userId },
+            { $set: updateFields },
+            { new: true },
+        );
+
+        if (!updated) {
+            return res
+                .status(404)
+                .json({ ok: false, error: "Course not found" });
+        }
+
+        return res.json({ ok: true, data: updated });
+    } catch (e) {
+        console.error("updateModule error:", e);
+        return res
+            .status(500)
+            .json({ ok: false, error: "Failed to update module" });
+    }
+}
+
 module.exports = {
     createCourse,
     listMyCourses,
@@ -554,4 +618,6 @@ module.exports = {
     // read endpoints
     listCourses,
     getCourse,
+    // new
+    updateModule,
 };
