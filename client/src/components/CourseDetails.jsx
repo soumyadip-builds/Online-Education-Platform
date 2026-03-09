@@ -140,6 +140,21 @@ export default function CourseDetails() {
                     ...foundCourse,
                     // normalize thumbnail to a plain string
                     thumbnail: foundCourse?.thumbnail?.link ?? "",
+                    // Map learningOutcomes from API to whatYouWillLearn for the UI
+                    whatYouWillLearn: foundCourse?.learningOutcomes ?? [],
+                    // Calculate includes from course data
+                    includes: {
+                        hoursOnDemandVideo: foundCourse?.totalEstimatedMinutes
+                            ? Math.round(
+                                  (foundCourse.totalEstimatedMinutes / 60) * 10,
+                              ) / 10
+                            : (foundCourse?.counts?.videos ?? 0),
+                        articles: foundCourse?.counts?.documentation ?? 0,
+                        downloadableResources:
+                            foundCourse?.counts?.assignments ?? 0,
+                        accessOnMobile: true,
+                        certificate: true,
+                    },
                     // map modules -> sections your UI expects
                     sections: (foundCourse.modules ?? []).map((m, idx) => ({
                         id: m.id ?? `module-${idx + 1}`,
@@ -499,7 +514,7 @@ export default function CourseDetails() {
                         {videos?.length > 0 && (
                             <section className="course-details__section">
                                 <div className="video-grid">
-                                    {videos.map((v) => (
+                                    {videos.slice(0, 1).map((v) => (
                                         <article
                                             className="video-card"
                                             key={v.id || v.title}
@@ -554,21 +569,21 @@ export default function CourseDetails() {
                             <h3 className="section-title">
                                 This course includes
                             </h3>
-                            <ul className="includes-list">
-                                {includes.hoursOnDemandVideo && (
+                            <ul className="includes-list list-unstyled">
+                                {includes.hoursOnDemandVideo > 0 && (
                                     <li>
                                         <span className="icon">🎬</span>{" "}
                                         {includes.hoursOnDemandVideo} hours
                                         on-demand video
                                     </li>
                                 )}
-                                {includes.articles && (
+                                {includes.articles > 0 && (
                                     <li>
                                         <span className="icon">📰</span>{" "}
                                         {includes.articles} articles
                                     </li>
                                 )}
-                                {includes.downloadableResources && (
+                                {includes.downloadableResources > 0 && (
                                     <li>
                                         <span className="icon">📥</span>{" "}
                                         {includes.downloadableResources}{" "}
@@ -596,7 +611,7 @@ export default function CourseDetails() {
                 {whatYouWillLearn.length > 0 && (
                     <section className="course-details__section">
                         <h3 className="section-title">What you'll learn</h3>
-                        <ul className="learn-grid">
+                        <ul className="learn-grid list-unstyled">
                             {whatYouWillLearn.map((item, i) => (
                                 <li key={i}>
                                     <span className="tick">✔</span> {item}
