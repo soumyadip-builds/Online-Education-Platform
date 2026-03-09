@@ -273,10 +273,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for all courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -290,10 +303,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for these courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -388,6 +414,20 @@ async function getCourse(req, res) {
         }
 
         course.thumbnail = course?.thumbnail?.link || "";
+
+        // Get enrollment count for this course
+        const enrollments = await Enrollment.aggregate([
+            { $match: { course: course._id, role: "learner" } },
+            { $group: { _id: "$course", count: { $sum: 1 } } },
+        ]);
+
+        // DEBUG: Log enrollment query results
+        console.log("CourseController - courseId:", course._id);
+        console.log("CourseController - enrollments:", enrollments);
+
+        course.learners = enrollments.length > 0 ? enrollments[0].count : 0;
+        console.log("CourseController - learners set to:", course.learners);
+
         return res.json({ ok: true, data: course });
     } catch (e) {
         return res

@@ -136,10 +136,18 @@ export default function CourseDetails() {
                     throw new Error("Course not found");
                 }
 
+                // DEBUG: Log the API response
+                console.log("CourseDetails - API Response:", payload);
+                console.log("CourseDetails - foundCourse:", foundCourse);
+
                 const normalizedCourse = {
                     ...foundCourse,
                     // normalize thumbnail to a plain string
-                    thumbnail: foundCourse?.thumbnail?.link ?? "",
+                    thumbnail: foundCourse?.thumbnail ?? "",
+                    // Include learners count from API
+                    learners: foundCourse?.learners ?? 0,
+                    // DEBUG: Log the learners value
+                    _debug_learners: foundCourse?.learners,
                     // Map learningOutcomes from API to whatYouWillLearn for the UI
                     whatYouWillLearn: foundCourse?.learningOutcomes ?? [],
                     // Calculate includes from course data
@@ -432,7 +440,7 @@ export default function CourseDetails() {
                                 )}
                             </span>
                             <span className="chip" title="Learners">
-                                {formattedLearners} students
+                                {formattedLearners} learners
                             </span>
                             {author && (
                                 <span className="chip">

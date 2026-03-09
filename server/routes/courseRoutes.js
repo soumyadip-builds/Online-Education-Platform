@@ -3,6 +3,7 @@ const express = require("express");
 const {
     createCourse,
     getMyCourseById,
+    getCourse,
     updateMyCourse,
     deleteMyCourse,
     attachItemToModule,
@@ -26,7 +27,7 @@ router.use((req, res, next) => {
 
 router.post("/", createCourse);
 router.get("/", listCourses);
-router.get("/:id", getMyCourseById);
+router.get("/:id", getCourse);
 router.put("/:id", updateMyCourse);
 router.delete("/:id", deleteMyCourse);
 
