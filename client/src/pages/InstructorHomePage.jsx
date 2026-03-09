@@ -303,11 +303,6 @@ export default function InstructorHomePage() {
                                 {[
                                     { v: totalCourses, l: "Courses" },
                                     { v: activeStudents, l: "Active Students" },
-                                    { v: assignmentsDue, l: "Assignments Due" },
-                                    {
-                                        v: `${avgQuizScore}%`,
-                                        l: "Avg Quiz Score",
-                                    },
                                 ].map((s, i) => (
                                     <div key={i} className="col-6 col-md-3">
                                         <div className="card border-0 shadow-sm text-center">
@@ -322,6 +317,20 @@ export default function InstructorHomePage() {
                                         </div>
                                     </div>
                                 ))}
+                                {/* <div className="col-6 col-md-3"> */}
+                                    <div className="card-body py-3">
+                                        <button
+                                            className="btn btn-primary fw-bold nav-btn"
+                                            onClick={() =>
+                                                navigate(
+                                                    "/performance-instructor",
+                                                )
+                                            }
+                                        >
+                                            Performance Dashboard
+                                        </button>
+                                    </div>
+                                {/* </div> */}
                             </div>
                         </div>
                     </div>
