@@ -247,6 +247,7 @@ export default function CourseDetails() {
 					courseTitle: course?.title,
 					learnerEmail: me.email,
 					learnerName: me.name,
+					learnerUserId: me.id || me.userId,
 				});
 			} catch (e) {
 				// non-blocking; no toast for this
