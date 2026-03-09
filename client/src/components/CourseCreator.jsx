@@ -67,6 +67,12 @@ export default function CourseCreation() {
             const outcomes = editCourse.learningOutcomes || [];
             if (outcomes.length > 0) {
                 setOutcomeKeys(outcomes.map(() => Date.now() + Math.random()));
+                // Also populate outcomeValues with the actual outcome strings
+                const outcomeObj = {};
+                outcomes.forEach((outcome, idx) => {
+                    outcomeObj[idx] = outcome;
+                });
+                setOutcomeValues(outcomeObj);
             }
 
             // Pre-fill modules
@@ -385,6 +391,9 @@ export default function CourseCreation() {
                                                 className="form-control"
                                                 name="outcomes[]"
                                                 placeholder={`Outcome ${idx + 1}`}
+                                                defaultValue={
+                                                    outcomeValues[idx] || ""
+                                                }
                                             />
                                             <button
                                                 type="button"
