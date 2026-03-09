@@ -308,10 +308,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for these courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -322,10 +335,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for these courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -371,39 +397,45 @@ async function getCourse(req, res) {
 }
 // controllers/CourseController.js  (ADD THIS FUNCTION)
 async function enrollCourse(req, res) {
-	try {
-		// Must be authenticated & a learner
-		if (!req.user?.id) {
-			return res.status(401).json({ ok: false, error: 'Unauthorized' });
-		}
-		if (req.user?.role !== 'learner') {
-			return res.status(403).json({ ok: false, error: 'Only learners can enroll' });
-		}
+    try {
+        // Must be authenticated & a learner
+        if (!req.user?.id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+        if (req.user?.role !== "learner") {
+            return res
+                .status(403)
+                .json({ ok: false, error: "Only learners can enroll" });
+        }
 
-		const { id } = req.params; // course id
-		if (!mongoose.isValidObjectId(id)) {
-			return res.status(400).json({ ok: false, error: 'Invalid course id' });
-		}
+        const { id } = req.params; // course id
+        if (!mongoose.isValidObjectId(id)) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "Invalid course id" });
+        }
 
-		// Optional: ensure the course exists
-		const exists = await Course.exists({ _id: id });
-		if (!exists) {
-			return res.status(404).json({ ok: false, error: 'Course not found' });
-		}
+        // Optional: ensure the course exists
+        const exists = await Course.exists({ _id: id });
+        if (!exists) {
+            return res
+                .status(404)
+                .json({ ok: false, error: "Course not found" });
+        }
 
-		// Upsert learner profile & add the course
-		const updated = await Learner.findOneAndUpdate(
-			{ userId: req.user.id },
-			{
-				$addToSet: { coursesEnrolled: id },
-				// if learner doc not found, create a minimal one
-				$setOnInsert: { domainInterest: [] },
-			},
-			{ new: true, upsert: true },
-		).lean();
+        // Upsert learner profile & add the course
+        const updated = await Learner.findOneAndUpdate(
+            { userId: req.user.id },
+            {
+                $addToSet: { coursesEnrolled: id },
+                // if learner doc not found, create a minimal one
+                $setOnInsert: { domainInterest: [] },
+            },
+            { new: true, upsert: true },
+        ).lean();
 
         const enrollment = await Enrollment.findOneAndUpdate(
-            { user: req.user.id},
+            { user: req.user.id },
             {
                 $set: {
                     course: id,
@@ -415,17 +447,17 @@ async function enrollCourse(req, res) {
         );
         console.log("Enrollment upserted:", enrollment);
 
-		return res.json({
-			ok: true,
-			data: {
-				enrolled: true,
-				courseId: id,
-				coursesEnrolled: updated?.coursesEnrolled ?? [],
-			},
-		});
-	} catch (e) {
-		return res.status(500).json({ ok: false, error: 'Failed to enroll' });
-	}
+        return res.json({
+            ok: true,
+            data: {
+                enrolled: true,
+                courseId: id,
+                coursesEnrolled: updated?.coursesEnrolled ?? [],
+            },
+        });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: "Failed to enroll" });
+    }
 }
 
 // async function enrollCourse(req, res) {
