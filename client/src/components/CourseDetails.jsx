@@ -376,11 +376,6 @@ export default function CourseDetails() {
         [course, id, navigate],
     );
 
-    // Handler for module deletion (placeholder)
-    const handleDeleteModule = useCallback((moduleId) => {
-        console.log("Delete module:", moduleId);
-    }, []);
-
     // Loading / Error UI
     if (loading) {
         return (
@@ -638,7 +633,6 @@ export default function CourseDetails() {
                             role={role ?? "learner"}
                             defaultCollapsed={true}
                             onEditModule={handleEditModule}
-                            onDeleteModule={handleDeleteModule}
                         />
                     </section>
                 )}

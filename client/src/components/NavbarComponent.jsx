@@ -257,13 +257,6 @@ const NavbarComponent = () => {
 								placeholder="Search for Courses"
 								aria-label="Search for Courses"
 							/>
-							<Button
-								type="submit"
-								variant="outline-primary"
-								className="ms-2"
-							>
-								Search
-							</Button>
 						</Form>
 
 						{/* Suggestions dropdown */}
