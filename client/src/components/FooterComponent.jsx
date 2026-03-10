@@ -188,21 +188,8 @@ const Footer = () => {
                                         Courses
                                     </a>
                                 </li>
-                                {/* <li>
-                                    <a
-                                        className="link-smooth"
-                                        href="/assignments"
-                                    >
-                                        Assignments
-                                    </a>
-                                </li>
                                 <li>
-                                    <a className="link-smooth" href="/quizzes">
-                                        Quizzes
-                                    </a>
-                                </li> */}
-                                <li>
-                                    <a className="link-smooth" href="/forum">
+                                    <a className="link-smooth" onClick={() => navigate("/forum")}>
                                         Forum
                                     </a>
                                 </li>

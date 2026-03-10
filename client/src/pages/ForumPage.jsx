@@ -9,7 +9,6 @@ import {
 	markNotificationRead,
 	subscribe,
 } from '../services/communicationService';
-// Removed session.js dependency
 import { publicUrl } from '../utils/publicUrl';
 import '../styles/forum-post.css';
 import { getAuthHeader } from '../lib/authLocal';
@@ -17,9 +16,7 @@ import { getAuthHeader } from '../lib/authLocal';
 export default function ForumPage() {
 	const [serviceUsers, setServiceUsers] = useState([]);
 	const [currentSessionUser, setCurrentSessionUser] = useState(null);
-	// currentServiceUser is now derived via useMemo for stability (see below)
 	const [courseDetails, setCourseDetails] = useState([]);
-	// qnaSeed removed
 	const [courseOptions, setCourseOptions] = useState([]);
 	const [courseId, setCourseId] = useState('');
 	const [posts, setPosts] = useState([]);
@@ -57,13 +54,11 @@ export default function ForumPage() {
       </div>
     `;
 		toastContainerRef.current.appendChild(wrapper);
-		// eslint-disable-next-line no-undef
 		const toast = new bootstrap.Toast(wrapper, { delay: 4000 });
 		toast.show();
 		toast._element.addEventListener('hidden.bs.toast', () => wrapper.remove());
 	}
 
-	// ---- helpers ----
 	async function fetchJsonSafe(url) {
 		const res = await fetch(url, { cache: 'no-store', credentials: 'include' });
 		if (!res.ok) throw new Error(`HTTP ${res.status} while fetching ${url}`);
@@ -76,9 +71,6 @@ export default function ForumPage() {
 		return res.json();
 	}
 
-	// SEED logic removed
-
-	// ---- initial data ----
 	useEffect(() => {
 		let alive = true;
 		(async () => {
@@ -116,17 +108,14 @@ export default function ForumPage() {
 		};
 	}, []);
 
-	// ---- session + users bootstrap ----
 	useEffect(() => {
 		(async () => {
-			// Get user details from JWT
 			try {
 				const token =
 					localStorage.getItem('auth_token') ||
 					sessionStorage.getItem('auth_token');
 				if (token) {
 					const payload = JSON.parse(atob(token.split('.')[1]));
-					// Fetch enrolled courses for learner
 					let mergedUser = { ...payload };
 					if (payload.role === 'learner' && payload.sub) {
 						try {
@@ -151,9 +140,8 @@ export default function ForumPage() {
 						}
 					}
 					setCurrentSessionUser(mergedUser);
-					console.log('Parsed user from JWT and merged:', mergedUser);
 
-					// Auto-create/update forum user for the logged-in user
+					const forumUserId = mergedUser.sub || mergedUser.userId;
 					try {
 						await fetch('http://localhost:8000/edstream/forum/users', {
 							method: 'POST',
@@ -163,7 +151,7 @@ export default function ForumPage() {
 							},
 							credentials: 'include',
 							body: JSON.stringify({
-								userId: mergedUser.sub || mergedUser.userId,
+								userId: forumUserId,
 								name: mergedUser.name,
 								email: mergedUser.email,
 								role: mergedUser.role,
@@ -174,56 +162,45 @@ export default function ForumPage() {
 					}
 				} else {
 					setCurrentSessionUser(null);
-					console.log('No JWT found');
 				}
 			} catch (e) {
 				setCurrentSessionUser(null);
-				console.log('JWT parse error:', e);
 			}
 			const svcUsers = await getUsers();
 			setServiceUsers(svcUsers);
-			console.log('Fetched service users:', svcUsers);
 		})();
 	}, []);
 
-	// ---- DERIVED: service user for the current session (stable via useMemo) ----
+	// ---- DERIVED: service user for the current session ----
+	// FIX: Use userId if available, otherwise fall back to sub (JWT uses 'sub' not 'userId')
 	const currentServiceUser = useMemo(() => {
 		if (!currentSessionUser || !serviceUsers?.length) return null;
-		return serviceUsers.find((u) => u.userId === currentSessionUser.userId) ?? null;
+		const searchId = currentSessionUser.userId || currentSessionUser.sub;
+		return serviceUsers.find((u) => u.userId === searchId) ?? null;
 	}, [serviceUsers, currentSessionUser]);
 
-	// ---- compute courseOptions by role (using courseDetails) ----
 	useEffect(() => {
 		(async () => {
 			if (!currentSessionUser || courseDetails.length === 0) {
-				console.log('No session user or courses:', {
-					currentSessionUser,
-					courseDetails,
-				});
 				return;
 			}
 
 			const role = (currentSessionUser.role ?? '').toLowerCase();
-			console.log('Filtering courses for role:', role);
 			if (role === 'instructor') {
-				// Filter by instructor name === course author (case-insensitive)
 				const instructorName = (currentSessionUser?.name ?? '')
 					.trim()
 					.toLowerCase();
 				const authored = courseDetails.filter(
 					(c) => (c.author ?? '').trim().toLowerCase() === instructorName,
 				);
-				console.log('Authored courses:', authored);
 				setCourseOptions(authored);
 				setCourseId((prev) =>
 					authored.some((c) => c.id === prev) ? prev : (authored[0]?.id ?? ''),
 				);
 				if (authored.length === 0) setPosts([]);
 			} else if (role === 'learner' || role === 'student') {
-				// Enrolled courses by userId from backend user object
 				const ids = currentSessionUser?.coursesEnrolled ?? [];
 				const enrolled = courseDetails.filter((c) => ids.includes(c.id));
-				console.log('Enrolled courses:', enrolled);
 				setCourseOptions(enrolled);
 				setCourseId((prev) =>
 					enrolled.some((c) => c.id === prev) ? prev : (enrolled[0]?.id ?? ''),
@@ -233,12 +210,10 @@ export default function ForumPage() {
 				setCourseOptions([]);
 				setCourseId('');
 				setPosts([]);
-				console.log('No matching role, empty course options');
 			}
 		})();
 	}, [currentSessionUser, courseDetails]);
 
-	// ---- subscribe for updates ----
 	useEffect(() => {
 		const unsubscribe = subscribe(async () => {
 			if (currentServiceUser?.userId) {
@@ -256,7 +231,9 @@ export default function ForumPage() {
 	// ---- notifications for current user ----
 	useEffect(() => {
 		(async () => {
-			if (!currentServiceUser?.userId) return;
+			if (!currentServiceUser?.userId) {
+				return;
+			}
 			const notifs = await listNotifications(currentServiceUser.userId);
 			setNotifications(notifs);
 			const unread = notifs.filter((n) => !n.read);
@@ -264,9 +241,6 @@ export default function ForumPage() {
 		})();
 	}, [currentServiceUser?.userId]);
 
-	// ---- seed from QnA removed ----
-
-	// ---- load posts on course change ----
 	useEffect(() => {
 		(async () => {
 			if (!courseId) return;
@@ -275,10 +249,6 @@ export default function ForumPage() {
 		})();
 	}, [courseId]);
 
-	// ---- actions ----
-	// Allow posting if:
-	// 1. User has a message and course selected
-	// 2. User is logged in (has a valid session userId from JWT - can be userId or sub)
 	const canPost = Boolean(
 		newMessage.trim() &&
 		courseId &&
@@ -286,8 +256,6 @@ export default function ForumPage() {
 	);
 
 	const getActiveForumUserId = () => {
-		// Use userId if available, otherwise fall back to sub from JWT
-		// The forum system can accept either userId or sub
 		return currentSessionUser?.userId ?? currentSessionUser?.sub ?? null;
 	};
 
@@ -298,9 +266,7 @@ export default function ForumPage() {
 		const userId = getActiveForumUserId();
 
 		if (!userId) {
-			setPostError(
-				'No forum user found for the signed-in account. Check /data/forum.json → users[].',
-			);
+			setPostError('No forum user found for the signed-in account.');
 			return;
 		}
 		if (!courseId) {
@@ -329,9 +295,7 @@ export default function ForumPage() {
 		const userId = getActiveForumUserId();
 
 		if (!userId) {
-			setPostError(
-				'No forum user found for the signed-in account. Check /data/forum.json → users[].',
-			);
+			setPostError('No forum user found for the signed-in account.');
 			return;
 		}
 		if (!message?.trim()) {
@@ -358,7 +322,6 @@ export default function ForumPage() {
 		setNotifications(refreshed);
 	};
 
-	// ---- UI ----
 	if (loadingData) {
 		return (
 			<div className="container py-4">
@@ -377,14 +340,12 @@ export default function ForumPage() {
 
 	return (
 		<div className="container py-4">
-			{/* Toast container */}
 			<div
 				className="toast-container position-fixed bottom-0 end-0 p-3"
 				ref={toastContainerRef}
 				style={{ zIndex: 1060 }}
 			/>
 
-			{/* Top bar */}
 			<div className="d-flex justify-content-between align-items-center mb-3">
 				<div>
 					<h6 className="mb-1">Course Forum</h6>
@@ -395,7 +356,6 @@ export default function ForumPage() {
 					</div>
 				</div>
 
-				{/* Notifications dropdown */}
 				<div className="dropdown">
 					<button
 						className="btn btn-outline-secondary dropdown-toggle"
@@ -447,7 +407,6 @@ export default function ForumPage() {
 				</div>
 			</div>
 
-			{/* Filters */}
 			<div className="row g-2 align-items-center mb-3">
 				<div className="col-auto">
 					<label htmlFor="courseSelect" className="form-label mb-0">
@@ -475,7 +434,6 @@ export default function ForumPage() {
 				</div>
 			</div>
 
-			{/* New Post */}
 			<form className="mb-3" onSubmit={onSendPost}>
 				<div className="input-group">
 					<input
@@ -499,7 +457,6 @@ export default function ForumPage() {
 				)}
 			</form>
 
-			{/* Posts */}
 			{!posts || posts.length === 0 ? (
 				<div className="text-muted">No messages yet. Be the first to post!</div>
 			) : (

@@ -284,6 +284,7 @@ export default function CourseDetails() {
                     courseTitle: course?.title,
                     learnerEmail: me.email,
                     learnerName: me.name,
+					learnerUserId: me.id || me.userId,
                 });
             } catch (e) {
                 console.warn("Enrollment notification failed:", e);
