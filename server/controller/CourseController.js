@@ -273,10 +273,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for all courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -290,10 +303,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for these courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -308,10 +334,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for these courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -322,10 +361,23 @@ async function listCourses(req, res) {
                     "title author thumbnail.link counts totalEstimatedMinutes",
                 )
                 .lean();
+
+            // Get enrollment counts for these courses
+            const courseIds = list.map((c) => c._id);
+            const enrollments = await Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, role: "learner" } },
+                { $group: { _id: "$course", count: { $sum: 1 } } },
+            ]);
+            const enrollmentCountByCourse = {};
+            enrollments.forEach((e) => {
+                enrollmentCountByCourse[e._id.toString()] = e.count;
+            });
+
             const data = (list || []).map((c) => ({
                 ...c,
                 thumbnail: c?.thumbnail?.link || "",
                 id: c._id,
+                learners: enrollmentCountByCourse[c._id.toString()] || 0,
             }));
             return res.json({ ok: true, data });
         }
@@ -362,6 +414,20 @@ async function getCourse(req, res) {
         }
 
         course.thumbnail = course?.thumbnail?.link || "";
+
+        // Get enrollment count for this course
+        const enrollments = await Enrollment.aggregate([
+            { $match: { course: course._id, role: "learner" } },
+            { $group: { _id: "$course", count: { $sum: 1 } } },
+        ]);
+
+        // DEBUG: Log enrollment query results
+        console.log("CourseController - courseId:", course._id);
+        console.log("CourseController - enrollments:", enrollments);
+
+        course.learners = enrollments.length > 0 ? enrollments[0].count : 0;
+        console.log("CourseController - learners set to:", course.learners);
+
         return res.json({ ok: true, data: course });
     } catch (e) {
         return res
@@ -371,39 +437,45 @@ async function getCourse(req, res) {
 }
 // controllers/CourseController.js  (ADD THIS FUNCTION)
 async function enrollCourse(req, res) {
-	try {
-		// Must be authenticated & a learner
-		if (!req.user?.id) {
-			return res.status(401).json({ ok: false, error: 'Unauthorized' });
-		}
-		if (req.user?.role !== 'learner') {
-			return res.status(403).json({ ok: false, error: 'Only learners can enroll' });
-		}
+    try {
+        // Must be authenticated & a learner
+        if (!req.user?.id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+        if (req.user?.role !== "learner") {
+            return res
+                .status(403)
+                .json({ ok: false, error: "Only learners can enroll" });
+        }
 
-		const { id } = req.params; // course id
-		if (!mongoose.isValidObjectId(id)) {
-			return res.status(400).json({ ok: false, error: 'Invalid course id' });
-		}
+        const { id } = req.params; // course id
+        if (!mongoose.isValidObjectId(id)) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "Invalid course id" });
+        }
 
-		// Optional: ensure the course exists
-		const exists = await Course.exists({ _id: id });
-		if (!exists) {
-			return res.status(404).json({ ok: false, error: 'Course not found' });
-		}
+        // Optional: ensure the course exists
+        const exists = await Course.exists({ _id: id });
+        if (!exists) {
+            return res
+                .status(404)
+                .json({ ok: false, error: "Course not found" });
+        }
 
-		// Upsert learner profile & add the course
-		const updated = await Learner.findOneAndUpdate(
-			{ userId: req.user.id },
-			{
-				$addToSet: { coursesEnrolled: id },
-				// if learner doc not found, create a minimal one
-				$setOnInsert: { domainInterest: [] },
-			},
-			{ new: true, upsert: true },
-		).lean();
+        // Upsert learner profile & add the course
+        const updated = await Learner.findOneAndUpdate(
+            { userId: req.user.id },
+            {
+                $addToSet: { coursesEnrolled: id },
+                // if learner doc not found, create a minimal one
+                $setOnInsert: { domainInterest: [] },
+            },
+            { new: true, upsert: true },
+        ).lean();
 
         const enrollment = await Enrollment.findOneAndUpdate(
-            { user: req.user.id},
+            { user: req.user.id },
             {
                 $set: {
                     course: id,
@@ -415,17 +487,17 @@ async function enrollCourse(req, res) {
         );
         console.log("Enrollment upserted:", enrollment);
 
-		return res.json({
-			ok: true,
-			data: {
-				enrolled: true,
-				courseId: id,
-				coursesEnrolled: updated?.coursesEnrolled ?? [],
-			},
-		});
-	} catch (e) {
-		return res.status(500).json({ ok: false, error: 'Failed to enroll' });
-	}
+        return res.json({
+            ok: true,
+            data: {
+                enrolled: true,
+                courseId: id,
+                coursesEnrolled: updated?.coursesEnrolled ?? [],
+            },
+        });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: "Failed to enroll" });
+    }
 }
 
 // async function enrollCourse(req, res) {
@@ -511,6 +583,70 @@ async function enrollCourse(req, res) {
 //     }
 // }
 
+/**
+ * PATCH /edstream/courses/:id/modules/:moduleIndex
+ * Update a specific module's title and description
+ * Body: { title, description }
+ */
+async function updateModule(req, res) {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        const { id, moduleIndex } = req.params;
+        if (!mongoose.isValidObjectId(id)) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "Invalid course id" });
+        }
+
+        const idx = Number(moduleIndex);
+        if (!Number.isFinite(idx) || idx < 0) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "Invalid module index" });
+        }
+
+        const { title, description } = req.body ?? {};
+
+        // Build the update object
+        const updateFields = {};
+        if (title !== undefined) {
+            updateFields[`modules.${idx}.title`] = title;
+        }
+        if (description !== undefined) {
+            updateFields[`modules.${idx}.description`] = description;
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            return res
+                .status(400)
+                .json({ ok: false, error: "No fields to update" });
+        }
+
+        const updated = await Course.findOneAndUpdate(
+            { _id: id, owner: userId },
+            { $set: updateFields },
+            { new: true },
+        );
+
+        if (!updated) {
+            return res
+                .status(404)
+                .json({ ok: false, error: "Course not found" });
+        }
+
+        return res.json({ ok: true, data: updated });
+    } catch (e) {
+        console.error("updateModule error:", e);
+        return res
+            .status(500)
+            .json({ ok: false, error: "Failed to update module" });
+    }
+}
+
 module.exports = {
     createCourse,
     listMyCourses,
@@ -522,4 +658,6 @@ module.exports = {
     // read endpoints
     listCourses,
     getCourse,
+    // new
+    updateModule,
 };

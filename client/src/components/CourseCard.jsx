@@ -106,7 +106,7 @@ export default function CourseCard({ course }) {
 				{/* Learners only — buttons removed */}
 				<div className="d-flex justify-content-start align-items-center mt-auto">
 					<div className="text-muted small">
-						👥 {learners ? learners.toLocaleString() : '1392'} learners
+						👥 {learners ? learners.toLocaleString() : '0'} learners
 					</div>
 				</div>
 			</div>
