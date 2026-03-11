@@ -167,16 +167,19 @@ async function addReply(req, res) {
 // GET /api/forum/notifications?userId=xxx - Get notifications for a user
 async function listNotifications(req, res) {
 	try {
+		console.log("inside listNotifications controller, query:", req.query);
 		const { userId } = req.query;
 
 		if (!userId) {
 			return res.status(400).json({ error: 'userId is required' });
 		}
 
+		console.log('[listNotifications] Fetching notifications for userId:', userId);
 		const notifications = await ForumNotification.find({ userId })
 			.sort({ timestamp: -1 })
 			.lean();
 
+		console.log('[listNotifications] Found notifications:', notifications.length);
 		return res.json(notifications);
 	} catch (err) {
 		console.error('listNotifications error:', err);
@@ -212,31 +215,123 @@ async function notifyCourseEnrollment(req, res) {
 		const { courseId, courseTitle, learnerEmail, learnerName, learnerUserId } =
 			req.body;
 
+		console.log('[notifyCourseEnrollment] ===== START =====');
+		console.log('[notifyCourseEnrollment] Called with:', {
+			courseId,
+			courseTitle,
+			learnerEmail,
+			learnerName,
+			learnerUserId,
+		});
+
 		if (!courseId || !learnerUserId) {
+			console.log('[notifyCourseEnrollment] Missing required fields');
 			return res
 				.status(400)
 				.json({ error: 'courseId and learnerUserId are required' });
 		}
 
-		// Find instructors to notify
-		const instructors = await ForumUser.find({ role: 'instructor' }).lean();
+		// Find the course to get the owner/instructor
+		const Course = require('../model/CourseModel');
+		const course = await Course.findById(courseId).lean();
 
-		const notifications = instructors.map((instructor) => ({
+		console.log('[notifyCourseEnrollment] Course found:', course);
+
+		if (!course) {
+			console.log('[notifyCourseEnrollment] Course not found!');
+			return res.status(404).json({ error: 'Course not found' });
+		}
+
+		console.log(
+			'[notifyCourseEnrollment] Course owner (course.owner):',
+			course.owner,
+		);
+
+		// Find the instructor by the course owner's userId
+		const Instructor = require('../model/InstructorModel');
+		const instructor = await Instructor.findOne({ userId: course.owner }).lean();
+
+		console.log('[notifyCourseEnrollment] Instructor found:', instructor);
+
+		if (!instructor) {
+			console.log(
+				'[notifyCourseEnrollment] No instructor found for course owner:',
+				course.owner,
+			);
+			// Try to find all users and check
+			const allUsers = await ForumUser.find().lean();
+			console.log(
+				'[notifyCourseEnrollment] All forum users:',
+				JSON.stringify(allUsers),
+			);
+			return res.json({ ok: true, count: 0 });
+		}
+
+		// Get or create forum user for the instructor
+		let forumInstructors = await ForumUser.find({ role: 'instructor' }).lean();
+		console.log(
+			'[notifyCourseEnrollment] Forum instructors (role=instructor):',
+			forumInstructors,
+		);
+
+		// If no forum users with instructor role, try to find by the instructor's userId
+		if (forumInstructors.length === 0) {
+			// Check if there's a forum user with this userId
+			const instructorUserIdStr = instructor.userId.toString();
+			console.log(
+				'[notifyCourseEnrollment] Looking for forum user with userId:',
+				instructorUserIdStr,
+			);
+			const forumUser = await ForumUser.findOne({
+				userId: instructorUserIdStr,
+			}).lean();
+			console.log('[notifyCourseEnrollment] Found forum user:', forumUser);
+			if (forumUser) {
+				forumInstructors = [forumUser];
+			}
+		}
+
+		// If still no instructors found, create a notification for the course owner directly
+		if (forumInstructors.length === 0) {
+			console.log(
+				'[notifyCourseEnrollment] Creating notification for course owner directly:',
+				course.owner,
+			);
+			// Create notification directly for the course owner
+			const notification = {
+				notificationId: generateId(),
+				userId: course.owner,
+				message: `${learnerName || 'A learner'} enrolled in ${courseTitle || courseId}`,
+				type: 'Course Enrollment',
+				timestamp: new Date(),
+				read: false,
+			};
+			console.log('[notifyCourseEnrollment] Creating notification:', notification);
+			await ForumNotification.create(notification);
+			console.log('[notifyCourseEnrollment] Notification created successfully');
+			console.log('[notifyCourseEnrollment] ===== END =====');
+			return res.json({ ok: true, count: 1 });
+		}
+
+		const notifications = forumInstructors.map((instructorForumUser) => ({
 			notificationId: generateId(),
-			userId: instructor.userId,
+			userId: instructorForumUser.userId,
 			message: `${learnerName || 'A learner'} enrolled in ${courseTitle || courseId}`,
 			type: 'Course Enrollment',
 			timestamp: new Date(),
 			read: false,
 		}));
 
+		console.log('[notifyCourseEnrollment] Creating notifications:', notifications);
+
 		if (notifications.length > 0) {
 			await ForumNotification.insertMany(notifications);
 		}
 
+		console.log('[notifyCourseEnrollment] ===== END =====');
 		return res.json({ ok: true, count: notifications.length });
 	} catch (err) {
-		console.error('notifyCourseEnrollment error:', err);
+		console.error('[notifyCourseEnrollment] Error:', err);
 		return res.status(500).json({ error: 'Failed to send enrollment notification' });
 	}
 }

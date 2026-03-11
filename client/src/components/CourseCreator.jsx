@@ -58,8 +58,8 @@ export default function CourseCreation() {
             if (thumbnail) {
                 const mode = thumbnail.mode || "link";
                 setThumbMode(mode);
-                if (mode === "link" && thumbnail.link) {
-                    setThumbLink(thumbnail.link);
+                if (mode === "link" && thumbnail) {
+                    setThumbLink(thumbnail);
                 }
             }
 

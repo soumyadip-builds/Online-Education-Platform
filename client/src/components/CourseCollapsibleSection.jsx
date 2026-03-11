@@ -31,9 +31,7 @@ export default function CourseCollapsibleSection({
   /** Behavior / callbacks */
   defaultCollapsed = false,
   onEditModule, // (moduleId) => void
-  onDeleteModule, // (moduleId) => void
   onEditItem, // (moduleId, itemId) => void
-  onDeleteItem, // (moduleId, itemId) => void
   onToggleModule, // (moduleId, collapsed) => void
 
   /** Link behavior */
@@ -137,15 +135,7 @@ export default function CourseCollapsibleSection({
                   >
                     <I.edit />
                   </button>
-                  <button
-                    type="button"
-                    className="ccs__iconBtn cc--danger"
-                    onClick={() => onDeleteModule?.(m.id)}
-                    aria-label="Delete module"
-                    title="Delete module"
-                  >
-                    <I.trash />
-                  </button>
+
                 </div>
               )}
             </div>
@@ -232,15 +222,6 @@ export default function CourseCollapsibleSection({
                               title="Edit item"
                             >
                               <I.edit />
-                            </button>
-                            <button
-                              type="button"
-                              className="ccs__iconBtn cc--danger"
-                              onClick={() => onDeleteItem?.(m.id, it.id)}
-                              aria-label="Delete item"
-                              title="Delete item"
-                            >
-                              <I.trash />
                             </button>
                           </span>
                         )}
