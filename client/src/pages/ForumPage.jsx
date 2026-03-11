@@ -151,7 +151,6 @@ export default function ForumPage() {
 						}
 					}
 					setCurrentSessionUser(mergedUser);
-					console.log('Parsed user from JWT and merged:', mergedUser);
 
 					// Auto-create/update forum user for the logged-in user
 					try {
@@ -241,8 +240,11 @@ export default function ForumPage() {
 	// ---- subscribe for updates ----
 	useEffect(() => {
 		const unsubscribe = subscribe(async () => {
+			console.log(currentServiceUser)
 			if (currentServiceUser?.userId) {
 				const notifs = await listNotifications(currentServiceUser.userId);
+				console.log(notifs);
+				
 				setNotifications(notifs);
 			}
 			if (courseId) {

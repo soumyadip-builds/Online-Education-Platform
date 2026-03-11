@@ -279,11 +279,13 @@ export default function CourseDetails() {
             showToast("Enrolled successfully ✅", "success");
 
             try {
+                console.log("Enrolling learner:", me);
                 await notifyCourseEnrollment({
                     courseId: id,
                     courseTitle: course?.title,
                     learnerEmail: me.email,
                     learnerName: me.name,
+                    learnerUserId : me.userId
                 });
             } catch (e) {
                 console.warn("Enrollment notification failed:", e);

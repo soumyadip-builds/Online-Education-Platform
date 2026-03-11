@@ -167,6 +167,7 @@ async function addReply(req, res) {
 // GET /api/forum/notifications?userId=xxx - Get notifications for a user
 async function listNotifications(req, res) {
 	try {
+		console.log("inside listNotifications controller, query:", req.query);
 		const { userId } = req.query;
 
 		if (!userId) {
