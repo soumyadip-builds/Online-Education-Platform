@@ -188,7 +188,9 @@ export default function ForumPage() {
 	// ---- DERIVED: service user for the current session (stable via useMemo) ----
 	const currentServiceUser = useMemo(() => {
 		if (!currentSessionUser || !serviceUsers?.length) return null;
-		return serviceUsers.find((u) => u.userId === currentSessionUser.userId) ?? null;
+		// Match using sub first (preferred), then userId fallback
+		const searchId = currentSessionUser.sub ?? currentSessionUser.userId;
+		return serviceUsers.find((u) => u.userId === searchId) ?? null;
 	}, [serviceUsers, currentSessionUser]);
 
 	// ---- compute courseOptions by role (using courseDetails) ----
@@ -240,11 +242,11 @@ export default function ForumPage() {
 	// ---- subscribe for updates ----
 	useEffect(() => {
 		const unsubscribe = subscribe(async () => {
-			console.log(currentServiceUser)
+			console.log(currentServiceUser);
 			if (currentServiceUser?.userId) {
 				const notifs = await listNotifications(currentServiceUser.userId);
 				console.log(notifs);
-				
+
 				setNotifications(notifs);
 			}
 			if (courseId) {
