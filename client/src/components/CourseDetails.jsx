@@ -279,12 +279,13 @@ export default function CourseDetails() {
             showToast("Enrolled successfully ✅", "success");
 
             try {
+                console.log("Enrolling learner:", me);
                 await notifyCourseEnrollment({
                     courseId: id,
                     courseTitle: course?.title,
                     learnerEmail: me.email,
                     learnerName: me.name,
-					learnerUserId: me.id || me.userId,
+                    learnerUserId : me.userId
                 });
             } catch (e) {
                 console.warn("Enrollment notification failed:", e);
@@ -376,11 +377,6 @@ export default function CourseDetails() {
         },
         [course, id, navigate],
     );
-
-    // Handler for module deletion (placeholder)
-    const handleDeleteModule = useCallback((moduleId) => {
-        console.log("Delete module:", moduleId);
-    }, []);
 
     // Loading / Error UI
     if (loading) {
@@ -639,7 +635,6 @@ export default function CourseDetails() {
                             role={role ?? "learner"}
                             defaultCollapsed={true}
                             onEditModule={handleEditModule}
-                            onDeleteModule={handleDeleteModule}
                         />
                     </section>
                 )}

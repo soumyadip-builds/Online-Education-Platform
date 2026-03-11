@@ -175,7 +175,8 @@ export default function ForumPage() {
 	// FIX: Use userId if available, otherwise fall back to sub (JWT uses 'sub' not 'userId')
 	const currentServiceUser = useMemo(() => {
 		if (!currentSessionUser || !serviceUsers?.length) return null;
-		const searchId = currentSessionUser.userId || currentSessionUser.sub;
+		// Match using sub first (preferred), then userId fallback
+		const searchId = currentSessionUser.sub ?? currentSessionUser.userId;
 		return serviceUsers.find((u) => u.userId === searchId) ?? null;
 	}, [serviceUsers, currentSessionUser]);
 
@@ -216,8 +217,11 @@ export default function ForumPage() {
 
 	useEffect(() => {
 		const unsubscribe = subscribe(async () => {
+			console.log(currentServiceUser);
 			if (currentServiceUser?.userId) {
 				const notifs = await listNotifications(currentServiceUser.userId);
+				console.log(notifs);
+
 				setNotifications(notifs);
 			}
 			if (courseId) {
