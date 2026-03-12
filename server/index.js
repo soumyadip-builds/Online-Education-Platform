@@ -32,10 +32,9 @@ app.use(
 	}),
 );
 
-// Ensure uploads directory exists
+// uploads directory
 const uploadsDir = path.join(__dirname, 'uploads', 'assignments');
 fs.mkdirSync(uploadsDir, { recursive: true });
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB connect
 const MONGO_URI =
@@ -55,10 +54,9 @@ app.use('/edstream/quizzes', quizRoutes);
 app.use('/edstream/editProfile', editProfileRouter);
 app.use('/edstream/learners', learnerRoutes);
 app.use('/edstream/coursework', courseWorkRoutes);
-app.use('/edstream/instructorDashboard', instructorRoutes); // NEW - instructor dashboard routes
-
-// Forum routes
+app.use('/edstream/instructorDashboard', instructorRoutes);
 app.use('/edstream/forum', forumRoutes);
+
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 

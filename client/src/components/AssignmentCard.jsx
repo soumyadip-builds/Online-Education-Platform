@@ -254,7 +254,7 @@ const handleSubmit = async () => {
       return;
     }
 
-    // QUIZ — Standalone create (no attach; course may not exist yet)
+    // QUIZ — Standalone create
     const createUrl = `${apiBaseUrl}/quizzes`;
     const created = await apiPostJson(createUrl, token, payload); // { ok, quiz, item }
 
@@ -288,7 +288,6 @@ const handleSubmit = async () => {
     setSubmitting(false);
   }
 };
-
 
   // ------- Render -------
   return (

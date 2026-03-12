@@ -12,7 +12,7 @@ const {
     updateModule,
 } = require("../controller/CourseController");
 
-const { requireAuth } = require("../middleware/requireAuth"); // adjust path if needed
+const { requireAuth } = require("../middleware/requireAuth"); 
 
 const router = express.Router();
 

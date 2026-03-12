@@ -1,5 +1,4 @@
 // src/api/courses.js
-
 function resolveBaseUrl() {
     try {
         if (

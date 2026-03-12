@@ -1,7 +1,5 @@
 // server/controller/AuthenticationController.js
 const jwt = require("jsonwebtoken");
-
-// ⬇️ Adjust these paths if your folder is "models" instead of "model"
 const User = require("../model/UserModel");
 const Instructor = require("../model/InstructorModel");
 const Learner = require("../model/LearnerModel");
