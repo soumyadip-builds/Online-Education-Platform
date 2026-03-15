@@ -1,6 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 
-const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin }) => {
+const RegisterPage = ({
+  data,
+  setData,
+  errors,
+  status,
+  onSubmit,
+  onSwitchToLogin,
+}) => {
   const [showPasswords, setShowPasswords] = useState(false);
 
   const handleChange = (e) => {
@@ -8,24 +15,16 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
-  
-  // ---- Password Strength Calculation ----
-  // To avoid recalculating the strength on every render, we use useMemo
-  // Without useMemo, this calculation would run on every render, which is inefficient
-  // With useMemo, it only recalculates when data.password changes
+  // password strength calculation
   const strength = useMemo(() => {
-
-    // Getting the Password from the registration data
-    const pwd = data.password || '';
+    const pwd = data.password || "";
     let score = 0;
 
-    // Checking the length of the password and assigning scores based on length
-    // If length >= 12, score 2; if length >= 8, score 1; else score 0
+    // if length >= 12, score 2; if length >= 8, score 1; else score 0
     const lengthScore = pwd.length >= 12 ? 2 : pwd.length >= 8 ? 1 : 0;
     score += lengthScore;
 
     // Checking for character variety: lowercase, uppercase, digits, special characters
-    // Each regex checks whether the password contains at least one character from each set
     const sets =
       (/[a-z]/.test(pwd) ? 1 : 0) +
       (/[A-Z]/.test(pwd) ? 1 : 0) +
@@ -33,7 +32,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
       (/[^A-Za-z0-9]/.test(pwd) ? 1 : 0);
     score += sets;
 
-    // Based on the total score, determine the strength level
+    // based on the total score, determine the strength level
     let level = 1;
     if (score <= 1) level = 1;
     else if (score === 2) level = 2;
@@ -41,9 +40,11 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
     else if (score === 4 || score === 5) level = 4;
     else level = 5;
 
-    // Converting the level to percentage, label, and CSS class for UI representation
+    // converting the level to percentage, label, and CSS class for UI
     const percent = [20, 40, 60, 80, 100][level - 1];
-    const label = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'][level - 1];
+    const label = ["Very Weak", "Weak", "Fair", "Strong", "Very Strong"][
+      level - 1
+    ];
     const cls = `strength-${level}`;
     return { percent, label, cls };
   }, [data.password]);
@@ -52,12 +53,15 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
     <form className="needs-validation" noValidate onSubmit={onSubmit}>
       <h2 className="section-title mb-3">Create Your Account</h2>
       <p className="mb-3 login-page-text">
-        Join EdStream as an <strong>Instructor</strong> or a <strong>Learner</strong>.
+        Join EdStream as an <strong>Instructor</strong> or a{" "}
+        <strong>Learner</strong>.
       </p>
 
       {/* Status message */}
       {status && (
-        <div className={`alert ${status.type === 'success' ? 'alert-success' : 'alert-danger'} fade show mb-3`}>
+        <div
+          className={`alert ${status.type === "success" ? "alert-success" : "alert-danger"} fade show mb-3`}
+        >
           {status.message}
         </div>
       )}
@@ -68,22 +72,22 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
         <div className="role-toggle">
           <button
             type="button"
-            className={`role-btn ${data.role === 'instructor' ? 'active' : ''}`}
-            onClick={() => setData((prev) => ({ ...prev, role: 'instructor' }))}
+            className={`role-btn ${data.role === "instructor" ? "active" : ""}`}
+            onClick={() => setData((prev) => ({ ...prev, role: "instructor" }))}
           >
-            {/* ...prev copies all existing properties
-            role: "instructor" overwrites the role property */}
             Instructor
           </button>
           <button
             type="button"
-            className={`role-btn ${data.role === 'learner' ? 'active' : ''}`}
-            onClick={() => setData((prev) => ({ ...prev, role: 'learner' }))}
+            className={`role-btn ${data.role === "learner" ? "active" : ""}`}
+            onClick={() => setData((prev) => ({ ...prev, role: "learner" }))}
           >
             Learner
           </button>
         </div>
-        {errors.role && <div className="invalid-feedback d-block">{errors.role}</div>}
+        {errors.role && (
+          <div className="invalid-feedback d-block">{errors.role}</div>
+        )}
       </div>
 
       {/* Name */}
@@ -91,7 +95,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
         <label className="form-label">Name</label>
         <input
           type="text"
-          className={`form-control soft-input ${errors.name ? 'is-invalid' : ''}`}
+          className={`form-control soft-input ${errors.name ? "is-invalid" : ""}`}
           name="name"
           value={data.name}
           onChange={handleChange}
@@ -104,7 +108,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
         <label className="form-label">Email</label>
         <input
           type="email"
-          className={`form-control soft-input ${errors.email ? 'is-invalid' : ''}`}
+          className={`form-control soft-input ${errors.email ? "is-invalid" : ""}`}
           name="email"
           value={data.email}
           onChange={handleChange}
@@ -119,13 +123,15 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
         </div>
 
         <input
-          type={showPasswords ? 'text' : 'password'}
-          className={`form-control soft-input ${errors.password ? 'is-invalid' : ''}`}
+          type={showPasswords ? "text" : "password"}
+          className={`form-control soft-input ${errors.password ? "is-invalid" : ""}`}
           name="password"
           value={data.password}
           onChange={handleChange}
         />
-        {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+        {errors.password && (
+          <div className="invalid-feedback">{errors.password}</div>
+        )}
 
         {/* Strength Meter */}
         <div className="progress password-progress mt-2">
@@ -134,20 +140,24 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
             style={{ width: `${strength.percent}%` }}
           />
         </div>
-        <small className="login-page-text"><strong>{strength.label}</strong></small>
+        <small className="login-page-text">
+          <strong>{strength.label}</strong>
+        </small>
       </div>
 
       {/* Confirm Password */}
       <div className="mb-3">
         <label className="form-label">Confirm Password</label>
         <input
-          type={showPasswords ? 'text' : 'password'}
-          className={`form-control soft-input ${errors.confirmPassword ? 'is-invalid' : ''}`}
+          type={showPasswords ? "text" : "password"}
+          className={`form-control soft-input ${errors.confirmPassword ? "is-invalid" : ""}`}
           name="confirmPassword"
           value={data.confirmPassword}
           onChange={handleChange}
         />
-        {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
+        {errors.confirmPassword && (
+          <div className="invalid-feedback">{errors.confirmPassword}</div>
+        )}
       </div>
 
       {/* DOB */}
@@ -166,7 +176,7 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
       <div className="mb-3">
         <label className="form-label">Gender</label>
         <select
-          className={`form-select soft-input ${errors.gender ? 'is-invalid' : ''}`}
+          className={`form-select soft-input ${errors.gender ? "is-invalid" : ""}`}
           name="gender"
           value={data.gender}
           onChange={handleChange}
@@ -176,9 +186,10 @@ const RegisterPage = ({ data, setData, errors, status, onSubmit, onSwitchToLogin
           <option value="female">Female</option>
           <option value="other">Prefer not to say</option>
         </select>
-        {errors.gender && <div className="invalid-feedback">{errors.gender}</div>}
+        {errors.gender && (
+          <div className="invalid-feedback">{errors.gender}</div>
+        )}
       </div>
-
 
       {/* Buttons */}
       <div className="d-flex justify-content-between mt-3">

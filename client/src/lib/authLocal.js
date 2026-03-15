@@ -30,7 +30,7 @@ export function createLocalSession({ user, token }) {
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   localStorage.setItem(AUTH_TOKEN_KEY, token);
 
-  window.dispatchEvent(new Event("auth-changed")); // if one component logs a user out then by firing a custom auth-changed event, this module broadcasts a message to the entire browser window that login status changed
+  window.dispatchEvent(new Event("auth-changed")); // this module broadcasts a message to the entire browser window that login status changed
 }
 
 // clear auth state

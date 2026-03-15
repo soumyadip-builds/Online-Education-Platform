@@ -1,6 +1,3 @@
-// models/UserModel.js
-// User schema with secure defaults, embedded profiles, and virtual links to Instructor/Learner.
-
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -8,7 +5,7 @@ const { Schema, model } = mongoose;
 
 const UserSchema = new Schema(
     {
-        // _id (ObjectId) is the primary key; virtual userId exposed below
+        // _id (ObjectId) is the primary key
         name: {
             type: String,
             trim: true,
@@ -83,7 +80,7 @@ UserSchema.virtual("userId").get(function () {
     return this._id;
 });
 
-/** Virtual populate to linked collections (one-to-one) */
+// Virtual populate to linked collections (one-to-one)
 UserSchema.virtual("instructor", {
     ref: "Instructor",
     localField: "_id",
@@ -97,7 +94,7 @@ UserSchema.virtual("learner", {
     foreignField: "userId",
     justOne: true,
 });
-/** Helper methods for password handling */
+// Helper methods for password handling
 UserSchema.methods.setPassword = async function setPassword(
     plainPassword,
     saltRounds = 12,
@@ -113,8 +110,7 @@ UserSchema.methods.validatePassword = async function validatePassword(
     plainPassword,
 ) {
     if (typeof plainPassword !== "string") return false;
-    if (!this.passwordHash) {
-        // Ensure you queried with .select('+passwordHash')
+    if (!this.passwordHash) { // if passwordHash is missing on the document then cannot compare.
         throw new Error(
             'passwordHash not selected; use .select("+passwordHash")',
         );

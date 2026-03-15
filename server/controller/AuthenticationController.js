@@ -1,7 +1,5 @@
-// server/controller/AuthenticationController.js
 const jwt = require("jsonwebtoken");
 
-// ⬇️ Adjust these paths if your folder is "models" instead of "model"
 const User = require("../model/UserModel");
 const Instructor = require("../model/InstructorModel");
 const Learner = require("../model/LearnerModel");
@@ -19,30 +17,28 @@ function signToken(user) {
   return jwt.sign(payload, secret, { expiresIn });
 }
 
-/**
- * POST /api/auth/register
- * Body: { name, email, password, role, dob?, gender? }
- * Flow (no transactions):
- *  1) create User
- *  2) create role profile (Instructor/Learner)
- *  3) if step 2 fails, delete step 1 (manual rollback)
- */
 exports.register = async (req, res) => {
   const { name, email, password, role, dob, gender } = req.body || {};
   try {
     if (!name || !email || !password || !role) {
-      return res.status(400).json({ ok: false, error: "Missing required fields." });
+      return res
+        .status(400)
+        .json({ ok: false, error: "Missing required fields." });
     }
     if (!["instructor", "learner"].includes(String(role))) {
       return res.status(400).json({ ok: false, error: "Invalid role." });
     }
 
-    const existing = await User.findOne({ email: String(email).toLowerCase().trim() });
+    const existing = await User.findOne({
+      email: String(email).toLowerCase().trim(),
+    });
     if (existing) {
-      return res.status(409).json({ ok: false, error: "Email already in use." });
+      return res
+        .status(409) // conflict
+        .json({ ok: false, error: "Email already in use." });
     }
 
-    // 1) Create user
+    // create user
     const user = new User({
       name,
       email,
@@ -54,7 +50,7 @@ exports.register = async (req, res) => {
     await user.save();
 
     try {
-      // 2) Create role profile
+      // create role profile
       if (role === "instructor") {
         await Instructor.create({
           userId: user._id,
@@ -77,7 +73,7 @@ exports.register = async (req, res) => {
         });
       }
     } catch (profileErr) {
-      // 3) Manual rollback (delete user if profile creation failed)
+      // rollback - delete user if profile creation failed)
       try {
         await User.deleteOne({ _id: user._id });
       } catch (cleanupErr) {
@@ -95,23 +91,24 @@ exports.register = async (req, res) => {
     return res.status(201).json({ ok: true, user: safeUser, token });
   } catch (err) {
     if (err && err.code === 11000) {
-      return res.status(409).json({ ok: false, error: "Email already in use." });
+      return res
+        .status(409)
+        .json({ ok: false, error: "Email already in use." });
     }
     console.error("REGISTER_ERROR:", err);
-    return res.status(500).json({ ok: false, error: "Server error. Please try again." });
+    return res
+      .status(500)
+      .json({ ok: false, error: "Server error. Please try again." });
   }
 };
 
-/**
- * POST /api/auth/login
- * Body: { email, password }
- * Also populates the role profile.
- */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ ok: false, error: "Email and password are required." });
+      return res
+        .status(400) // Bad Request
+        .json({ ok: false, error: "Email and password are required." });
     }
 
     const user = await User.findOne({
@@ -119,12 +116,16 @@ exports.login = async (req, res) => {
     }).select("+passwordHash");
 
     if (!user) {
-      return res.status(401).json({ ok: false, error: "Invalid email or password." });
+      return res
+        .status(401) // Unauthorized
+        .json({ ok: false, error: "Invalid email or password." });
     }
 
     const ok = await user.validatePassword(password);
     if (!ok) {
-      return res.status(401).json({ ok: false, error: "Invalid email or password." });
+      return res
+        .status(401)
+        .json({ ok: false, error: "Invalid email or password." });
     }
 
     await user.populate(user.role === "instructor" ? "instructor" : "learner");
@@ -135,6 +136,8 @@ exports.login = async (req, res) => {
     return res.status(200).json({ ok: true, user: safeUser, token });
   } catch (err) {
     console.error("LOGIN_ERROR:", err);
-    return res.status(500).json({ ok: false, error: "Server error. Please try again." });
+    return res
+      .status(500)
+      .json({ ok: false, error: "Server error. Please try again." });
   }
 };
