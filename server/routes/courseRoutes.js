@@ -1,43 +1,40 @@
 // routes/course.routes.js
 const express = require("express");
 const {
-    createCourse,
-    getMyCourseById,
-    getCourse,
-    updateMyCourse,
-    deleteMyCourse,
-    attachItemToModule,
-    listCourses,
-    enrollCourse,
-    updateModule,
+  createCourse,
+  getMyCourseById, // (unused in this router, kept for completeness)
+  getCourse,
+  updateMyCourse,
+  deleteMyCourse,
+  attachItemToModule,
+  listCourses,
+  enrollCourse,
+  updateModule,
 } = require("../controller/CourseController");
 
-const { requireAuth } = require("../middleware/requireAuth"); // adjust path if needed
+const { requireAuth } = require("../middleware/requireAuth"); 
+const { optionalAuth } = require("../middleware/optionalAuth");
 
 const router = express.Router();
 
-// All routes below require a valid JWT
-router.use(requireAuth);
+// ---- PUBLIC GET ROUTES (with optional user context) ----
+router.get("/", optionalAuth, listCourses);
+router.get("/:id", optionalAuth, getCourse);
 
-// print requests for debugging
+// ---- PROTECTED (mutating) ROUTES ----
+// (Optional) logging only on protected routes to reduce noise
 router.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    next();
+  console.log(`${req.method} ${req.url}`);
+  next();
 });
 
+router.use(requireAuth);
+
 router.post("/", createCourse);
-router.get("/", listCourses);
-router.get("/:id", getCourse);
 router.put("/:id", updateMyCourse);
 router.delete("/:id", deleteMyCourse);
-
-// ENROLL: learner only
 router.post("/:id/enroll", enrollCourse);
-
-// NEW generic attach (Option A)
 router.post("/:courseId/modules/:moduleIndex/items", attachItemToModule);
-
-// NEW: Update specific module
 router.patch("/:id/modules/:moduleIndex", updateModule);
 
 module.exports = router;
