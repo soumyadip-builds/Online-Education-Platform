@@ -1,4 +1,3 @@
-// controllers/EditProfileController.js
 const User = require('../model/UserModel');
 const Learner = require('../model/LearnerModel');
 const Instructor = require('../model/InstructorModel');

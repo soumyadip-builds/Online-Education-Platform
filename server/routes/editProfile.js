@@ -1,12 +1,5 @@
-// routes/editProfile.js
 const express = require('express');
-// EITHER import the whole controller object…
 const EditProfileController = require('../controller/EditProfileController');
-// …OR destructure like this:
-// const { getProfile, updateProfile } = require('../controller/EditProfileController');
-
-// Optional auth middleware (JWT/session); enable when ready
-// const ensureAuth = require('../middleware/ensureAuth');
 
 const router = express.Router();
 
