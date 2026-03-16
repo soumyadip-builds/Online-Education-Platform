@@ -10,6 +10,7 @@ const RegisterPage = ({
 }) => {
   const [showPasswords, setShowPasswords] = useState(false);
 
+  // Each time when a change is noticed in any input field, update the data state
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
