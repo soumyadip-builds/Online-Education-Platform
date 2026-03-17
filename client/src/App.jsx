@@ -38,7 +38,7 @@ function roleHomePath(user) {
   if (roles.includes("learner") || user?.role === "learner") return "/student-home";
   return "/not-authorized";
 }
-
+// allows to access the current location object
 function RequireRole({ role, children }) {
   const location = useLocation();
   const user = isAuthed() ? getAuthUser() : null;
