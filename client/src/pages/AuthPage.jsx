@@ -76,7 +76,7 @@ const AuthPage = () => {
     if (!data.password) errs.password = "Password is required.";
     else if (!isStrongPassword(data.password))
       errs.password =
-        "Password must be at least 8 chars, include an uppercase and a number.";
+        "Password must be at least 8 characters, include an uppercase and a number.";
     if (!data.confirmPassword) errs.confirmPassword = "Confirm your password.";
     else if (data.password !== data.confirmPassword)
       errs.confirmPassword = "Passwords do not match.";
@@ -84,15 +84,15 @@ const AuthPage = () => {
     return errs;
   };
 
-  const navigateToUserHome = (user) => {
-    if (user?.role === "learner")
-      navigate(STUDENT_HOME_PATH, { replace: true });
-    else if (user?.role === "instructor")
-      navigate(INSTRUCTOR_HOME_PATH, { replace: true });
-    else navigate("/not-authorized", { replace: true });
-  };
+  // const navigateToUserHome = (user) => {
+  //   if (user?.role === "learner")
+  //     navigate(STUDENT_HOME_PATH, { replace: true });
+  //   else if (user?.role === "instructor")
+  //     navigate(INSTRUCTOR_HOME_PATH, { replace: true });
+  //   else navigate("/not-authorized", { replace: true });
+  // };
 
-  // submit: LOGIN (creates localStorage keys)
+  // submit: LOGIN 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
 

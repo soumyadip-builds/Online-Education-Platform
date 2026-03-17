@@ -321,14 +321,14 @@ const NavbarComponent = () => {
 											navigate('/performance-instructor')
 										}
 									>
-										📈 Performance Metrics
+										📈 Dashboard
 									</NavDropdown.Item>
 								)}
 								{role === 'learner' && (
 									<NavDropdown.Item
 										onClick={() => navigate('/performance-student')}
 									>
-										📈 Performance Metrics
+										📈 Dashboard
 									</NavDropdown.Item>
 								)}
 								<NavDropdown.Divider />

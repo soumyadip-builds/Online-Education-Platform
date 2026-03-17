@@ -64,68 +64,6 @@ async function createAssignmentStandalone(req, res, next) {
 	}
 }
 
-// POST /api/courses/:courseId/modules/:moduleIndex/assignments
-async function createAssignmentAndAttach(req, res, next) {
-	try {
-		const userId = req.user?.id;
-		if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-		const { courseId, moduleIndex } = req.params;
-		if (!mongoose.isValidObjectId(courseId)) {
-			return res.status(400).json({ message: 'Invalid course id' });
-		}
-		const idx = Number(moduleIndex);
-		if (!Number.isFinite(idx) || idx < 0) {
-			return res.status(400).json({ message: 'Invalid module index' });
-		}
-
-		const p = req.body ?? {};
-		const title = (p.title ?? '').trim();
-		if (!title) return res.status(400).json({ message: 'Title is required' });
-
-		const assignment = await Assignment.create({
-			owner: userId,
-			title,
-			description: p.description ?? '',
-			attachmentName: p.attachmentName ?? '',
-			estimatedMinutes: asNumber(p.estimatedMinutes, 1),
-			maxScore: asNumber(p.maxScore, 1),
-			passingScore: asNumber(p.passingScore, 1),
-		});
-
-		const item = {
-			type: 'assignment',
-			title: assignment.title,
-			url: '',
-			estimatedMinutes: asNumber(assignment.estimatedMinutes, 0),
-			refId: assignment.id,
-		};
-
-		const countersInc = {
-			totalEstimatedMinutes: item.estimatedMinutes,
-			'counts.assignments': 1,
-		};
-
-		const course = await attachItemToCourse({
-			userId,
-			courseId,
-			moduleIndex: idx,
-			item,
-			countersInc,
-		});
-
-		const lightweight = {
-			id: assignment.id,
-			type: 'assignment',
-			title: assignment.title,
-			estimatedMinutes: item.estimatedMinutes,
-		};
-
-		return res.status(201).json({ ok: true, assignment, course, item: lightweight });
-	} catch (err) {
-		const status = err?.status ?? 500;
-		return res.status(status).json({ message: err.message ?? 'Server error' });
-	}
-}
 
 // PATCH /api/assignments/:id
 async function updateAssignment(req, res, next) {
@@ -195,7 +133,9 @@ module.exports = {
 	getById,
 	// existing
 	createAssignmentStandalone,
-	createAssignmentAndAttach,
+	
 	updateAssignment,
 	deleteAssignment,
 };
+
+//createAssignmentAndAttach,

@@ -24,12 +24,12 @@ import InstructorDashboard from "./pages/InstructorDashboard";
 import StudentDashboard from "./pages/StudentMetrics";
 import { Toaster, toast } from "react-hot-toast";
 
-// --- local auth helpers (see section 0) ---
+// --- local auth helpers ---
 import {
   getAuthUser,
   isAuthed,
   clearLocalSession,
-} from "./lib/authLocal"; // or paste helpers here
+} from "./lib/authLocal";
 
 // Helpers ----------------------------------------------------------------
 function roleHomePath(user) {

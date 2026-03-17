@@ -50,13 +50,13 @@ mongoose
 // Routes
 app.use("/edstream/auth", authRouter);
 app.use("/edstream/courses", courseRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/edstream/assignments", assignmentRoutes);
 app.use("/edstream/quizzes", quizRoutes);
 app.use("/edstream/editProfile", editProfileRouter);
 app.use("/edstream/learners", learnerRoutes);
 app.use("/edstream/coursework", courseWorkRoutes);
-app.use("/edstream/instructorDashboard", instructorRoutes); // NEW - instructor dashboard routes
+app.use("/edstream/instructorDashboard", instructorRoutes); 
 
 // Forum routes
 app.use("/edstream/forum", forumRoutes);

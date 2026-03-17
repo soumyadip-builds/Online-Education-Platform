@@ -4,17 +4,7 @@ import "../styles/assignmentCard.css";
 import QuizEditor from "./QuizEditor";
 import { getAuthToken } from "../utils/authToken";
 
-/**
- * AssignmentCard (Option-A)
- * - Assignments:
- *     1) POST /edstream/assignments (standalone create)
- *     2) Optional attach: POST /edstream/courses/:courseId/modules/:moduleIndex/items { type:'assignment', refId }
- * - Quizzes:
- *     Uses existing create-and-attach path:
- *     POST /edstream/courses/:courseId/modules/:moduleIndex/quizzes
- *
- * onCreated: ({ id, type, title, estimatedMinutes }) => void
- */
+
 const AssignmentCard = ({
   courseId,
   moduleIndex,
@@ -35,7 +25,7 @@ const AssignmentCard = ({
     maxScore: 100,
     passingScore: 1,
     estimatedMinutes: 60,
-    attachment: null, // File | null (only name is sent)
+    attachment: null, 
   });
 
   // ------- Local State -------
@@ -141,11 +131,6 @@ const AssignmentCard = ({
       }
     }
 
-    // For quizzes (with no standalone quiz endpoint), require course/module for now
-    // if (workType === "quiz" && !wantsAttach) {
-    //   errors.push("Please select a course and module to create a quiz.");
-    // }
-
      return errors;
   };
 
@@ -171,7 +156,6 @@ const AssignmentCard = ({
     return resp.json();
   };
 
-  // ------- Submit -------
  // ------- Submit -------
 const handleSubmit = async () => {
   setErrorMsg("");
@@ -209,7 +193,7 @@ const handleSubmit = async () => {
               ? quizData.questions
               : [],
           },
-          // (optional) description field for quizzes if your schema supports it
+
           description: (description || "").trim(),
         }
       : {
@@ -300,7 +284,6 @@ const handleSubmit = async () => {
         </h1>
       </div>
 
-      {/* No <form> here — this avoids nested form submission */}
       <div role="form" className="p-3 p-md-4">
         <div className="assignment-card__grid row g-3">
           {/* Work Type toggle */}

@@ -17,19 +17,19 @@ export default function CourseCreation() {
   const isEditMode = !!editCourse;
   const courseId = editCourse?._id || editCourse?.id;
 
-  // 🔹 FORM REFS (uncontrolled inputs for course details)
+  //  FORM REFS (uncontrolled inputs for course details)
   const formRef = useRef(null);
   const titleRef = useRef(null);
   const descRef = useRef(null);
   const thumbLinkRef = useRef(null);
 
-  // 🔹 Minimal UI state
+  //  Minimal UI state
   const [modules, setModules] = useState(() => [emptyModule()]);
   const [outcomeKeys, setOutcomeKeys] = useState([Date.now()]);
   const [outcomeValues, setOutcomeValues] = useState({});
   const [saving, setSaving] = useState(false);
 
-  // ✅ Thumbnail mode toggle (link | upload)
+  //  Thumbnail mode toggle (link | upload)
   const [thumbMode, setThumbMode] = useState("link");
   const [thumbLink, setThumbLink] = useState("");
   const [thumbFile, setThumbFile] = useState(null);
@@ -42,7 +42,7 @@ export default function CourseCreation() {
     };
   }, [thumbPreviewUrl]);
 
-  // 🔹 Pre-fill form data when in edit mode
+  //  Pre-fill form data when in edit mode
   useEffect(() => {
     if (isEditMode && editCourse) {
       // Pre-fill title and description using refs
@@ -113,27 +113,25 @@ export default function CourseCreation() {
     [modules],
   );
 
-  // ✅ You can still keep this grouped memo if used elsewhere in UI.
-  // We won't rely on it for payload counts (we compute counts from normalized modules in handleSave).
-  const grouped = useMemo(() => {
-    const out = {
-      Videos: [],
-      Documentation: [],
-      Assignments: [],
-      Quizzes: [],
-    };
-    modules.forEach((m) =>
-      m.items.forEach((it) => {
-        if (it.type === "video") out.Videos.push(it);
-        else if (it.type === "reading") out.Documentation.push(it);
-        else if (it.type === "assignment") out.Assignments.push(it);
-        else if (it.type === "quiz") out.Quizzes.push(it);
-      }),
-    );
-    return out;
-  }, [modules]);
+  // const grouped = useMemo(() => {
+  //   const out = {
+  //     Videos: [],
+  //     Documentation: [],
+  //     Assignments: [],
+  //     Quizzes: [],
+  //   };
+  //   modules.forEach((m) =>
+  //     m.items.forEach((it) => {
+  //       if (it.type === "video") out.Videos.push(it);
+  //       else if (it.type === "reading") out.Documentation.push(it);
+  //       else if (it.type === "assignment") out.Assignments.push(it);
+  //       else if (it.type === "quiz") out.Quizzes.push(it);
+  //     }),
+  //   );
+  //   return out;
+  // }, [modules]);
 
-  // Validate course (reads from uncontrolled form inputs + modules)
+  // Validate course
   const validate = (fd) => {
     const errors = [];
     const title = (fd.get("title") || "").trim();
@@ -158,10 +156,9 @@ export default function CourseCreation() {
       });
     });
 
-    // Thumbnail validation (optional): no hard requirement, but if link mode and entered, basic check
+    // Thumbnail validation 
     if (thumbMode === "link" && thumbLink) {
       try {
-        // rudimentary URL format check
         const u = new URL(thumbLink);
         if (!/^https?:/.test(u.protocol)) throw new Error("Invalid URL");
       } catch {
@@ -169,7 +166,6 @@ export default function CourseCreation() {
       }
     }
 
-    // If in upload mode and file selected, ensure it's an image
     if (thumbMode === "upload" && thumbFile) {
       if (!thumbFile.type.startsWith("image/")) {
         errors.push("Uploaded thumbnail must be an image file.");
@@ -179,7 +175,7 @@ export default function CourseCreation() {
     return errors;
   };
 
-  // Save course (JSON-only; Upload mode records file name only)
+  // Save course
   const handleSave = async (e) => {
     e.preventDefault();
 
@@ -239,11 +235,11 @@ export default function CourseCreation() {
     });
     const counts = { videos, documentation, assignments, quizzes };
 
-    // Thumbnail payload: only keep mode, link (for link mode), and fileName (for upload mode)
+    // Thumbnail payload
     const thumbnail = {
       mode: thumbnailMode, // 'link' or 'upload'
       link: thumbnailMode === "link" ? thumbnailLink : "",
-      fileName: uploadedFile?.name || "", // when 'upload', record filename only
+      fileName: uploadedFile?.name || "", 
     };
 
     const me = getCurrentUser();
